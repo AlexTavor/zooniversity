@@ -1,4 +1,5 @@
-import { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
+// @ts-ignore
+import React, { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from './main';
 import { EventBus } from './EventBus';
 
@@ -21,7 +22,6 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
     {
         if (game.current === null)
         {
-
             game.current = StartGame("game-container");
 
             if (typeof ref === 'function')
@@ -38,9 +38,11 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
         {
             if (game.current)
             {
-                game.current.destroy(true);
-                if (game.current !== null)
-                {
+                try {
+                    game.current.plugins.destroy();
+                } finally {
+                    game.current.canvas.remove();
+                    game.current.destroy(true);
                     game.current = null;
                 }
             }
@@ -53,9 +55,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
         {
             if (currentActiveScene && typeof currentActiveScene === 'function')
             {
-
                 currentActiveScene(scene_instance);
-
             }
 
             if (typeof ref === 'function')
@@ -65,7 +65,7 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
             {
                 ref.current = { game: game.current, scene: scene_instance };
             }
-            
+
         });
         return () =>
         {
@@ -73,8 +73,5 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
         }
     }, [currentActiveScene, ref]);
 
-    return (
-        <div id="game-container"></div>
-    );
-
+    return <div id='game-container'/>;
 });
