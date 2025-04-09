@@ -1,12 +1,13 @@
-import { EventBus } from '../EventBus';
+import {EventBus} from '../EventBus';
 import { Scene } from 'phaser';
+import {GameDisplay} from "../display/GameDisplay.ts";
+import {ECS} from "../ECS.ts";
 
 export class Game extends Scene
 {
-    camera: Phaser.Cameras.Scene2D.Camera;
-    background: Phaser.GameObjects.Image;
-    gameText: Phaser.GameObjects.Text;
-
+    gameDisplay: GameDisplay;
+    ecs:ECS;
+    
     constructor ()
     {
         super('Game');
@@ -16,25 +17,15 @@ export class Game extends Scene
         super.update(time, delta);
         
         // this.gameLogic.update(delta);
-        // this.gameDisplay.update(delta);
-        //
-        // EventBus.emit(UiEvents.GameUpdate, this);
+        this.gameDisplay.update(delta);
     }
     
     create ()
     {
-        // this.camera = this.cameras.main;
-        // this.camera.setBackgroundColor(0x00ff00);
+        // this.cameras.main.setBackgroundColor('#2d2d2d');
 
-        // this.background = this.add.image(512, 384, 'background');
-        // this.background.setAlpha(0.5);
-
-        this.gameText = this.add.text(512, 384, 'Make something fun!\nand share it with us:\nsupport@phaser.io', {
-            fontFamily: 'Arial Black', fontSize: 380, color: '#ffffff',
-            stroke: '#000000', strokeThickness: 8,
-            align: 'center'
-        }).setOrigin(0.5).setDepth(0);
-
+        this.gameDisplay = new GameDisplay(this, this.ecs);
+        
         EventBus.emit('current-scene-ready', this);
     }
 }

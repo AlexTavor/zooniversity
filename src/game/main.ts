@@ -3,13 +3,16 @@ import { Game } from './scenes/Game';
 import { AUTO, Game as PhaserGame } from 'phaser';
 import { Preloader } from './scenes/Preloader';
 import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin.js';
+import {Config} from "./config/Config.ts";
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
-    width: 800,
-    height: 800,
+    mode: Phaser.Scale.FIT,
+    autoCenter: Phaser.Scale.CENTER_BOTH,
+    width: Config.Display.Width,
+    height: Config.Display.Height,
     parent: 'game-container',
     backgroundColor: '#028af8',
     scene: [

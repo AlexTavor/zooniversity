@@ -1,4 +1,5 @@
 import { Scene } from 'phaser';
+import { Config } from '../config/Config';
 
 export class Preloader extends Scene
 {
@@ -32,16 +33,46 @@ export class Preloader extends Scene
         //  Load the assets for the game - Replace with your own assets
         this.load.setPath('assets');
 
-        this.load.image('logo', 'logo.png');
-        this.load.image('star', 'star.png');
+        this.load.spritesheet(
+            'ground_tiles_sheet',     // Unique key for this ground tileset
+            'ground.png',
+            {
+                frameWidth: Config.AnimImports.FrameWidth,
+                frameHeight: Config.AnimImports.FrameHeight,
+                endFrame: Config.AnimImports.NumberOfFrames-1
+            }
+        );
+
+        this.load.setPath('assets/plants');
+
+
+        for (let i = 0; i < Config.AnimImports.NumberOfTrees; i++) {
+            this.load.spritesheet(
+                `tree${i}`, 
+                `tree${i}.png`,
+                {
+                    frameWidth: Config.AnimImports.FrameWidth*2,
+                    frameHeight: Config.AnimImports.FrameHeight*2,
+                    endFrame: Config.AnimImports.NumberOfFrames-1
+                }
+            );
+        }
+        
+        for (let i = 0; i < Config.AnimImports.NumberOfBushes; i++) {
+            this.load.spritesheet(
+                `bush${i}`,
+                `bush${i}.png`,
+                {
+                    frameWidth: Config.AnimImports.FrameWidth*2,
+                    frameHeight: Config.AnimImports.FrameHeight*2,
+                    endFrame: Config.AnimImports.NumberOfFrames-1
+                }
+            );
+        }
     }
 
     create ()
     {
-        //  When all the assets have loaded, it's often worth creating global objects here that the rest of the game can use.
-        //  For example, you can define global animations here, so we can use them in other scenes.
-
-        //  Move to the MainMenu. You could also swap this for a Scene Transition, such as a camera fade.
-        this.scene.start('MainMenu');
+        this.scene.start('Game');
     }
 }
