@@ -9,7 +9,7 @@ export class GroundDisplayModule extends DisplayModule<GameDisplay> {
 
         for (let y = 0; y < Config.Map.HeightInTiles; y++) {
             const row: number[] = [];
-            for (let x = 0; x < Config.Map.HeightInTiles; x++) {
+            for (let x = 0; x < Config.Map.WidthInTiles; x++) {
                 // Assign a random tile index (0-5) to each cell
                 const randomIndex = Phaser.Math.Between(0, 3);
                 row.push(randomIndex);

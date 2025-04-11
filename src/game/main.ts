@@ -10,7 +10,6 @@ import {Config} from "./config/Config.ts";
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
     mode: Phaser.Scale.FIT,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
     width: Config.Display.Width,
     height: Config.Display.Height,
     parent: 'game-container',

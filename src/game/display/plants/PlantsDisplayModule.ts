@@ -9,19 +9,22 @@ export class PlantsDisplayModule extends DisplayModule<GameDisplay> {
     public init(display: GameDisplay): void {
         // Initialize plant animations
         PlantView.initAnimations(display.scene);
-        
+
         var numTrees = 2000; // Number of trees to create
         var positions = [];
-        // Create and display plants
-        for (let i = 0; i < numTrees; i++) {
-            const pos = {
-                x: Phaser.Math.Between(0, Config.GameWidth/4),
-                y: Phaser.Math.Between(0, Config.GameHeight/4)
-            };
-            
-            positions.push(pos);
-        }
-        
+        // // Create and display plants
+        // for (let i = 0; i < numTrees; i++) {
+        //     const pos = {
+        //         x: Phaser.Math.Between(0, Config.GameWidth),
+        //         y: Phaser.Math.Between(0, Config.GameHeight)
+        //     };
+        //    
+        //     positions.push(pos);
+        // }
+
+        positions.push({x:0, y:0});
+        positions.push({x:Config.GameWidth, y: Config.GameHeight});
+
         // sort positions by y
         positions.sort((a, b) => a.y - b.y);
         
