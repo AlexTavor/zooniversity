@@ -12,19 +12,16 @@ export class PlantsDisplayModule extends DisplayModule<GameDisplay> {
 
         var numTrees = 2000; // Number of trees to create
         var positions = [];
-        // // Create and display plants
-        // for (let i = 0; i < numTrees; i++) {
-        //     const pos = {
-        //         x: Phaser.Math.Between(0, Config.GameWidth),
-        //         y: Phaser.Math.Between(0, Config.GameHeight)
-        //     };
-        //    
-        //     positions.push(pos);
-        // }
-
-        positions.push({x:0, y:0});
-        positions.push({x:Config.GameWidth, y: Config.GameHeight});
-
+        // Create and display plants
+        for (let i = 0; i < numTrees; i++) {
+            const pos = {
+                x: Phaser.Math.Between(0, Config.GameWidth),
+                y: Phaser.Math.Between(0, Config.GameHeight)
+            };
+            
+            positions.push(pos);
+        }
+        
         // sort positions by y
         positions.sort((a, b) => a.y - b.y);
         

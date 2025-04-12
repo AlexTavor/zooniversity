@@ -1,1 +1,9 @@
 - Test Hill
+    - Add a tool for placing items on the hill
+     - Trees
+     - Rocks
+     - Buildings
+    Select item from a list, now can paint with it, shift+click to single place, ctrl-click to remove.
+    Save to a file
+    Have a scene for painting
+    The higher up the hill, the smaller the item scale?

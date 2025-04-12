@@ -7,7 +7,7 @@ export class CameraModule extends DisplayModule<GameDisplay> {
     public Camera: ControlledCamera;
 
     override init(display: GameDisplay) {
-        this.Camera = new ControlledCamera(display.scene, Config.GameWidth, Config.GameHeight, Config.Camera, Config.PointerEvents);
+        this.Camera = new ControlledCamera(display.scene, Config.GameWidth, Config.GameHeight, Config.Camera);
     }
 
     override update(delta: number) {

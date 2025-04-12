@@ -1,12 +1,12 @@
 import Phaser from 'phaser';
 import {CameraConfig} from "../../config/CameraConfig.ts";
-import {PointerEvents} from "../../config/PointerEvents.ts";
+import {PointerEvents} from "../../consts/PointerEvents.ts";
+
 export class ControlledCamera {
 
     private readonly scene: Phaser.Scene;
     private readonly camera: Phaser.Cameras.Scene2D.Camera;
     private readonly config: CameraConfig; // Use updated CameraConfig
-    private readonly pointerEvents: PointerEvents; // Use new PointerEvents
 
     private isDown = false;
     private isCountingClicks = false;
@@ -22,11 +22,9 @@ export class ControlledCamera {
         worldWidth: number,
         worldHeight: number,
         config: CameraConfig, // Required instance
-        pointerEvents: PointerEvents // Required instance
     ) {
         this.scene = scene;
         this.config = config;
-        this.pointerEvents = pointerEvents;
         this.inertiaThresholdSq = this.config.InertiaThreshold * this.config.InertiaThreshold; // Use title case field
 
         this.camera = this.scene.cameras.main;
@@ -35,10 +33,10 @@ export class ControlledCamera {
 
     public destroy() {
         // Use pointerEvents instance for event names
-        this.scene.input.off(this.pointerEvents.PointerDown, this.handlePointerDown, this);
-        this.scene.input.off(this.pointerEvents.PointerUp, this.handlePointerUp, this);
-        this.scene.input.off(this.pointerEvents.PointerMove, this.handlePointerMove, this);
-        this.scene.input.off(this.pointerEvents.Wheel, this.handleWheel, this);
+        this.scene.input.off(PointerEvents.PointerDown, this.handlePointerDown, this);
+        this.scene.input.off(PointerEvents.PointerUp, this.handlePointerUp, this);
+        this.scene.input.off(PointerEvents.PointerMove, this.handlePointerMove, this);
+        this.scene.input.off(PointerEvents.Wheel, this.handleWheel, this);
         clearTimeout(this.timeout);
     }
 
@@ -156,10 +154,10 @@ export class ControlledCamera {
         this.camera.setBounds(0, 0, worldWidth, worldHeight);
 
         // Use pointerEvents instance for event names
-        this.scene.input.on(this.pointerEvents.PointerDown, this.handlePointerDown, this);
-        this.scene.input.on(this.pointerEvents.PointerUp, this.handlePointerUp, this);
-        this.scene.input.on(this.pointerEvents.PointerMove, this.handlePointerMove, this);
-        this.scene.input.on(this.pointerEvents.Wheel, this.handleWheel, this);
+        this.scene.input.on(PointerEvents.PointerDown, this.handlePointerDown, this);
+        this.scene.input.on(PointerEvents.PointerUp, this.handlePointerUp, this);
+        this.scene.input.on(PointerEvents.PointerMove, this.handlePointerMove, this);
+        this.scene.input.on(PointerEvents.Wheel, this.handleWheel, this);
 
         this.resetZoom();
     }

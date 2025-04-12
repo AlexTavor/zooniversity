@@ -46,15 +46,17 @@ export class Preloader extends Scene
         this.load.setPath('assets/plants');
 
 
+        const animFrameConfig =                 {
+            frameWidth: Config.AnimImports.FrameWidth*2,
+            frameHeight: Config.AnimImports.FrameHeight*2,
+            endFrame: Config.AnimImports.NumberOfFrames-1
+        };
+        
         for (let i = 0; i < Config.AnimImports.NumberOfTrees; i++) {
             this.load.spritesheet(
                 `tree${i}`, 
                 `tree${i}.png`,
-                {
-                    frameWidth: Config.AnimImports.FrameWidth*2,
-                    frameHeight: Config.AnimImports.FrameHeight*2,
-                    endFrame: Config.AnimImports.NumberOfFrames-1
-                }
+                animFrameConfig
             );
         }
         
@@ -62,17 +64,28 @@ export class Preloader extends Scene
             this.load.spritesheet(
                 `bush${i}`,
                 `bush${i}.png`,
-                {
-                    frameWidth: Config.AnimImports.FrameWidth*2,
-                    frameHeight: Config.AnimImports.FrameHeight*2,
-                    endFrame: Config.AnimImports.NumberOfFrames-1
-                }
+                animFrameConfig
             );
         }
+
+        this.load.setPath('assets/hill');
+
+        const staticFrameConfig = {
+            frameWidth: Config.AnimImports.StaticWidth,
+            frameHeight: Config.AnimImports.StaticHeight,
+            endFrame: 0
+        };
+        
+        this.load.spritesheet('hill', 'hill.png', staticFrameConfig);
+        this.load.spritesheet('home-lvl-1', 'home-lvl-1.png', staticFrameConfig);
+        this.load.spritesheet('home-lvl-1-inside', 'home-lvl-1-inside.png', staticFrameConfig);
+        this.load.spritesheet('kitchen-lvl-1', 'kitchen-lvl-1.png', staticFrameConfig);
+        this.load.spritesheet('kitchen-lvl-1-inside', 'kitchen-lvl-1-inside.png', staticFrameConfig);
+
     }
 
     create ()
     {
-        this.scene.start('Game');
+        this.scene.start(Config.EntryScene);
     }
 }
