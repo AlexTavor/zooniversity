@@ -5,6 +5,7 @@ import {ECS} from "../ECS.ts";
 import {CameraModule} from "../display/camera/CameraModule.ts";
 import {DragManager} from "../display/views_editor/DragManager.ts";
 import {setDragManager} from "../display/views_editor/DragManagerRef.ts";
+import {ViewsEditorModule} from "../display/views_editor/ViewsEditorModule.ts";
 
 export class ViewsEditor extends Scene
 {
@@ -29,7 +30,8 @@ export class ViewsEditor extends Scene
         setDragManager(dragManager);
         
         this.gameDisplay = new GameDisplay(this, this.ecs, [
-            new CameraModule()
+            new CameraModule(),
+            new ViewsEditorModule()
         ]);
         
         EventBus.emit('current-scene-ready', this);

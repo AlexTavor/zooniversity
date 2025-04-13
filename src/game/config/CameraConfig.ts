@@ -8,6 +8,6 @@ export class CameraConfig {
     public readonly PanDurationMs: number = 300;
     public readonly WheelZoomFactorIncrement: number = 1.5;
     public readonly WheelZoomFactorDecrement: number = 0.5;
-    public readonly BackgroundColor: number = 0x000000;
+    public readonly BackgroundColor: number = 0x0000ff;
     public readonly PanEasing: string = 'Linear';
 }

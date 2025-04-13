@@ -2,6 +2,7 @@ import Phaser from 'phaser';
 import { SpriteKey, SpriteLibrary } from './SpriteLibrary';
 import {DnDEvents} from "../../consts/DnDEvents.ts";
 import {PointerEvents} from "../../consts/PointerEvents.ts";
+import {EventBus} from "../../EventBus.ts";
 
 interface DragPayload {
     spriteKey: SpriteKey;
@@ -31,7 +32,7 @@ export class DragManager {
             .setDepth(10000)
             .setOrigin(0.5, 0.5);
 
-        this.scene.events.emit(DnDEvents.DragStart, payload);
+        EventBus.emit(DnDEvents.DragStart, payload);
     }
 
     private handlePointerMove(pointer: Phaser.Input.Pointer): void {
@@ -46,12 +47,12 @@ export class DragManager {
         const dropSuccess = this.isPointerOverCanvas(pointer);
 
         if (dropSuccess) {
-            this.scene.events.emit(DnDEvents.DragDrop, {
+            EventBus.emit(DnDEvents.DragDrop, {
                 spriteKey: this.payload.spriteKey,
                 position: { x: pointer.worldX, y: pointer.worldY }
             });
         } else {
-            this.scene.events.emit(DnDEvents.DragCancel, this.payload);
+            EventBus.emit(DnDEvents.DragCancel, this.payload);
         }
 
         this.cancel();

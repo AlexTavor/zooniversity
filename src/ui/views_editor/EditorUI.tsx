@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { SpritePalette } from './SpritePalette';
 import {EventBus} from "../../game/EventBus.ts";
+import {EditorSidebar} from "./sidebar/EditorSidebar.tsx";
 
 export const EditorUI: React.FC = () => {
     const [sceneReady, setSceneReady] = useState(false);
@@ -18,7 +18,7 @@ export const EditorUI: React.FC = () => {
 
     return (
         <div>
-            {sceneReady && <SpritePalette />}
+            {sceneReady && <EditorSidebar />}
         </div>
     );
 };

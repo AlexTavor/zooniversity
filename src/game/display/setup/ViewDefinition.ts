@@ -2,12 +2,6 @@ import {Pos} from "../../../utils/Math.ts";
 
 import Phaser from 'phaser';
 
-export class SpriteDefinition {
-    public readonly key: string;
-    public readonly defaultSize: Pos;
-    public readonly lastFrame: number;
-}
-
 export class ViewDefinition {
     public readonly id: number;
     public readonly name: string;
@@ -19,8 +13,8 @@ export class ViewDefinition {
 
 export class View {
     public readonly viewDefinition: ViewDefinition;
-    private sprite: Phaser.GameObjects.Sprite;
-    private viewContainer: Phaser.GameObjects.Container;
+    public sprite: Phaser.GameObjects.Sprite;
+    public viewContainer: Phaser.GameObjects.Container;
     
     constructor(
         views: { [key: number]: ViewDefinition },
