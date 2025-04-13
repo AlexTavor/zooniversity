@@ -2,24 +2,31 @@
 import { createView } from './ViewStore';
 import {DisplayModule} from "../setup/DisplayModule.ts";
 import {GameDisplay} from "../GameDisplay.ts";
-import {View, ViewDefinition} from "../setup/ViewDefinition.ts";
+import {ViewDefinition} from "../setup/ViewDefinition.ts";
 import {Pos} from "../../../utils/Math.ts";
 import {DropToAddViewModule} from "./view_editor_modules/DropToAddViewModule.ts";
 import {SpriteLibrary} from "./SpriteLibrary.ts";
 import {worldToLocal} from "../utils/worldToLocal.ts";
+import {View} from "../setup/View.ts";
+import {ViewsEditorSelectionModule} from "./view_editor_modules/ViewsEditorSelectionModule.ts";
 
 export class ViewsEditorModule extends DisplayModule<GameDisplay> {
-    private display!: GameDisplay;
-    private modules: DisplayModule<ViewsEditorModule>[] = [ new DropToAddViewModule()];
+    public display!: GameDisplay;
+    private modules: DisplayModule<ViewsEditorModule>[] = [ 
+        new DropToAddViewModule(),
+        new ViewsEditorSelectionModule()
+    ];
 
-    private viewMap: Record<number, ViewDefinition> = {};
-    private activeViewId: number | null = null;
-    private activeViewInstance: View | null = null;
-
+    public viewMap: Record<number, ViewDefinition> = {};
+    public activeViewId: number | null = null;
+    public activeViewInstance: View | null = null;
+    public canvasContainer: Phaser.GameObjects.Container;
+    
     private dirty: boolean = false;
 
     public init(display: GameDisplay): void {
         this.display = display;
+        this.canvasContainer = display.layers.Ground;
         this.modules.forEach(m => m.init(this));
     }
 
@@ -84,7 +91,7 @@ export class ViewsEditorModule extends DisplayModule<GameDisplay> {
         const def = this.viewMap[this.activeViewId];
         if (!def) return;
 
-        this.activeViewInstance = new View(this.viewMap, def, this.display.layers.Plants, this.display.scene);
+        this.activeViewInstance = new View(this.activeViewId, this.viewMap, def, this.canvasContainer!, this.display.scene);
     }
 
     private clearActiveView() {
