@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Sidebar } from './Sidebar';
 import { SidebarButton } from './SidebarButton';
 import './EditorSidebar.css';
-import {SpritePalette} from "../SpritePalette.tsx";
+import {SpritePalette} from "../sprite_palette/SpritePalette.tsx";
+import {UndoRedo} from "./UndoRedo.tsx";
 
 export const EditorSidebar: React.FC = () => {
     const [activePanel, setActivePanel] = useState<'palette' | null>('palette');
@@ -20,6 +21,8 @@ export const EditorSidebar: React.FC = () => {
                     isActive={activePanel === 'palette'}
                     onClick={() => togglePanel('palette')}
                 />
+                <div className="grow" />
+                <UndoRedo />
             </Sidebar>
 
             <div className={`editor-panel ${activePanel === 'palette' ? 'open' : 'closed'}`}>

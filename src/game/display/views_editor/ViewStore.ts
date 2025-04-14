@@ -9,7 +9,7 @@ export function createView(def: Partial<ViewDefinition>): ViewDefinition {
     const id = nextId++;
     const view: ViewDefinition = {
         id,
-        name: def.name ?? `View_${id}`,
+        spriteName: def.spriteName ?? ``,
         position: def.position ?? { x: 0, y: 0 },
         size: def.size ?? { x: 1, y: 1 },
         frame: def.frame ?? 0,

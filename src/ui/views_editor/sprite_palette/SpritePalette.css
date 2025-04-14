@@ -1,0 +1,32 @@
+.sprite-palette {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+    gap: 6px;
+    padding: 8px;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.palette-entry {
+    border: 1px solid transparent;
+    background: none;
+    padding: 2px;
+    border-radius: 4px;
+    cursor: pointer;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.palette-entry.selected {
+    border-color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.palette-entry img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+}

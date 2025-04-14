@@ -15,8 +15,9 @@ export class ControlledCamera {
     private dragInertia: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
     private lastDragDelta: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
     private readonly inertiaThresholdSq: number;
-
-    // Constructor requires CameraConfig and PointerEvents instances
+    
+    public draggable: boolean = true;
+    
     public constructor(
         scene: Phaser.Scene,
         worldWidth: number,
@@ -129,7 +130,7 @@ export class ControlledCamera {
     }
 
     private handlePointerMove(pointer: Phaser.Input.Pointer) {
-        if (!this.isDown) {
+        if (!this.isDown || !this.draggable) {
             return;
         }
         const dx = pointer.x - pointer.prevPosition.x;

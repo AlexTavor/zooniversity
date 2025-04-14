@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {EventBus} from "../../game/EventBus.ts";
 import {EditorSidebar} from "./sidebar/EditorSidebar.tsx";
+import {Toolbox} from "./toolbox/Toolbox.tsx";
 
 export const EditorUI: React.FC = () => {
     const [sceneReady, setSceneReady] = useState(false);
@@ -16,9 +17,10 @@ export const EditorUI: React.FC = () => {
         };
     }, []);
 
-    return (
-        <div>
-            {sceneReady && <EditorSidebar />}
+    return !sceneReady ? null : (
+        <div style={{height:"inherit", position:"relative"}}>
+            <EditorSidebar />
+            <Toolbox />
         </div>
     );
 };

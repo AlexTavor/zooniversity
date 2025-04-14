@@ -1,32 +1,34 @@
-
-import { createView } from './ViewStore';
-import {DisplayModule} from "../setup/DisplayModule.ts";
-import {GameDisplay} from "../GameDisplay.ts";
+import { DisplayModule } from '../setup/DisplayModule';
+import { GameDisplay } from '../GameDisplay';
+import { ViewsEditorState } from './ViewsEditorState';
+import { ViewsEditorCameraModule } from './view_editor_modules/camera/ViewsEditorCameraModule';
+import { ToolSwitcherModule } from './view_editor_modules/tool_switcher/ToolSwitcherModule';
+import { ToolPreviewModule } from './view_editor_modules/tool_switcher/modules/ToolPreviewModule';
+import { EditorHistoryModule } from './view_editor_modules/edtor_history/EditorHistoryModule';
+import { SelectionStateModule } from './view_editor_modules/selection/SelectionStateModule';
+import { SelectionHighlightModule } from './view_editor_modules/selection/SelectionHighlightModule';
 import {ViewDefinition} from "../setup/ViewDefinition.ts";
-import {Pos} from "../../../utils/Math.ts";
-import {DropToAddViewModule} from "./view_editor_modules/DropToAddViewModule.ts";
-import {SpriteLibrary} from "./SpriteLibrary.ts";
-import {worldToLocal} from "../utils/worldToLocal.ts";
 import {View} from "../setup/View.ts";
-import {ViewsEditorSelectionModule} from "./view_editor_modules/ViewsEditorSelectionModule.ts";
+import {Pos} from "../../../utils/Math.ts";
 
 export class ViewsEditorModule extends DisplayModule<GameDisplay> {
     public display!: GameDisplay;
-    private modules: DisplayModule<ViewsEditorModule>[] = [ 
-        new DropToAddViewModule(),
-        new ViewsEditorSelectionModule()
-    ];
+    public state!: ViewsEditorState;
+    public dirty = false;
 
-    public viewMap: Record<number, ViewDefinition> = {};
-    public activeViewId: number | null = null;
-    public activeViewInstance: View | null = null;
-    public canvasContainer: Phaser.GameObjects.Container;
-    
-    private dirty: boolean = false;
+    private modules: DisplayModule<ViewsEditorModule>[] = [
+        new ViewsEditorCameraModule(),
+        new ToolSwitcherModule(),
+        new SelectionStateModule(),
+        new SelectionHighlightModule(),
+        new ToolPreviewModule(),
+        new EditorHistoryModule(),
+    ];
 
     public init(display: GameDisplay): void {
         this.display = display;
-        this.canvasContainer = display.layers.Ground;
+        this.state = new ViewsEditorState(display);
+        this.state.createRootView();
         this.modules.forEach(m => m.init(this));
     }
 
@@ -34,78 +36,47 @@ export class ViewsEditorModule extends DisplayModule<GameDisplay> {
         this.modules.forEach(m => m.update(delta));
 
         if (this.dirty) {
-            this.refreshActiveView();
+            const def = this.state.viewMap[this.state.activeViewId!];
+            if (!def) this.state.clearActiveInstance();
+            this.state.renderActiveView();
+            this.state.activeViewInstance?.sortSubviewsByY();
             this.dirty = false;
         }
     }
 
     public destroy(): void {
         this.modules.forEach(m => m.destroy());
-        this.clearActiveView();
+        this.state.clearActiveInstance();
     }
 
-    public addModule(module: DisplayModule<ViewsEditorModule>) {
-        this.modules.push(module);
-        if (this.display) {
-            module.init(this); // for hot-injected modules
-        }
-    }
-
-    public createViewFromDrop(spriteKey: string, position: Pos): void {
-        const def = SpriteLibrary[spriteKey as keyof typeof SpriteLibrary];
-        let adjustedPosition = position;
-
-        if (this.activeViewInstance) {
-            adjustedPosition = this.activeViewInstance
-                ? worldToLocal(this.activeViewInstance.viewContainer, position)
-                : position;
-        }
-
-        const view = createView({
-            name: spriteKey,
-            position: adjustedPosition,
-            size: def?.defaultSize ?? { x: 1, y: 1 },
-            frame: 0,
-        });
-
-        this.viewMap[view.id] = view;
-
-        if (this.activeViewId === null) {
-            this.setActiveView(view.id);
-        } else {
-            this.viewMap[this.activeViewId].subViews.push(view.id);
-        }
-    }
-
-
-    private setActiveView(id: number) {
-        this.activeViewId = id;
-        this.markDirty();
-    }
-
-    private refreshActiveView() {
-        this.clearActiveView();
-
-        if (this.activeViewId === null) return;
-
-        const def = this.viewMap[this.activeViewId];
-        if (!def) return;
-
-        this.activeViewInstance = new View(this.activeViewId, this.viewMap, def, this.canvasContainer!, this.display.scene);
-    }
-
-    private clearActiveView() {
-        if (this.activeViewInstance) {
-            this.activeViewInstance.viewContainer.destroy();
-            this.activeViewInstance = null;
-        }
-    }
-
-    public markDirty() {
+    public requestSync(): void {
         this.dirty = true;
     }
 
-    public getDisplay(): GameDisplay {
-        return this.display;
+    public findSpriteUnderPointer(pointer: Phaser.Input.Pointer): Phaser.GameObjects.Sprite | undefined {
+        const hits = this.display.scene.input.hitTestPointer(pointer);
+        return hits.find(h => h instanceof Phaser.GameObjects.Sprite) as Phaser.GameObjects.Sprite | undefined;
+    }
+
+    // -- View state access
+    public get viewMap() {
+        return this.state.viewMap;
+    }
+
+    public get activeViewId() {
+        return this.state.activeViewId;
+    }
+
+    public get activeViewInstance() {
+        return this.state.activeViewInstance;
+    }
+
+    public findViewInstance(viewId: number): View | null {
+        return this.state.findViewInstance(viewId);
+    }
+
+    public createViewFromDrop(spriteKey: string, position: Pos): void {
+        this.state.createViewFromDrop(spriteKey, position);
+        this.requestSync();
     }
 }

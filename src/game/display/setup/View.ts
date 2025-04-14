@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { ViewDefinition } from "./ViewDefinition.ts";
+import {Naming} from "../../consts/Naming.ts";
 
 export class View {
     public readonly viewDefinition: ViewDefinition;
@@ -18,15 +19,13 @@ export class View {
 
         this.viewContainer = scene.add.container(viewDefinition.position.x, viewDefinition.position.y);
         parentContainer.add(this.viewContainer);
-
-        this.sprite = scene.add.sprite(0, 0, viewDefinition.name);
-        this.sprite.name = `View_${id}`;
-        this.viewContainer.add(this.sprite);
-        this.sprite.setInteractive({ useHandCursor: true });
-
-        this.sprite.setOrigin(0.5, 0.5);
+        this.viewContainer.name = `${Naming.VIEW}${id}`;
+        
+        if (viewDefinition.spriteName) {
+            this.addSprite(viewDefinition, scene, id);
+        }
+        
         this.viewContainer.setScale(viewDefinition.size.x, viewDefinition.size.y);
-        this.sprite.setFrame(viewDefinition.frame);
 
         const parentScaleX = parentContainer.scaleX || 1;
         const parentScaleY = parentContainer.scaleY || 1;
@@ -45,16 +44,25 @@ export class View {
         }
     }
 
-    public findViewSprite(viewId: number): Phaser.GameObjects.Sprite | null {
-        if (this.viewDefinition.id === viewId) {
-            return this.sprite;
-        }
+    public sortSubviewsByY(): void {
+        const containers = this.viewContainer.list.filter(
+            obj => obj instanceof Phaser.GameObjects.Container
+        ) as Phaser.GameObjects.Container[];
 
-        for (const subView of this.subViews) {
-            const result = subView.findViewSprite(viewId);
-            if (result) return result;
-        }
+        containers.sort((a, b) =>
+            (a.y * a.scaleY) - (b.y * b.scaleY)
+        );
+        containers.forEach(c => this.viewContainer.bringToTop(c));
+        
+        this.subViews.forEach(subView => subView.sortSubviewsByY());
+    }
 
-        return null;
+    private addSprite(viewDefinition: ViewDefinition, scene: Phaser.Scene, id: number = this.id): void {
+        this.sprite = scene.add.sprite(0, 0, viewDefinition.spriteName);
+        this.sprite.name = `${Naming.SPRITE}${id}`;
+        this.viewContainer.add(this.sprite);
+        this.sprite.setInteractive({ useHandCursor: true });
+        this.sprite.setOrigin(0.5, 0.5);
+        this.sprite.setFrame(viewDefinition.frame);
     }
 }
