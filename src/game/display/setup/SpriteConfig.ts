@@ -1,4 +1,4 @@
-import {Pos} from "../../../utils/Math.ts";
+import {Pos} from "../../../../utils/Math.ts";
 import {SpriteKey} from "./SpriteLibrary.ts";
 
 export interface SpriteConfig {

@@ -1,5 +1,5 @@
-import {Pos} from "../../../utils/Math.ts";
-import {Config} from "../../config/Config.ts";
+import {Pos} from "../../../../utils/Math.ts";
+import {Config} from "../../../config/Config.ts";
 
 export const PlantSpriteKeys = ['tree0', 'tree1', 'tree2', 'tree3', 'tree4', 'tree5', 'bush0', 'bush1'] as const;
 export type PlantSpriteKey = typeof PlantSpriteKeys[number];
