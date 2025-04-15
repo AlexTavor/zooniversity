@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import {EventBus} from "../../game/EventBus.ts";
+import {EventBus} from "../../../game/EventBus.ts";
 import {EditorSidebar} from "./sidebar/EditorSidebar.tsx";
 import {Toolbox} from "./toolbox/Toolbox.tsx";
 
-export const EditorUI: React.FC = () => {
+export const ViewsEditorUI: React.FC = () => {
     const [sceneReady, setSceneReady] = useState(false);
 
     useEffect(() => {

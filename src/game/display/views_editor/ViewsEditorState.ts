@@ -1,18 +1,18 @@
 import {ViewMap, createView, getViews} from './ViewStore';
 import { View } from '../setup/View';
 import { ViewDefinition } from '../setup/ViewDefinition';
-import { GameDisplay } from '../GameDisplay';
 import { worldToLocal } from '../utils/worldToLocal';
 import { SpriteLibrary } from './SpriteLibrary';
 import { Pos } from '../../../utils/Math';
 import {Snapshot} from "./view_editor_modules/edtor_history/EditorHistoryModule.ts";
+import {EditorContext} from "../editor/EditorHost.ts";
 
 export class ViewsEditorState {
     public viewMap: ViewMap = getViews();
     public activeViewId: number | null = null;
     public activeViewInstance: View | null = null;
 
-    constructor(private display: GameDisplay) {}
+    constructor(private display: EditorContext) {}
 
     createRootView(): void {
         const root = createView({

@@ -2,10 +2,11 @@ import {DisplayModule} from "./setup/DisplayModule.ts";
 import {ECS} from "../ECS.ts";
 import {EventBus, UiEvents} from "../EventBus.ts";
 import {Layers} from "./setup/Layers.ts";
+import {EditorContext} from "./editor/EditorHost.ts";
 
-export type GameDisplayModule = DisplayModule<GameDisplay>;
+export type GameDisplayModule = DisplayModule<EditorContext>;
 
-export class GameDisplay {
+export class GameDisplay implements EditorContext {
     modules: GameDisplayModule[];
     scene: Phaser.Scene;
     ecs: ECS;

@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { ViewDefinition } from "./ViewDefinition.ts";
 import {Naming} from "../../consts/Naming.ts";
+import {Config} from "../../config/Config.ts";
 
 export class View {
     public readonly viewDefinition: ViewDefinition;
@@ -24,8 +25,9 @@ export class View {
         if (viewDefinition.spriteName) {
             this.addSprite(viewDefinition, scene, id);
         }
-        
-        this.viewContainer.setScale(viewDefinition.size.x, viewDefinition.size.y);
+
+        const pxPerUnit = Config.Display.PixelsPerUnit;
+        this.sprite?.setDisplaySize(viewDefinition.size.x * pxPerUnit, viewDefinition.size.y * pxPerUnit);
 
         const parentScaleX = parentContainer.scaleX || 1;
         const parentScaleY = parentContainer.scaleY || 1;

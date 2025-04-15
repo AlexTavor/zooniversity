@@ -1,5 +1,5 @@
 import React from 'react';
-import {SpriteKey, SpriteLibrary} from "../../../game/display/views_editor/SpriteLibrary.ts";
+import {SpriteKey, SpriteLibrary} from "../../../../game/display/views_editor/SpriteLibrary.ts";
 
 interface Props {
     spriteKey: SpriteKey;

@@ -1,5 +1,5 @@
 import React from 'react';
-import {EventBus} from "../../../game/EventBus.ts";
+import {EventBus} from "../../../../game/EventBus.ts";
 
 export const UndoRedo: React.FC = () => {
     return (

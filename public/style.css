@@ -1,11 +1,13 @@
+/* Base page styling */
 body {
     margin: 0;
     padding: 0;
     color: rgba(255, 255, 255, 0.87);
-    background-color: #000000; 
+    background-color: #000000;
     font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Root app container */
 #app {
     width: 100%;
     height: 100vh;
@@ -13,36 +15,126 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative; /* required for absolute children */
 }
 
-.spritePosition {
-    margin: 10px 0 0 10px;
-    font-size: 0.8em;
+/* Game wrapper defines bounds of Phaser + UI */
+#game-wrapper {
+    position: relative;
+    width: 1280px;  /* or use Config.GameWidth + 'px' */
+    height: 720px;  /* or use Config.GameHeight + 'px' */
 }
 
-.button {
-    width: 140px;
-    margin: 10px;
-    padding: 10px;
-    background-color: #000000;
-    color: rgba(255, 255, 255, 0.87);
-    border: 1px solid rgba(255, 255, 255, 0.87);
+/* Phaser canvas */
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+/* === UI LAYOUT === */
+
+/* All UI floats above Phaser game */
+.tools-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    pointer-events: none;
+}
+
+/* Sidebar buttons, always visible */
+.tool-sidebar {
+    width: 60px;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-top: 10px;
+    gap: 8px;
+    pointer-events: auto;
+}
+
+/* Panel area for tool-specific UI */
+.tool-panel {
+    flex: 1;
+    padding: 12px;
+    pointer-events: auto;
+}
+
+/* Individual tool button */
+.tool-button {
+    width: 40px;
+    height: 40px;
+    background: #333;
+    color: white;
+    border: none;
+    border-radius: 6px;
     cursor: pointer;
-    transition: all 0.3s;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-    &:hover {
-        border: 1px solid #0ec3c9;
-        color: #0ec3c9;
-    }
+.tool-button.active {
+    background: #6cf;
+    color: black;
+    font-weight: bold;
+}
 
-    &:active {
-        background-color: #0ec3c9;
-    }
+.tool-button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 10px;
+}
 
-    /* Disabled styles */
-    &:disabled {
-        cursor: not-allowed;
-        border: 1px solid rgba(255, 255, 255, 0.3);
-        color: rgba(255, 255, 255, 0.3);
-    }
+.tool-divider {
+    width: 80%;
+    height: 1px;
+    background-color: #666;
+    margin: 12px auto;
+}
+
+.tool-subpanel {
+    width: 100%;
+    padding: 0 6px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.side-panel {
+    position: absolute;
+    left: 70px; /* aligned to the right of sidebar */
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    background: rgba(0, 0, 0, 0.7);
+    border-left: 1px solid #444;
+    color: white;
+    pointer-events: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.side-panel-header {
+    display: flex;
+    justify-content: space-between;
+    background: #222;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 14px;
+    border-bottom: 1px solid #444;
+}
+
+.side-panel-content {
+    flex: 1;
+    padding: 10px;
+    overflow-y: auto;
 }

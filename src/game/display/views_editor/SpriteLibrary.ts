@@ -12,9 +12,7 @@ interface SpriteDefinition {
     path?: string;
 }
 
-var unitToPixelFactor = 1/Config.Display.PixelsPerUnit;
-
-const defaultSize = {x:Config.AnimImports.FrameWidth*unitToPixelFactor, y:Config.AnimImports.FrameHeight*unitToPixelFactor};
+const defaultSize = {x:Config.AnimImports.FrameWidth/Config.Display.PixelsPerUnit, y:Config.AnimImports.FrameHeight/Config.Display.PixelsPerUnit};
 
 export const SpriteLibrary: Record<SpriteKey, SpriteDefinition> = {
     tree0: {key: 'tree0', defaultSize: defaultSize, path: 'assets/plants/tree0.png'},
@@ -25,5 +23,5 @@ export const SpriteLibrary: Record<SpriteKey, SpriteDefinition> = {
     tree5: {key: 'tree5', defaultSize: defaultSize, path: 'assets/plants/tree5.png'},
     bush0: {key: 'bush0', defaultSize: defaultSize, path: 'assets/plants/bush0.png'},
     bush1: {key: 'bush1', defaultSize: defaultSize, path: 'assets/plants/bush1.png'},
-    hill: {key: 'hill', defaultSize: {x: Config.AnimImports.StaticWidth*unitToPixelFactor, y: Config.AnimImports.StaticHeight*unitToPixelFactor}, path: 'assets/hill/hill.png'},
+    hill: {key: 'hill', defaultSize: {x: Config.AnimImports.StaticWidth/Config.Display.PixelsPerUnit, y: Config.AnimImports.StaticHeight/Config.Display.PixelsPerUnit}, path: 'assets/hill/hill.png'},
 };

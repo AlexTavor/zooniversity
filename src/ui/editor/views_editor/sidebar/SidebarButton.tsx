@@ -18,7 +18,7 @@ export const SidebarButton: React.FC<SidebarButtonProps> = ({ label, icon, isAct
                     <span className="sidebar-icon">{icon}</span>
                 )
             )}
-            <span className="sidebar-label">{label}</span>
+            <span>{label}</span>
         </button>
     );
 };

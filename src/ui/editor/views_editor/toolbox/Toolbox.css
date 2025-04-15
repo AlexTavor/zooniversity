@@ -1,0 +1,45 @@
+.toolbox {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+    padding: 8px;
+    border: 1px solid #666;
+    border-radius: 6px;
+    background-color: rgba(0, 0, 0, 0.4);
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.tool-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 14px;
+    background-color: #222;
+    color: #ccc;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.tool-button:hover {
+    background-color: #444;
+}
+
+.tool-button.active {
+    background-color: #6cf;
+    color: #000;
+    font-weight: bold;
+}
+
+.icon {
+    font-size: 16px;
+}
+
+.label {
+    flex-grow: 1;
+}

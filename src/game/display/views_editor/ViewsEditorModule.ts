@@ -1,5 +1,4 @@
 import { DisplayModule } from '../setup/DisplayModule';
-import { GameDisplay } from '../GameDisplay';
 import { ViewsEditorState } from './ViewsEditorState';
 import { ViewsEditorCameraModule } from './view_editor_modules/camera/ViewsEditorCameraModule';
 import { ToolSwitcherModule } from './view_editor_modules/tool_switcher/ToolSwitcherModule';
@@ -7,12 +6,12 @@ import { ToolPreviewModule } from './view_editor_modules/tool_switcher/modules/T
 import { EditorHistoryModule } from './view_editor_modules/edtor_history/EditorHistoryModule';
 import { SelectionStateModule } from './view_editor_modules/selection/SelectionStateModule';
 import { SelectionHighlightModule } from './view_editor_modules/selection/SelectionHighlightModule';
-import {ViewDefinition} from "../setup/ViewDefinition.ts";
 import {View} from "../setup/View.ts";
 import {Pos} from "../../../utils/Math.ts";
+import {EditorContext} from "../editor/EditorHost.ts";
 
-export class ViewsEditorModule extends DisplayModule<GameDisplay> {
-    public display!: GameDisplay;
+export class ViewsEditorModule extends DisplayModule<EditorContext> {
+    public display!: EditorContext;
     public state!: ViewsEditorState;
     public dirty = false;
 
@@ -25,7 +24,7 @@ export class ViewsEditorModule extends DisplayModule<GameDisplay> {
         new EditorHistoryModule(),
     ];
 
-    public init(display: GameDisplay): void {
+    public init(display: EditorContext): void {
         this.display = display;
         this.state = new ViewsEditorState(display);
         this.state.createRootView();

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Toolbox.css';
-import {getSelectedTool, setSelectedTool, ToolType} from "../../../game/display/setup/ToolboxState.ts";
+import {getSelectedTool, setSelectedTool, ToolType} from "../../../../game/display/setup/ToolboxState.ts";
 
 const TOOL_OPTIONS: { icon: string; label: string; value: ToolType }[] = [
     { icon: '🎨', label: 'Paint', value: 'paint' },
@@ -27,11 +27,11 @@ export const Toolbox: React.FC = () => {
             {TOOL_OPTIONS.map(tool => (
                 <button
                     key={tool.value}
-                    className={`tool-button ${selectedTool === tool.value ? 'active' : ''}`}
+                    className={`sidebar-button ${selectedTool === tool.value ? 'active' : ''}`}
                     onClick={() => handleSelect(tool.value)}
                 >
-                    <span className="icon">{tool.icon}</span>
-                    <span className="label">{tool.label}</span>
+                    <span className="sidebar-icon">{tool.icon}</span>
+                    <span className="sidebar-label">{tool.label}</span>
                 </button>
             ))}
         </div>
