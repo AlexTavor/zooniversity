@@ -3,7 +3,8 @@ import {PointerEvents} from "../../../../../consts/PointerEvents.ts";
 import {getSelectedSpriteKey} from "../../../../setup/PaletteState.ts";
 import {getSelectedTool} from "../../../../setup/ToolboxState.ts";
 import {MapEditorModule} from "../../MapEditorModule.ts";
-import {SpriteKey, SpriteLibrary} from "../../../../views_editor/SpriteLibrary.ts";
+import {SpriteKey, SpriteLibrary} from "../../../../setup/SpriteLibrary.ts";
+import {Config} from "../../../../../config/Config.ts";
 
 export class MapEditorToolPreviewModule extends DisplayModule<MapEditorModule> {
     private editor!: MapEditorModule;
@@ -13,8 +14,7 @@ export class MapEditorToolPreviewModule extends DisplayModule<MapEditorModule> {
 
     public init(editor: MapEditorModule): void {
         this.editor = editor;
-        const scene = editor.display.scene;
-        scene.input.on(PointerEvents.PointerMove, this.handlePointerMove, this);
+        editor.display.scene.input.on(PointerEvents.PointerMove, this.handlePointerMove, this);
     }
 
     public destroy(): void {
@@ -55,8 +55,10 @@ export class MapEditorToolPreviewModule extends DisplayModule<MapEditorModule> {
         sprite.setAlpha(0.5);
         sprite.setDepth(9999); // ensure it's on top
         sprite.setOrigin(0.5);
-        sprite.setScale(config.defaultSize.x, config.defaultSize.y);
 
+        const pxPerUnit = Config.Display.PixelsPerUnit;
+        sprite?.setDisplaySize(config.defaultSize.x * pxPerUnit, config.defaultSize.y * pxPerUnit);
+        
         this.previewSprite = sprite;
         this.currentKey = key;
     }

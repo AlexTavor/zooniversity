@@ -1,37 +1,28 @@
-import {DisplayModule} from "../../../../setup/DisplayModule.ts";
 import {ViewsEditorModule} from "../../../ViewsEditorModule.ts";
-import {PointerEvents} from "../../../../../consts/PointerEvents.ts";
-import {getSelectedSpriteKey, setSelectedSpriteKey} from "../../../../setup/PaletteState.ts";
-import {DnDEvents} from "../../../../../consts/DnDEvents.ts";
-import {EventBus} from "../../../../../EventBus.ts";
+import {DisplayModule} from "../../../../../setup/DisplayModule.ts";
+import {getSelectedSpriteKey} from "../../../../../setup/PaletteState.ts";
+import {BaseDropToolModule, DropToolContext} from "../../../../common/BaseDropToolModule.ts";
 
 export class DropToolModule extends DisplayModule<ViewsEditorModule> {
     private editor!: ViewsEditorModule;
+    private baseDropTool: BaseDropToolModule = new BaseDropToolModule();
 
-    public init(editor: ViewsEditorModule): void {
+    init(editor: ViewsEditorModule): void {
         this.editor = editor;
-        editor.display.scene.input.on(PointerEvents.PointerUp, this.handlePointerUp, this);
-        editor.display.scene.input.on(PointerEvents.PointerDown, this.handlePointerDown, this);
-    }
+        this.baseDropTool.init(new DropToolContext(editor.display.scene, pos=> {
+            const key = getSelectedSpriteKey();
+            if (!key) return;
 
-    public update(): void {}
+            this.editor.createViewFromDrop(key, pos);
+            this.editor.requestSync();
+        }));
+    }
 
     public destroy(): void {
-        this.editor.display.scene.input.off(PointerEvents.PointerUp, this.handlePointerUp, this);
-        this.editor.display.scene.input.off(PointerEvents.PointerDown, this.handlePointerDown, this);
+        this.baseDropTool.destroy();
     }
 
-    private handlePointerUp = (pointer: Phaser.Input.Pointer) => {
-        EventBus.emit(DnDEvents.DragControlEnd);
-        const key = getSelectedSpriteKey();
-        if (!key) return;
-
-        this.editor.createViewFromDrop(key, { x: pointer.worldX, y: pointer.worldY });
-        this.editor.requestSync();
-        setSelectedSpriteKey(null);
-    };
-
-    private handlePointerDown = (_: Phaser.Input.Pointer) => {
-        EventBus.emit(DnDEvents.DragControlStart);
-    };
+    update(delta: number): void {
+        this.baseDropTool.update(delta);
+    }
 }

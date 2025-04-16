@@ -18,6 +18,8 @@ export class MapEditorCameraModule extends DisplayModule<MapEditorModule> {
     public destroy(): void {
         EventBus.off(DnDEvents.DragControlEnd, this.enableDrag);
         EventBus.off(DnDEvents.DragControlStart, this.disableDrag);
+        
+        this.camera.destroy();
     }
 
     private enableDrag = () => {

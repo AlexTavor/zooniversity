@@ -1,8 +1,7 @@
 import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin.js';
 import {ViewsEditorModule} from "../../ViewsEditorModule.ts";
-import {DisplayModule} from "../../../setup/DisplayModule.ts";
-import {EventBus} from "../../../../EventBus.ts";
-
+import {DisplayModule} from "../../../../setup/DisplayModule.ts";
+import {EventBus} from "../../../../../EventBus.ts";
 export class SelectionHighlightModule extends DisplayModule<ViewsEditorModule> {
     private editor!: ViewsEditorModule;
     private currentSprite?: Phaser.GameObjects.Sprite;

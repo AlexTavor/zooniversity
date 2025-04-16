@@ -1,9 +1,9 @@
-import {ControlledCamera} from "../../../camera/ControlledCamera.ts";
-import {Config} from "../../../../config/Config.ts";
-import {DnDEvents} from "../../../../consts/DnDEvents.ts";
-import {EventBus} from "../../../../EventBus.ts";
-import {DisplayModule} from "../../../setup/DisplayModule.ts";
 import {ViewsEditorModule} from "../../ViewsEditorModule.ts";
+import {DisplayModule} from "../../../../setup/DisplayModule.ts";
+import {ControlledCamera} from "../../../../camera/ControlledCamera.ts";
+import {Config} from "../../../../../config/Config.ts";
+import {EventBus} from "../../../../../EventBus.ts";
+import {DnDEvents} from "../../../../../consts/DnDEvents.ts";
 
 export class ViewsEditorCameraModule extends DisplayModule<ViewsEditorModule> {
     private camera: ControlledCamera;

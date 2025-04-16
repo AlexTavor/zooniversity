@@ -1,9 +1,9 @@
 import {ViewsEditorModule} from "../../../ViewsEditorModule.ts";
-import {DisplayModule} from "../../../../setup/DisplayModule.ts";
-import {PointerEvents} from "../../../../../consts/PointerEvents.ts";
-import {EventBus} from "../../../../../EventBus.ts";
-import {DnDEvents} from "../../../../../consts/DnDEvents.ts";
-import {Naming} from "../../../../../consts/Naming.ts";
+import {DisplayModule} from "../../../../../setup/DisplayModule.ts";
+import {PointerEvents} from "../../../../../../consts/PointerEvents.ts";
+import {EventBus} from "../../../../../../EventBus.ts";
+import {DnDEvents} from "../../../../../../consts/DnDEvents.ts";
+import {Naming} from "../../../../../../consts/Naming.ts";
 
 export class DeleteToolModule extends DisplayModule<ViewsEditorModule> {
     private editor!: ViewsEditorModule;
@@ -42,7 +42,7 @@ export class DeleteToolModule extends DisplayModule<ViewsEditorModule> {
         const parent = this.findParentId(viewId);
         if (parent) {
             const parentView = this.editor.viewMap[parent];
-            parentView.subViews = parentView.subViews.filter(id => id !== viewId);
+            parentView.subViews = parentView.subViews.filter((id: number) => id !== viewId);
         }
 
         delete this.editor.viewMap[viewId];
@@ -52,6 +52,7 @@ export class DeleteToolModule extends DisplayModule<ViewsEditorModule> {
 
     private findParentId(childId: number): number | undefined {
         for (const [id, view] of Object.entries(this.editor.viewMap)) {
+            // @ts-ignore
             if (view.subViews.includes(childId)) return Number(id);
         }
         return undefined;

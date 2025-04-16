@@ -1,12 +1,13 @@
-import {DisplayModule} from "../../../setup/DisplayModule.ts";
 import {ViewsEditorModule} from "../../ViewsEditorModule.ts";
-import {getSelectedTool, ToolType} from "../../../setup/ToolboxState.ts";
+import {DisplayModule} from "../../../../setup/DisplayModule.ts";
+import {getSelectedTool, ToolType} from "../../../../setup/ToolboxState.ts";
+import {EventBus} from "../../../../../EventBus.ts";
+import {DnDEvents} from "../../../../../consts/DnDEvents.ts";
 import {DropToolModule} from "./modules/DropToolModule.ts";
 import {PaintToolModule} from "./modules/PaintToolModule.ts";
-import {EventBus} from "../../../../EventBus.ts";
-import {DnDEvents} from "../../../../consts/DnDEvents.ts";
 import {DeleteToolModule} from "./modules/DeleteToolModule.ts";
 import {MoveToolModule} from "./modules/MoveToolModule.ts";
+
 
 export class ToolSwitcherModule extends DisplayModule<ViewsEditorModule> {
     private editor!: ViewsEditorModule;

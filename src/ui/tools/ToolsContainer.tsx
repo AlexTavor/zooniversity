@@ -4,17 +4,24 @@ import { ToolSidebar } from './ToolsSidebar.tsx';
 import {EditorTool, TOOL_SELECTED_EVENT} from "../../game/display/editor/EditorHost.ts";
 import {EventBus} from "../../game/EventBus.ts";
 import {SidePanelHost} from "./SidePanelHost.tsx";
+import {closePanel} from "./useSidePanel.ts";
+import {setSelectedTool} from "../../game/display/setup/ToolboxState.ts";
 
 export function ToolsContainer() {
     const [tool, setTool] = useState<EditorTool>(() => {
         return (localStorage.getItem('editor-tool') as EditorTool) ?? 'map';
     });
-
+    
     // @ts-ignore
     useEffect(() => {
         EventBus.on(TOOL_SELECTED_EVENT, setTool);
         return () => EventBus.off(TOOL_SELECTED_EVENT, setTool);
     }, []);
+
+    useEffect(() => {
+        closePanel();
+        setSelectedTool('none');
+    }, [tool]);
 
     return (
         <div className="tools-container">

@@ -8,8 +8,8 @@ export interface MapObject {
     name?: string;
     components?: {
         view?: ViewDefinition;
-        [key: string]: any; // future-proofing for additional data
     };
+    zHint?: number; // zHint is used to determine the rendering order of objects
 }
 
 export interface MapDefinition {

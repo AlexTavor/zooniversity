@@ -1,30 +1,30 @@
 import React, { useState } from 'react';
-import { Sidebar } from './Sidebar';
-import { SidebarButton } from './SidebarButton';
 import './EditorSidebar.css';
-import {SpritePalette} from "../sprite_palette/SpritePalette.tsx";
-import {UndoRedo} from "./UndoRedo.tsx";
 import {openPanel} from "../../../tools/useSidePanel.ts";
-import {Toolbox} from "../toolbox/Toolbox.tsx";
+import {ViewEditorSpritePalette} from "./ViewEditorSpritePalette.tsx";
+import {Sidebar} from "../../../shared/sidebar/Sidebar.tsx";
+import {SidebarButton} from "../../../shared/sidebar/SidebarButton.tsx";
+import {UndoRedo} from "../../../shared/sidebar/UndoRedo.tsx";
+import {ViewEditorToolbox} from "../ViewEditorToolbox.tsx";
 
 export const EditorSidebar: React.FC = () => {
     const [activePanel, setActivePanel] = useState<'palette' | null>('palette');
 
     const togglePanel = (panelId: 'palette') => {
         setActivePanel(activePanel === panelId ? null : panelId);
-        openPanel('🎨 Palette', <SpritePalette />);
+        openPanel('🎨 Palette', <ViewEditorSpritePalette />);
     };
 
     return (
         <div className="editor-wrapper">
-            <Sidebar title="TOOLS">
+            <Sidebar title="Views Editor">
                 <SidebarButton
-                    label="Palette"
+                    label="Sprites"
                     icon="🎨"
                     isActive={activePanel === 'palette'}
                     onClick={() => togglePanel('palette')}
                 />
-                <Toolbox/>
+                <ViewEditorToolbox/>
                 <div className="grow" />
                 <UndoRedo />
             </Sidebar>

@@ -1,11 +1,11 @@
-import {ViewMap, createView, getViews} from './ViewStore';
-import { View } from '../setup/View';
-import { ViewDefinition } from '../setup/ViewDefinition';
-import { worldToLocal } from '../utils/worldToLocal';
-import { SpriteLibrary } from './SpriteLibrary';
-import { Pos } from '../../../utils/Math';
+import { View } from '../../setup/View';
+import { ViewDefinition } from '../../setup/ViewDefinition';
+import { worldToLocal } from '../../utils/worldToLocal';
+import { Pos } from '../../../../utils/Math';
 import {Snapshot} from "./view_editor_modules/edtor_history/EditorHistoryModule.ts";
-import {EditorContext} from "../editor/EditorHost.ts";
+import {EditorContext} from "../EditorHost.ts";
+import {createView, getViews, ViewMap} from "../../setup/ViewStore.ts";
+import {SpriteLibrary} from "../../setup/SpriteLibrary.ts";
 
 export class ViewsEditorState {
     public viewMap: ViewMap = getViews();

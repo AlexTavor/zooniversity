@@ -1,8 +1,8 @@
 // @ts-ignore
 import React from 'react';
 import './SpritePalette.css';
-import {SpriteKey} from "../../../../game/display/views_editor/SpriteLibrary.ts";
 import {PaletteEntry} from "./PaletteEntry.tsx";
+import {SpriteKey} from "../../../game/display/setup/SpriteLibrary.ts";
 
 interface SpritePaletteProps {
     spriteKeys: string[];

@@ -1,37 +1,82 @@
-import { MapDefinition, MapObject } from './MapTypes';
+import {MapDefinition, MapObject} from './MapTypes';
 import {ViewDefinition} from "../../setup/ViewDefinition.ts";
-import {createView} from "../../views_editor/ViewStore.ts";
 import {Config} from "../../../config/Config.ts";
+import {Pos} from "../../../../utils/Math.ts";
+import {createView} from "../../setup/ViewStore.ts";
+import {SpriteLibrary} from "../../setup/SpriteLibrary.ts";
+import {getSelectedSpriteKey} from "../../setup/PaletteState.ts";
+import { MapObjectsStore } from './MapObjectsStore';
 
 export class MapEditorState {
-    private nextId = 1;
-    private dirty = false;
+    dirty = false;
+    private objectStore = new MapObjectsStore();
 
     public currentMapName: string = 'Untitled';
     public hill?: ViewDefinition;
-    public objects: Record<number, MapObject> = {};
 
     public createNew(): void {
         this.currentMapName = 'Untitled';
         this.hill = undefined;
-        this.objects = {};
-        this.nextId = 1;
-        
+        this.objectStore = new MapObjectsStore();
         this.setHill();
     }
 
+    public addTreeAtWorldPosition(pos: Pos): void {
+        const spriteKey = getSelectedSpriteKey();
+        if (!spriteKey) return;
+
+        var spriteDef = SpriteLibrary[spriteKey];
+        
+        const pxPu = Config.Display.PixelsPerUnit;
+        const size = {
+            x: spriteDef.defaultSize.x / pxPu,
+            y: spriteDef.defaultSize.y / pxPu
+        };
+        
+        const view = createView({ spriteName: spriteDef.key, position: pos, size });
+        this.objectStore.create({ view });
+        this.markDirty();
+    }
+
+    public removeObject(id: number): void {
+        this.objectStore.remove(id);
+        this.markDirty();
+    }
+
+    public loadMap(def: MapDefinition): void {
+        this.currentMapName = def.name;
+        this.hill = def.hill;
+        this.objectStore.setAll(def.objects);
+        this.markDirty();
+    }
+
+    public getMapDefinition(): MapDefinition {
+        return {
+            name: this.currentMapName,
+            hill: this.hill!,
+            objects: this.objectStore.getAll()
+        };
+    }
+
     public setHill(): void {
+        const wFactor = Config.AnimImports.StaticWidth / Config.Display.Width;
+        const hFactor = Config.AnimImports.StaticHeight / Config.Display.Height;
+        
         const hillSize = {
-            x: Config.GameWidth / Config.Display.PixelsPerUnit / 5.8,
-            y: Config.GameHeight / Config.Display.PixelsPerUnit / 4.8
+            x: Config.Display.Width / Config.Display.PixelsPerUnit * wFactor,
+            y: Config.Display.Height / Config.Display.PixelsPerUnit * hFactor
         };
 
+        // Why offset?
+        const hOffset = 100;
+        const wOffset = 100;
+        
         const hillPosition = {
-            x: Config.GameWidth / 2,
-            y: Config.GameHeight / 2 + hillSize.y*Config.Display.PixelsPerUnit / 2
+            x: Config.GameWidth / 2 + wOffset,
+            y: Config.GameHeight / 2 + hOffset
         };
 
-
+        
         this.hill = createView({
             size: hillSize,
             position: hillPosition,
@@ -40,40 +85,7 @@ export class MapEditorState {
         
         this.markDirty();
     }
-
-
-    public addTree(view: ViewDefinition): number {
-        const id = this.nextId++;
-        this.objects[id] = {
-            id,
-            type: 'tree',
-            components: { view }
-        };
-        this.markDirty();
-        return id;
-    }
-
-    public removeObject(id: number): void {
-        delete this.objects[id];
-        this.markDirty();
-    }
-
-    public loadMap(def: MapDefinition): void {
-        this.currentMapName = def.name;
-        this.hill = def.hill;
-        this.objects = def.objects;
-        this.nextId = Math.max(...Object.keys(def.objects).map(Number), 0) + 1;
-        this.markDirty();
-    }
-
-    public getMapDefinition(): MapDefinition {
-        return {
-            name: this.currentMapName,
-            hill: this.hill!,
-            objects: this.objects
-        };
-    }
-
+    
     public markDirty(): void {
         this.dirty = true;
     }
@@ -84,5 +96,13 @@ export class MapEditorState {
             return true;
         }
         return false;
+    }
+    
+    public getViewById(id: number): ViewDefinition | null {
+        return this.objectStore.get(id)?.components?.view ?? null;
+    }
+    
+    public getObjectById(id: number): MapObject | null {
+        return this.objectStore.get(id);
     }
 }

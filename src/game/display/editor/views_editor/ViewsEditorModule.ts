@@ -1,4 +1,4 @@
-import { DisplayModule } from '../setup/DisplayModule';
+import { DisplayModule } from '../../setup/DisplayModule';
 import { ViewsEditorState } from './ViewsEditorState';
 import { ViewsEditorCameraModule } from './view_editor_modules/camera/ViewsEditorCameraModule';
 import { ToolSwitcherModule } from './view_editor_modules/tool_switcher/ToolSwitcherModule';
@@ -6,9 +6,10 @@ import { ToolPreviewModule } from './view_editor_modules/tool_switcher/modules/T
 import { EditorHistoryModule } from './view_editor_modules/edtor_history/EditorHistoryModule';
 import { SelectionStateModule } from './view_editor_modules/selection/SelectionStateModule';
 import { SelectionHighlightModule } from './view_editor_modules/selection/SelectionHighlightModule';
-import {View} from "../setup/View.ts";
-import {Pos} from "../../../utils/Math.ts";
-import {EditorContext} from "../editor/EditorHost.ts";
+import {View} from "../../setup/View.ts";
+import {Pos} from "../../../../utils/Math.ts";
+import {EditorContext} from "../EditorHost.ts";
+import {clearViews} from "../../setup/ViewStore.ts";
 
 export class ViewsEditorModule extends DisplayModule<EditorContext> {
     public display!: EditorContext;
@@ -46,6 +47,7 @@ export class ViewsEditorModule extends DisplayModule<EditorContext> {
     public destroy(): void {
         this.modules.forEach(m => m.destroy());
         this.state.clearActiveInstance();
+        clearViews();
     }
 
     public requestSync(): void {

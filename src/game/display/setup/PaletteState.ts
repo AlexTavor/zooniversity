@@ -1,4 +1,4 @@
-import {SpriteKey} from "../views_editor/SpriteLibrary.ts";
+import {SpriteKey} from "./SpriteLibrary.ts";
 
 let selectedSpriteKey: SpriteKey | null = null;
 

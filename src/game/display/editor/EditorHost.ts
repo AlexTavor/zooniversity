@@ -1,7 +1,7 @@
 import {DisplayModule} from "../setup/DisplayModule.ts";
 import {MapEditorModule} from "./map_editor/MapEditorModule.ts";
-import {ViewsEditorModule} from "../views_editor/ViewsEditorModule.ts";
 import {EventBus} from "../../EventBus.ts";
+import {ViewsEditorModule} from "./views_editor/ViewsEditorModule.ts";
 
 
 export type EditorTool = 'map' | 'views'; // Add 'dialogue' etc. later

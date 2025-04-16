@@ -1,9 +1,10 @@
 import {ViewsEditorModule} from "../../ViewsEditorModule.ts";
-import {DisplayModule} from "../../../setup/DisplayModule.ts";
-import {Pos} from "../../../../../utils/Math.ts";
-import {PointerEvents} from "../../../../consts/PointerEvents.ts";
-import {EventBus} from "../../../../EventBus.ts";
-import {Naming} from "../../../../consts/Naming.ts";
+import {DisplayModule} from "../../../../setup/DisplayModule.ts";
+import {Pos} from "../../../../../../utils/Math.ts";
+import {PointerEvents} from "../../../../../consts/PointerEvents.ts";
+import {EventBus} from "../../../../../EventBus.ts";
+import {Naming} from "../../../../../consts/Naming.ts";
+
 
 export class SelectionStateModule extends DisplayModule<ViewsEditorModule> {
     private editor!: ViewsEditorModule;

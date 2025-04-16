@@ -1,21 +1,19 @@
-import {ViewsEditorModule} from "../../../ViewsEditorModule.ts";
-import {DisplayModule} from "../../../../../setup/DisplayModule.ts";
-import {Naming} from "../../../../../../consts/Naming.ts";
-import {BaseMoveToolModule, MoveToolContext} from "../../../../common/BaseMoveToolModule.ts";
+import {DisplayModule} from "../../../../setup/DisplayModule.ts";
+import {BaseMoveToolModule, MoveToolContext} from "../../../common/BaseMoveToolModule.ts";
+import {Naming} from "../../../../../consts/Naming.ts";
+import {MapEditorModule} from "../../MapEditorModule.ts";
 
-export class MoveToolModule extends DisplayModule<ViewsEditorModule> {
-    private editor!: ViewsEditorModule;
+export class MapEditorMoveToolModule extends DisplayModule<MapEditorModule> {
+    private editor!: MapEditorModule;
     private moveTool = new BaseMoveToolModule();
-    
-    public init(editor: ViewsEditorModule): void {
+
+    public init(editor: MapEditorModule): void {
         this.editor = editor;
 
         this.moveTool.init(
             new MoveToolContext(
-                editor.display.scene, 
+                editor.display.scene,
                 () => {
-                    if (!this.editor.activeViewInstance) return null;
-
                     const sprite = this.editor.findSpriteUnderPointer(editor.display.scene.input.activePointer);
                     if (!sprite) return null;
 
@@ -25,14 +23,14 @@ export class MoveToolModule extends DisplayModule<ViewsEditorModule> {
                     const viewId = Number(container.name.replace(Naming.VIEW, ''));
                     if (isNaN(viewId)) return null;
 
-                    return this.editor.findViewInstance(viewId);
+                    return this.editor.getViewById(viewId)
                 },
                 (pos, view) => {
                     view.viewContainer.setPosition(pos.x, pos.y);
                     view.viewDefinition.position.x = pos.x;
                     view.viewDefinition.position.y = pos.y;
 
-                    this.editor.requestSync();
+                    this.editor.state.markDirty();
                 })
         );
     }

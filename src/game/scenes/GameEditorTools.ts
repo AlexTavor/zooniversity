@@ -2,16 +2,16 @@ import {EventBus} from '../EventBus';
 import { Scene } from 'phaser';
 import {GameDisplay} from "../display/GameDisplay.ts";
 import {ECS} from "../ECS.ts";
-import {ViewsEditorModule} from "../display/views_editor/ViewsEditorModule.ts";
+import {EditorHost} from "../display/editor/EditorHost.ts";
 
-export class ViewsEditor extends Scene
+export class GameEditorTools extends Scene
 {
     gameDisplay: GameDisplay;
     ecs:ECS;
     
     constructor ()
     {
-        super('ViewsEditor');
+        super('GameEditorTools');
     }
     
     update(time: number, delta: number) {
@@ -24,7 +24,7 @@ export class ViewsEditor extends Scene
     create ()
     {
         this.gameDisplay = new GameDisplay(this, this.ecs, [
-            new ViewsEditorModule()
+            new EditorHost()
         ]);
         
         EventBus.emit('current-scene-ready', this);

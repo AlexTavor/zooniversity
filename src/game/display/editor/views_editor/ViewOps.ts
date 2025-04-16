@@ -1,4 +1,4 @@
-import { ViewDefinition } from '../setup/ViewDefinition';
+import { ViewDefinition } from '../../setup/ViewDefinition';
 
 export function findParentId(childId: number, viewMap: Record<number, ViewDefinition>): number | undefined {
     for (const [id, view] of Object.entries(viewMap)) {

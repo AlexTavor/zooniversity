@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { ViewDefinition } from "./ViewDefinition.ts";
 import {Naming} from "../../consts/Naming.ts";
 import {Config} from "../../config/Config.ts";
+import {SpriteKey, SpriteLibrary} from "./SpriteLibrary.ts";
 
 export class View {
     public readonly viewDefinition: ViewDefinition;
@@ -26,17 +27,10 @@ export class View {
             this.addSprite(viewDefinition, scene, id);
         }
 
+        const config = SpriteLibrary[viewDefinition.spriteName as SpriteKey];
         const pxPerUnit = Config.Display.PixelsPerUnit;
-        this.sprite?.setDisplaySize(viewDefinition.size.x * pxPerUnit, viewDefinition.size.y * pxPerUnit);
+        this.sprite?.setDisplaySize(config.defaultSize.x * pxPerUnit, config.defaultSize.y * pxPerUnit);
 
-        const parentScaleX = parentContainer.scaleX || 1;
-        const parentScaleY = parentContainer.scaleY || 1;
-
-        const localScaleX = viewDefinition.size.x / parentScaleX;
-        const localScaleY = viewDefinition.size.y / parentScaleY;
-
-        this.viewContainer.setScale(localScaleX, localScaleY);
-        
         for (const subViewId of viewDefinition.subViews) {
             const subViewDefinition = views[subViewId];
             if (subViewDefinition) {
@@ -52,7 +46,7 @@ export class View {
         ) as Phaser.GameObjects.Container[];
 
         containers.sort((a, b) =>
-            (a.y * a.scaleY) - (b.y * b.scaleY)
+            ((a.y * a.scaleY) - a.height/2) - ((b.y * b.scaleY) - (b.height/2))
         );
         containers.forEach(c => this.viewContainer.bringToTop(c));
         

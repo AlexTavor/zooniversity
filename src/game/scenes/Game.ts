@@ -2,8 +2,6 @@ import {EventBus} from '../EventBus';
 import { Scene } from 'phaser';
 import {GameDisplay} from "../display/GameDisplay.ts";
 import {ECS} from "../ECS.ts";
-import {GroundDisplayModule} from "../display/ground/GroundDisplayModule.ts";
-import {PlantsDisplayModule} from "../display/plants/PlantsDisplayModule.ts";
 import {CameraModule} from "../display/camera/CameraModule.ts";
 
 export class Game extends Scene
@@ -26,8 +24,6 @@ export class Game extends Scene
     create ()
     {
         this.gameDisplay = new GameDisplay(this, this.ecs, [
-            new GroundDisplayModule(),
-            new PlantsDisplayModule(),
             new CameraModule()
         ]);
         
