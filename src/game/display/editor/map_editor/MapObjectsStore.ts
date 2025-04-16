@@ -1,4 +1,4 @@
-import { MapObject } from './MapTypes';
+import {MapObject, MapObjectType} from './MapTypes';
 import { ViewDefinition } from '../../setup/ViewDefinition';
 import {Config} from "../../../config/Config.ts";
 
@@ -6,12 +6,12 @@ export class MapObjectsStore {
     private nextId = 1;
     private objects: Record<number, MapObject> = {};
 
-    public create({ view }: { view?: ViewDefinition }): MapObject {
+    public create({ view, type = 'tree' }: { view?: ViewDefinition, type?:MapObjectType }): MapObject {
         const obj: MapObject = {
             id: this.nextId++,
-            type: 'tree',
+            type: type,
             components: { view },
-            zHint: view ? this.getBottomY(view) : undefined
+            zHint: view ? this.getBottomY(view, type) : undefined
         };
         this.objects[obj.id] = obj;
         return obj;
@@ -34,11 +34,15 @@ export class MapObjectsStore {
         return this.objects[id];
     }
     
-    getBottomY(view: ViewDefinition): number {
+    getBottomY(view: ViewDefinition, type:MapObjectType): number {
+        if (type === 'cave') {
+            return 99999999999;
+        }
+        
         const { position, size } = view;
 
         const ppu = Config.Display.PixelsPerUnit;
         const halfHeight = size.y / 2;
-        return position.y/ppu + halfHeight * ppu;
+        return (position.y/ppu + halfHeight * ppu);
     }
 }

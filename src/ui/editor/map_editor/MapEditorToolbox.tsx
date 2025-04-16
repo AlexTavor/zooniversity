@@ -1,6 +1,7 @@
 //@ts-ignore
 import React from 'react';
 import {Toolbox, ToolboxOption} from "../../shared/toolbox/Toolbox.tsx";
+import {MapSaveLoadWidget} from "./MapSaveLoadWidget.tsx";
 
 const TOOL_OPTIONS: ToolboxOption[] = [
     { icon: '🎨', label: 'Paint', value: 'paint' },
@@ -11,5 +12,5 @@ const TOOL_OPTIONS: ToolboxOption[] = [
 ];
 
 export function MapEditorToolbox() {
-    return <Toolbox toolOptions={TOOL_OPTIONS} />;
+    return <><Toolbox toolOptions={TOOL_OPTIONS} /><MapSaveLoadWidget/></>
 }

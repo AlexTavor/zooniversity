@@ -1,4 +1,4 @@
-import {MapDefinition, MapObject} from './MapTypes';
+import {MapDefinition, MapObject, MapObjectType} from './MapTypes';
 import {ViewDefinition} from "../../setup/ViewDefinition.ts";
 import {Config} from "../../../config/Config.ts";
 import {Pos} from "../../../../utils/Math.ts";
@@ -6,6 +6,8 @@ import {createView} from "../../setup/ViewStore.ts";
 import {SpriteLibrary} from "../../setup/SpriteLibrary.ts";
 import {getSelectedSpriteKey} from "../../setup/PaletteState.ts";
 import { MapObjectsStore } from './MapObjectsStore';
+import {EventBus} from "../../../EventBus.ts";
+import {EditorEvents} from "../../../consts/EditorEvents.ts";
 
 export class MapEditorState {
     dirty = false;
@@ -21,7 +23,7 @@ export class MapEditorState {
         this.setHill();
     }
 
-    public addTreeAtWorldPosition(pos: Pos): void {
+    public addObjectAtWorldPosition(pos: Pos, type:MapObjectType = 'tree'): void {
         const spriteKey = getSelectedSpriteKey();
         if (!spriteKey) return;
 
@@ -34,7 +36,7 @@ export class MapEditorState {
         };
         
         const view = createView({ spriteName: spriteDef.key, position: pos, size });
-        this.objectStore.create({ view });
+        this.objectStore.create({ view, type });
         this.markDirty();
     }
 
@@ -88,6 +90,7 @@ export class MapEditorState {
     
     public markDirty(): void {
         this.dirty = true;
+        EventBus.emit(EditorEvents.MapUpdated, this.getMapDefinition());
     }
 
     public consumeDirty(): boolean {

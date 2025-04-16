@@ -10,8 +10,8 @@ class StateStack<T> {
     private undoStack: T[] = [];
     private redoStack: T[] = [];
 
-    constructor(initial: T) {
-        this.undoStack.push(this.clone(initial));
+    constructor(initial?: T) {
+        initial && this.undoStack.push(this.clone(initial));
     }
 
     private clone(obj: T): T {
@@ -64,7 +64,7 @@ export class BaseEditorHistoryModule<T> extends DisplayModule<HistoryContext<T>>
     public init(editor: HistoryContext<T>): void {
         this.editor = editor;
 
-        this.stack = new StateStack(this.editor.makeSnapshot());
+        this.stack = new StateStack();
 
         EventBus.on(HistoryEvents.Undo, this.handleUndo);
         EventBus.on(HistoryEvents.Redo, this.handleRedo);

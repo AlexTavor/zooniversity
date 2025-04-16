@@ -138,3 +138,35 @@ canvas {
     padding: 10px;
     overflow-y: auto;
 }
+
+.file-management-ui {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    border: 1px solid #444;
+    border-radius: 6px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.file-management-ui input[type="text"] {
+    padding: 4px 6px;
+    font-size: 14px;
+    border-radius: 4px;
+    border: 1px solid #666;
+    background: #111;
+    color: white;
+}
+
+.file-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.file-actions button {
+    flex: 1;
+}

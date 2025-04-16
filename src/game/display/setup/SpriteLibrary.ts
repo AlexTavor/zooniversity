@@ -4,7 +4,9 @@ import {Config} from "../../config/Config.ts";
 export const PlantSpriteKeys = ['tree0', 'tree1', 'tree2', 'tree3', 'tree4', 'tree5', 'bush0', 'bush1'] as const;
 export type PlantSpriteKey = typeof PlantSpriteKeys[number];
 export type HillSpriteKey = 'hill';
-export type SpriteKey = PlantSpriteKey | HillSpriteKey;
+export const CaveSpriteKeys = ['cave'] as const;
+export type CaveSpriteKey = typeof CaveSpriteKeys[number];
+export type SpriteKey = PlantSpriteKey | HillSpriteKey | CaveSpriteKey;
 
 interface SpriteDefinition {
     key: SpriteKey;
@@ -14,6 +16,7 @@ interface SpriteDefinition {
 
 const defaultTreeSize = {x:2, y:2};
 const defaultBushSize = {x:1, y:1};
+const defaultCaveSize = {x:1, y:1};
 const defaultHillSize = {x:1 + Config.GameWidth/Config.Display.PixelsPerUnit, y:Config.GameHeight/Config.Display.PixelsPerUnit};
 
 export const SpriteLibrary: Record<SpriteKey, SpriteDefinition> = {
@@ -26,4 +29,5 @@ export const SpriteLibrary: Record<SpriteKey, SpriteDefinition> = {
     bush0: {key: 'bush0', defaultSize: defaultBushSize, path: 'assets/plants/bush0.png'},
     bush1: {key: 'bush1', defaultSize: defaultBushSize, path: 'assets/plants/bush1.png'},
     hill: {key: 'hill', defaultSize: defaultHillSize, path: 'assets/hill/hill.png'},
+    cave: {key: 'cave', defaultSize: defaultCaveSize, path: 'assets/hill/cave.png'}
 };

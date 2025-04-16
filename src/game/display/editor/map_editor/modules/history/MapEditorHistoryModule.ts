@@ -10,9 +10,13 @@ export class MapEditorHistoryModule extends DisplayModule<MapEditorModule> {
     public init(editor: MapEditorModule): void {
         this.editor = editor;
 
-        this.history.init(new HistoryContext<MapDefinition>(this.makeSnapshot.bind(this), this.applySnapshot.bind(this), ()=> this.editor.state.dirty));
+        this.history.init(new HistoryContext<MapDefinition>(this.makeSnapshot.bind(this), this.applySnapshot.bind(this), this.getDirty.bind(this)));
     }
 
+    private getDirty(): boolean {
+        return this.editor.state.dirty;
+    }
+    
     public update(): void {
         this.history.update();
     }

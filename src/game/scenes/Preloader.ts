@@ -30,19 +30,6 @@ export class Preloader extends Scene
 
     preload ()
     {
-        //  Load the assets for the game - Replace with your own assets
-        this.load.setPath('assets');
-
-        this.load.spritesheet(
-            'ground_tiles_sheet',     // Unique key for this ground tileset
-            'ground.png',
-            {
-                frameWidth: Config.AnimImports.FrameWidth,
-                frameHeight: Config.AnimImports.FrameHeight,
-                endFrame: Config.AnimImports.NumberOfFrames-1
-            }
-        );
-
         this.load.setPath('assets/plants');
 
 
@@ -75,13 +62,19 @@ export class Preloader extends Scene
             frameHeight: Config.AnimImports.StaticHeight,
             endFrame: 0
         };
+
+        const caveFrameConfig = {
+            frameWidth: Config.AnimImports.StaticHeight,
+            frameHeight: Config.AnimImports.StaticHeight,
+            endFrame: 0
+        };
         
         this.load.spritesheet('hill', 'hill.png', staticFrameConfig);
         this.load.spritesheet('home-lvl-1', 'home-lvl-1.png', staticFrameConfig);
         this.load.spritesheet('home-lvl-1-inside', 'home-lvl-1-inside.png', staticFrameConfig);
         this.load.spritesheet('kitchen-lvl-1', 'kitchen-lvl-1.png', staticFrameConfig);
         this.load.spritesheet('kitchen-lvl-1-inside', 'kitchen-lvl-1-inside.png', staticFrameConfig);
-
+        this.load.spritesheet('cave', 'cave.png', caveFrameConfig);
     }
 
     create ()

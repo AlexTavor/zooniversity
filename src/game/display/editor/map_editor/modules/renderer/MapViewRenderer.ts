@@ -10,6 +10,7 @@ export class MapViewRenderer extends DisplayModule<MapEditorModule> {
 
     private hillContainer!: Phaser.GameObjects.Container;
     private treeLayer!: Phaser.GameObjects.Container;
+    private caveLayer!: Phaser.GameObjects.Container;
     private renderedObjects: Record<number, View> = {};
     private readonly zById = new Map<string, number>();
 
@@ -22,14 +23,16 @@ export class MapViewRenderer extends DisplayModule<MapEditorModule> {
         const ground = editor.display.layers.Ground;
 
         this.hillContainer = scene.add.container(0, 0);
+        this.caveLayer = scene.add.container(0, 0);
         this.treeLayer = scene.add.container(0, 0);
-        ground.add([this.hillContainer, this.treeLayer]);
+        ground.add([this.hillContainer, this.treeLayer, this.caveLayer]);
     }
 
     public destroy(): void {
         this.clear();
         this.hillContainer?.destroy();
         this.treeLayer?.destroy();
+        this.caveLayer?.destroy();
     }
 
     public update(): void {
@@ -49,10 +52,10 @@ export class MapViewRenderer extends DisplayModule<MapEditorModule> {
 
         this.zById.clear();
         
-        // Render trees
         for (const obj of Object.values(def.objects)) {
-            if (obj.components?.view && obj.type === 'tree') {
-                this.renderedObjects[obj.id] = new View(obj.id, {}, obj.components.view, this.treeLayer, scene);
+            if (obj.components?.view) {
+                const layer = obj.type === 'tree' ? this.treeLayer : this.caveLayer;
+                this.renderedObjects[obj.id] = new View(obj.id, {}, obj.components.view, layer, scene);
                 new View(obj.id, {}, obj.components.view, this.treeLayer, scene).sortSubviewsByY();
                 this.zById.set(`${Naming.VIEW}${obj.id}`, obj.zHint ?? 0);
             }
@@ -76,6 +79,7 @@ export class MapViewRenderer extends DisplayModule<MapEditorModule> {
     private clear(): void {
         this.hillContainer?.removeAll(true);
         this.treeLayer?.removeAll(true);
+        this.caveLayer?.removeAll(true);
         this.renderedObjects = {};
         this.zById.clear();
     }

@@ -1,6 +1,7 @@
 import {MapEditorModule} from "../../MapEditorModule.ts";
 import {DisplayModule} from "../../../../setup/DisplayModule.ts";
 import {BasePaintToolModule, PaintToolContext} from "../../../common/BasePaintToolModule.ts";
+import {PaletteType} from "../../../../../consts/EditorEvents.ts";
 
 export class MapEditorPaintToolModule extends DisplayModule<MapEditorModule> {
     private editor!: MapEditorModule;
@@ -9,7 +10,7 @@ export class MapEditorPaintToolModule extends DisplayModule<MapEditorModule> {
     init(editor: MapEditorModule): void {
         this.editor = editor;
         this.basePaintTool.init(new PaintToolContext(editor.display.scene, pos=> {
-            this.editor.state.addTreeAtWorldPosition(pos);
+            this.editor.state.addObjectAtWorldPosition(pos, editor.activePalette == PaletteType.trees ? 'tree' : 'cave');
         }));
     }
 

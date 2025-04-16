@@ -10,17 +10,20 @@ import {clearViews} from "../../setup/ViewStore.ts";
 import {View} from "../../setup/View.ts";
 import {Naming} from "../../../consts/Naming.ts";
 import {MapEditorHistoryModule} from "./modules/history/MapEditorHistoryModule.ts";
+import {EventBus} from "../../../EventBus.ts";
+import {EditorEvents, PaletteType} from "../../../consts/EditorEvents.ts";
 
 export class MapEditorModule extends DisplayModule<EditorContext> {
     public display!: GameDisplay;
     public state!: MapEditorState;
-
+    public activePalette: PaletteType;
+    
     private modules: DisplayModule<MapEditorModule>[] = [
         new MapEditorCameraModule(),
+        new MapEditorHistoryModule(),
         new MapViewRenderer(),
         new MapTools(),
-        new MapEditorToolPreviewModule(),
-        new MapEditorHistoryModule()
+        new MapEditorToolPreviewModule()
     ];
 
     public init(display: GameDisplay): void {
@@ -28,6 +31,9 @@ export class MapEditorModule extends DisplayModule<EditorContext> {
         this.state = new MapEditorState();
         this.modules.forEach(m => m.init(this));
         this.state.createNew();
+        
+        EventBus.on(EditorEvents.MapLoaded, this.state.loadMap.bind(this.state));
+        EventBus.on(EditorEvents.PaletteTypeSelected, this.setPaletteType.bind(this));
     }
 
     public update(delta: number): void {
@@ -37,6 +43,12 @@ export class MapEditorModule extends DisplayModule<EditorContext> {
     public destroy(): void {
         this.modules.forEach(m => m.destroy());
         clearViews();
+        EventBus.off(EditorEvents.MapLoaded, this.state.loadMap.bind(this.state));
+        EventBus.off(EditorEvents.PaletteTypeSelected, this.setPaletteType.bind(this));
+    }
+    
+    setPaletteType(paletteType: PaletteType) {
+        this.activePalette = paletteType;
     }
 
     findSpriteUnderPointer(pointer: Phaser.Input.Pointer): Phaser.GameObjects.Sprite | undefined {
