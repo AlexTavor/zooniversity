@@ -3,6 +3,7 @@ import { Scene } from 'phaser';
 import {GameDisplay} from "../display/GameDisplay.ts";
 import {ECS} from "../ECS.ts";
 import {EditorHost} from "../display/editor/EditorHost.ts";
+import {setSceneType} from "../../ui/ui_switcher/useActiveSceneType.ts";
 
 export class GameEditorTools extends Scene
 {
@@ -28,5 +29,6 @@ export class GameEditorTools extends Scene
         ]);
         
         EventBus.emit('current-scene-ready', this);
+        setSceneType('editor');
     }
 }

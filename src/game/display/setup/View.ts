@@ -19,6 +19,9 @@ export class View {
     ) {
         this.viewDefinition = viewDefinition;
 
+        viewDefinition.position.x = Math.round(viewDefinition.position.x);
+        viewDefinition.position.y = Math.round(viewDefinition.position.y);
+        
         this.viewContainer = scene.add.container(viewDefinition.position.x, viewDefinition.position.y);
         parentContainer.add(this.viewContainer);
         this.viewContainer.name = `${Naming.VIEW}${id}`;

@@ -4,7 +4,7 @@ import {Config} from "../../../config/Config.ts";
 import {Pos} from "../../../../utils/Math.ts";
 import {createView} from "../../setup/ViewStore.ts";
 import {SpriteLibrary} from "../../setup/SpriteLibrary.ts";
-import {getSelectedSpriteKey} from "../../setup/PaletteState.ts";
+import {getSelectedSpriteKey} from "../common/PaletteState.ts";
 import { MapObjectsStore } from './MapObjectsStore';
 import {EventBus} from "../../../EventBus.ts";
 import {EditorEvents} from "../../../consts/EditorEvents.ts";
@@ -74,8 +74,8 @@ export class MapEditorState {
         const wOffset = 100;
         
         const hillPosition = {
-            x: Config.GameWidth / 2 + wOffset,
-            y: Config.GameHeight / 2 + hOffset
+            x: Math.round(Config.GameWidth / 2 + wOffset),
+            y: Math.round(Config.GameHeight / 2 + hOffset)
         };
 
         

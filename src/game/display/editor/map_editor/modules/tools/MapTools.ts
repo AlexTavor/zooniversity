@@ -1,7 +1,7 @@
 import { DisplayModule } from "../../../../setup/DisplayModule.ts";
 import { MapEditorModule } from "../../MapEditorModule.ts";
 import {EventBus} from "../../../../../EventBus.ts";
-import {getSelectedTool, ToolType} from "../../../../setup/ToolboxState.ts";
+import {getSelectedTool, ToolType} from "../../../common/ToolboxState.ts";
 import {DnDEvents} from "../../../../../consts/DnDEvents.ts";
 import {MapEditorPaintToolModule} from "./MapEditorPaintToolModule.ts";
 import {MapEditorDropToolModule} from "./MapEditorDropToolModule.ts";

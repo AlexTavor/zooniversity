@@ -10,5 +10,5 @@ export class Config {
     public static readonly Camera = new CameraConfig();
     public static readonly GameWidth = Config.Display.Width*(Config.Camera.MaxZoom-1);
     public static readonly GameHeight = Config.Display.Height*(Config.Camera.MaxZoom-1);
-    public static readonly EntryScene = "GameEditorTools";
+    public static readonly EntryScene = "Game";
 }

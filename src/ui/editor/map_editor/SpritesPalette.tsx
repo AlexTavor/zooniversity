@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { getSelectedSpriteKey, setSelectedSpriteKey } from "../../../game/display/setup/PaletteState.ts";
+import { getSelectedSpriteKey, setSelectedSpriteKey } from "../../../game/display/editor/common/PaletteState.ts";
 import { SpriteKey } from "../../../game/display/setup/SpriteLibrary.ts";
 import { SpritePalette } from "../../shared/sprite_palette/SpritePalette.tsx";
 

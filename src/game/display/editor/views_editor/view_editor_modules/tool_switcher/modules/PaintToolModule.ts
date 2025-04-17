@@ -1,6 +1,6 @@
 import {ViewsEditorModule} from "../../../ViewsEditorModule.ts";
 import {DisplayModule} from "../../../../../setup/DisplayModule.ts";
-import {getSelectedSpriteKey} from "../../../../../setup/PaletteState.ts";
+import {getSelectedSpriteKey} from "../../../../common/PaletteState.ts";
 import {BasePaintToolModule, PaintToolContext} from "../../../../common/BasePaintToolModule.ts";
 
 export class PaintToolModule extends DisplayModule<ViewsEditorModule> {

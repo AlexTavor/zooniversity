@@ -5,7 +5,7 @@ import {EditorTool, TOOL_SELECTED_EVENT} from "../../game/display/editor/EditorH
 import {EventBus} from "../../game/EventBus.ts";
 import {SidePanelHost} from "./SidePanelHost.tsx";
 import {closePanel} from "./useSidePanel.ts";
-import {setSelectedTool} from "../../game/display/setup/ToolboxState.ts";
+import {setSelectedTool} from "../../game/display/editor/common/ToolboxState.ts";
 
 export function ToolsContainer() {
     const [tool, setTool] = useState<EditorTool>(() => {

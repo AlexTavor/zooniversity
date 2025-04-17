@@ -1,6 +1,6 @@
 import { DisplayModule } from "../../setup/DisplayModule";
 import { PointerEvents } from "../../../consts/PointerEvents";
-import {getSelectedSpriteKey} from "../../setup/PaletteState.ts";
+import {getSelectedSpriteKey} from "./PaletteState.ts";
 import {EventBus} from "../../../EventBus.ts";
 import {DnDEvents} from "../../../consts/DnDEvents.ts";
 import {EditorContext} from "../EditorHost.ts";

@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=Chewy&display=swap');
+
+.main-menu {
+    position: static;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.menu-background {
+    background: #000000 !important;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain; /* Preserve aspect ratio */
+    object-position: center;
+    z-index: 0;
+    pointer-events: none; /* So it doesn't block buttons */
+}
+
+.menu-buttons {
+    position: absolute;
+    bottom: 40px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    z-index: 10;
+}
+
+
+.menu-button {
+    font-family: 'Chewy', cursive;
+    font-size: 1.6rem;
+    padding: 24px 56px;
+    background-color: #fce8c6; /* soft parchment tone */
+    border: 3px solid #6b4c3b; /* rich brown */
+    border-radius: 12px;
+    color: #2f1f16; /* darker brown text */
+    cursor: pointer;
+    transition:
+        transform 0.2s ease-out,
+        box-shadow 0.2s ease-out,
+        background-color 0.2s ease-in;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.menu-button:hover:not(.disabled) {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.menu-button:active:not(.disabled) {
+    transform: scale(0.96);
+}
+
+.menu-button.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}

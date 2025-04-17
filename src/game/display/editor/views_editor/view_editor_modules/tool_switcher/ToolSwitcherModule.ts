@@ -1,6 +1,6 @@
 import {ViewsEditorModule} from "../../ViewsEditorModule.ts";
 import {DisplayModule} from "../../../../setup/DisplayModule.ts";
-import {getSelectedTool, ToolType} from "../../../../setup/ToolboxState.ts";
+import {getSelectedTool, ToolType} from "../../../common/ToolboxState.ts";
 import {EventBus} from "../../../../../EventBus.ts";
 import {DnDEvents} from "../../../../../consts/DnDEvents.ts";
 import {DropToolModule} from "./modules/DropToolModule.ts";

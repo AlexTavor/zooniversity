@@ -75,6 +75,11 @@ export class Preloader extends Scene
         this.load.spritesheet('kitchen-lvl-1', 'kitchen-lvl-1.png', staticFrameConfig);
         this.load.spritesheet('kitchen-lvl-1-inside', 'kitchen-lvl-1-inside.png', staticFrameConfig);
         this.load.spritesheet('cave', 'cave.png', caveFrameConfig);
+
+
+        // ✅ Add this to load the forest map
+        this.load.setPath('assets/maps');
+        this.load.json('forestMap', 'forestMap.json');
     }
 
     create ()

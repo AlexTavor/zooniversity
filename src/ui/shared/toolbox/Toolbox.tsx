@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import './Toolbox.css';
-import { getSelectedTool, setSelectedTool, ToolType } from '../../../game/display/setup/ToolboxState';
+import { getSelectedTool, setSelectedTool, ToolType } from '../../../game/display/editor/common/ToolboxState';
 
 export interface ToolboxOption {
     icon: string;

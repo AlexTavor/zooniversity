@@ -1,7 +1,7 @@
 import {DisplayModule} from "../../../../setup/DisplayModule.ts";
 import {PointerEvents} from "../../../../../consts/PointerEvents.ts";
-import {getSelectedSpriteKey} from "../../../../setup/PaletteState.ts";
-import {getSelectedTool} from "../../../../setup/ToolboxState.ts";
+import {getSelectedSpriteKey} from "../../../common/PaletteState.ts";
+import {getSelectedTool} from "../../../common/ToolboxState.ts";
 import {MapEditorModule} from "../../MapEditorModule.ts";
 import {SpriteKey, SpriteLibrary} from "../../../../setup/SpriteLibrary.ts";
 import {Config} from "../../../../../config/Config.ts";

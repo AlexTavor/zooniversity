@@ -2,8 +2,8 @@ import {ViewsEditorModule} from "../../../ViewsEditorModule.ts";
 import {DisplayModule} from "../../../../../setup/DisplayModule.ts";
 import {SpriteKey, SpriteLibrary} from "../../../../../setup/SpriteLibrary.ts";
 import {PointerEvents} from "../../../../../../consts/PointerEvents.ts";
-import {getSelectedSpriteKey} from "../../../../../setup/PaletteState.ts";
-import {getSelectedTool} from "../../../../../setup/ToolboxState.ts";
+import {getSelectedSpriteKey} from "../../../../common/PaletteState.ts";
+import {getSelectedTool} from "../../../../common/ToolboxState.ts";
 
 export class ToolPreviewModule extends DisplayModule<ViewsEditorModule> {
     private editor!: ViewsEditorModule;
