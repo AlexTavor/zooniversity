@@ -1,19 +1,23 @@
 import {lerpColor} from "../../../../utils/Color.ts";
 
 export const SKY_TINT_GRADIENT: [number, number][] = [
-    [0.0, 0x0a0a2a],   // midnight start (deep night)
-    [0.375, 0xffcc88], // dawn (3h / 8h)
-    [0.5, 0x99ccff],   // day (4h / 8h)
-    [0.875, 0xff9966], // dusk (7h / 8h)
+    [0.0, 0x0a0a2a],   // midnight
+    [0.25, 0x0a0a2a],  // still night
+    [0.375, 0xffcc88], // dawn
+    [0.5, 0x99ccff],   // full day
+    [0.75, 0x99ccff],  // hold daylight
+    [0.875, 0xff9966], // dusk
     [1.0, 0x0a0a2a],   // back to night
 ];
 
 export const SPRITE_TINT_GRADIENT: [number, number][] = [
-    [0.0, 0x334466],  // start of night
-    [0.375, 0xfff2cc], // start of dawn (3h / 8h = 0.375)
-    [0.5, 0xffffff],   // start of day (4h / 8h)
-    [0.875, 0xfff2cc], // start of dusk (7h / 8h)
-    [1.0, 0x334466],  // end of night (loop around)
+    [0.0, 0x334466],   // deep night
+    [0.25, 0x334466],  // night holds
+    [0.375, 0xfff2cc], // dawn
+    [0.5, 0xffffff],   // full day
+    [0.75, 0xffffff],  // hold day
+    [0.875, 0xfff2cc], // dusk
+    [1.0, 0x334466],   // back to night
 ];
 
 

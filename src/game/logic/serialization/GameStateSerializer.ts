@@ -7,11 +7,15 @@ import {Cave} from "../components/Cave.ts";
 import {EntityState, GameState} from "./GameState.ts";
 import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvents.ts";
+import {InputComponent} from "../input/InputComponent.ts";
+import {TimeComponent} from "../time/TimeComponent.ts";
 
 const componentRegistry: Record<string, new (...args: any[]) => Component> = {
     Transform,
     Tree,
     Cave,
+    InputComponent,
+    TimeComponent
 };
 
 export function serializeECS(ecs: ECS): GameState {

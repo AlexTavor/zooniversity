@@ -10,8 +10,6 @@ export class Preloader extends Scene
 
     init ()
     {
-        //  We loaded this image in our Boot Scene, so we can display it here
-        this.add.image(512, 384, 'background');
 
         //  A simple progress bar. This is the outline of the bar.
         this.add.rectangle(512, 384, 468, 32).setStrokeStyle(1, 0xffffff);
@@ -80,6 +78,20 @@ export class Preloader extends Scene
         // ✅ Add this to load the forest map
         this.load.setPath('assets/maps');
         this.load.json('forestMap', 'forestMap.json');
+
+        this.load.setPath('assets/clouds');
+
+        for (let i = 0; i < 4; i++) {
+            this.load.spritesheet(
+                `cloud${i}`,
+                `cloud${i}.png`,
+                caveFrameConfig
+            );
+        }
+
+        this.load.setPath('assets');
+
+        this.load.spritesheet('night_sky', 'night_sky.png', caveFrameConfig);
     }
 
     create ()

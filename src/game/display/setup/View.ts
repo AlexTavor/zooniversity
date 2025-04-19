@@ -63,5 +63,6 @@ export class View {
         this.sprite.setInteractive({ useHandCursor: true });
         this.sprite.setOrigin(0.5, 0.5);
         this.sprite.setFrame(viewDefinition.frame);
+        this.sprite.setPipeline('TimeTint');
     }
 }

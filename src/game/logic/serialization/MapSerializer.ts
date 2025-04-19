@@ -6,6 +6,7 @@ import {PlantSpriteKey} from "../../display/setup/SpriteLibrary.ts";
 import {Cave} from "../components/Cave.ts";
 import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvents.ts";
+import {createWorldEntity} from "../createWorldEntity.ts";
 
 function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
     for (const [id, obj] of Object.entries(map.objects)) {
@@ -49,5 +50,6 @@ export function loadNewGame(ecs: ECS, scene: Phaser.Scene): void {
 
     const mapDefinition = rawData as MapDefinition;
     loadMapIntoECS(ecs, mapDefinition);
+    createWorldEntity(ecs);
     EventBus.emit(GameEvent.GameLoaded);
 } 

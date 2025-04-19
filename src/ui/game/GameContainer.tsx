@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import {GameEvent} from "../../game/consts/GameEvents.ts";
 import {EventBus} from "../../game/EventBus.ts";
 import {MainMenu} from "./main_menu/MainMenu.tsx";
+import {TimeControls} from "./time_controls/TimeControls.tsx";
+import {WeatherPanel} from "./weather/WeatherPanel.tsx";
 
 export const GameContainer: React.FC = () => {
     const [gameLoaded, setGameLoaded] = useState(false);
@@ -17,7 +19,8 @@ export const GameContainer: React.FC = () => {
     return (
         <>
             {!gameLoaded && <MainMenu />}
-            {/* Future: other game UI elements here */}
+            {gameLoaded && <TimeControls/>}
+            {gameLoaded && <WeatherPanel/>}
         </>
     );
 };

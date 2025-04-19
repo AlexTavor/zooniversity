@@ -24,7 +24,9 @@ export class GameEditorTools extends Scene
     
     create ()
     {
-        this.gameDisplay = new GameDisplay(this, this.ecs, [
+        this.gameDisplay = new GameDisplay();
+        
+        this.gameDisplay.init(this, this.ecs, [
             new EditorHost()
         ]);
         
