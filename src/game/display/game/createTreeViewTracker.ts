@@ -4,11 +4,13 @@ import { Tree } from "../../logic/components/Tree.ts";
 import { createView } from "../setup/ViewStore.ts";
 import { SpriteKey } from "../setup/SpriteLibrary.ts";
 import { GameDisplayContext } from "../GameDisplay.ts";
+import {ViewType} from "../setup/ViewDefinition.ts";
 
 export function createTreeViewTracker(
     context: GameDisplayContext
 ): ViewTracker {
     return new ViewTracker({
+        viewsByEntity: context.viewsByEntity,
         ecs: context.ecs,
         scene: context.scene,
         componentClasses: [Transform, Tree],
@@ -24,6 +26,7 @@ export function createTreeViewTracker(
                     y: Math.round(transform.y),
                 },
                 frame: 0,
+                type: ViewType.TREE
             });
         },
         updateView: (ecs, entity, view) => {

@@ -1,0 +1,79 @@
+import {DisplayModule} from "../../setup/DisplayModule.ts";
+import {GameDisplayContext} from "../../GameDisplay.ts";
+import {Entity} from "../../../ECS.ts";
+import {Transform} from "../../../logic/components/Transform.ts";
+import {Tree} from "../../../logic/components/Tree.ts";
+import {WeatherComponent} from "../../../logic/weather/WeatherComponent.ts";
+import {TimeComponent} from "../../../logic/time/TimeComponent.ts";
+import {SimplexNoise} from "../../../../utils/SimplexNoise.ts";
+import {ViewType} from "../../setup/ViewDefinition.ts";
+
+export namespace TreeSwayConfig {
+    export const MaxRotation = Phaser.Math.DegToRad(6);
+    export const SpatialFrequency = 0.001;
+    export const TimeSpeed = 0.001;
+}
+
+interface SwayEntry {
+    entity: Entity;
+    sprite: Phaser.GameObjects.Sprite;
+}
+
+export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
+    private context!: GameDisplayContext;
+    private entries: SwayEntry[] = [];
+    private worldEntity!: Entity;
+    private time = 0;
+    private simplex = new SimplexNoise();
+
+    init(context: GameDisplayContext): void {
+        this.context = context;
+        const { ecs, viewsByEntity } = context;
+
+        const trees = ecs.getEntitiesWithComponents([Transform, Tree]);
+        this.worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+
+        for (const entity of trees) {
+            const view = viewsByEntity.get(entity);
+            if (!view?.sprite) continue;
+
+            this.entries.push({
+                entity,
+                sprite: view.sprite,
+            });
+        }
+    }
+
+    update(delta: number): void {
+        this.time += delta;
+        const { ecs, viewsByEntity } = this.context;
+
+        const timeComp = ecs.getComponent(this.worldEntity, TimeComponent);
+        const weather = ecs.getComponent(this.worldEntity, WeatherComponent);
+
+        const windStrength = Phaser.Math.Clamp(weather.windStrength ?? 0, 0, 1000) / 1000;
+        const speedFactor = timeComp.speedFactor ?? 1;
+
+        const t = this.time * TreeSwayConfig.TimeSpeed * speedFactor;
+        const { SpatialFrequency: freq, MaxRotation: maxAngle } = TreeSwayConfig;
+
+        for (const [entity, view] of viewsByEntity) {
+            if (view.type !== ViewType.TREE) continue;
+
+            const sprite = view.sprite;
+
+            const sway = this.simplex.noise3D(
+                sprite.x * freq,
+                sprite.y * freq,
+                t + entity * 1000 // phase offset by entity ID
+            );
+
+            sprite.rotation = sway * maxAngle * windStrength;
+        }
+    }
+
+
+    destroy(): void {
+        this.entries = [];
+    }
+}

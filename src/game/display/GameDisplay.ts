@@ -1,5 +1,5 @@
 import { DisplayModule } from "./setup/DisplayModule.ts";
-import { ECS } from "../ECS.ts";
+import {ECS, Entity} from "../ECS.ts";
 import { Layers } from "./setup/Layers.ts";
 import {ViewTracker} from "./game/ViewTracker.ts";
 import {Config} from "../config/Config.ts";
@@ -10,6 +10,7 @@ export interface GameDisplayContext {
     scene: Phaser.Scene;
     layers: Layers;
     ecs: ECS;
+    viewsByEntity: Map<Entity, View>;
 }
 
 export type GameDisplayModule = DisplayModule<GameDisplayContext>;
@@ -21,6 +22,7 @@ export class GameDisplay implements GameDisplayContext {
     layers: Layers;
     hill: View;
     private trackers: ViewTracker[];
+    viewsByEntity = new Map();
 
     init(
         scene: Phaser.Scene, 

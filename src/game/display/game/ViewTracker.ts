@@ -1,9 +1,8 @@
 import Phaser from "phaser";
-import {ECS, Entity} from "../../ECS.ts";
-import {ViewDefinition} from "../setup/ViewDefinition.ts";
-import {View} from "../setup/View.ts";
-import {getViews} from "../setup/ViewStore.ts";
-import Container = Phaser.GameObjects.Container;
+import { ECS, Entity } from "../../ECS.ts";
+import { View } from "../setup/View.ts";
+import { ViewDefinition } from "../setup/ViewDefinition.ts";
+import { getViews } from "../setup/ViewStore.ts";
 
 export interface ViewTrackerOptions {
     ecs: ECS;
@@ -12,17 +11,12 @@ export interface ViewTrackerOptions {
     layerContainer: Phaser.GameObjects.Container;
     createDefinition: (ecs: ECS, entity: Entity) => ViewDefinition;
     updateView: (ecs: ECS, entity: Entity, view: View) => boolean;
-
-    /** Optional: Called when a new View is created */
-    onViewCreated?: (view: View) => void;
-
-    /** Optional: Called when a View is removed */
-    onViewDestroyed?: (view: View) => void;
+    viewsByEntity: Map<Entity, View>; // 👈 Shared view map
 }
 
 export class ViewTracker {
-    private viewsByEntity = new Map<Entity, View>();
-    private viewByContainer = new Map<Phaser.GameObjects.Container, View>();
+    private viewsByEntity: Map<Entity, View>;
+    private viewsLocal = new Map<Entity, View>();
     private firstRun = true;
 
     private ecs: ECS;
@@ -31,99 +25,81 @@ export class ViewTracker {
     private layerContainer: Phaser.GameObjects.Container;
     private createDefinition: (ecs: ECS, entity: Entity) => ViewDefinition;
     private updateView: (ecs: ECS, entity: Entity, view: View) => boolean;
-    options: ViewTrackerOptions;
-    
-    constructor(options: ViewTrackerOptions) {
-        this.options = options;
-        const {
-            ecs,
-            scene,
-            componentClasses,
-            layerContainer,
-            createDefinition,
-            updateView,
-        } = options;
-        
+
+    constructor({
+                    ecs,
+                    scene,
+                    componentClasses,
+                    layerContainer,
+                    createDefinition,
+                    updateView,
+                    viewsByEntity
+                }: ViewTrackerOptions) {
         this.ecs = ecs;
         this.scene = scene;
         this.componentClasses = componentClasses;
         this.layerContainer = layerContainer;
         this.createDefinition = createDefinition;
         this.updateView = updateView;
+        this.viewsByEntity = viewsByEntity;
     }
 
     public init() {
-        this.viewsByEntity.clear();
-        this.viewByContainer.clear();
+        this.viewsLocal.clear();
         this.firstRun = true;
     }
 
     public update() {
         const entityList = this.ecs.getEntitiesWithComponents(this.componentClasses);
         const currentSet = new Set<Entity>(entityList);
-
         let changed = this.firstRun;
         this.firstRun = false;
 
-        // 1) Remove views for stale entities
-        for (const [entity, view] of this.viewsByEntity) {
+        // Remove destroyed entities
+        for (const [entity, view] of this.viewsLocal) {
             if (!currentSet.has(entity)) {
                 view.viewContainer.destroy();
-                this.viewsByEntity.delete(entity);
-                this.viewByContainer.delete(view.viewContainer);
-
-                this.options.onViewDestroyed?.(view);
-                
+                this.viewsLocal.delete(entity);
+                this.viewsByEntity.delete(entity); // 🔁 global map cleanup
                 changed = true;
             }
         }
 
-        // 2) Add views for new entities
+        // Add newly created entities
         for (const entity of entityList) {
-            if (!this.viewsByEntity.has(entity)) {
+            if (!this.viewsLocal.has(entity)) {
                 const def = this.createDefinition(this.ecs, entity);
                 const view = new View(def.id, getViews(), def, this.layerContainer, this.scene);
-                this.viewsByEntity.set(entity, view);
-                this.viewByContainer.set(view.viewContainer, view);
-
-                this.options.onViewCreated?.(view);
-                
+                this.viewsLocal.set(entity, view);
+                this.viewsByEntity.set(entity, view); // 🔁 global map update
                 changed = true;
             }
         }
 
-        // 3) Update all existing views
-        for (const [entity, view] of this.viewsByEntity) {
+        // Update all tracked views
+        for (const [entity, view] of this.viewsLocal) {
             if (this.updateView(this.ecs, entity, view)) {
                 changed = true;
             }
         }
 
-        // 4) Sort layer children by view y-position if anything changed
         if (changed) {
-            const containers = this.layerContainer.list.filter(
-                obj => obj instanceof Container
-            ) as Container[];
+            const sorted = this.layerContainer.list
+                .filter(obj => obj instanceof Phaser.GameObjects.Container)
+                .map(obj => obj as Phaser.GameObjects.Container)
+                .sort((a, b) => (a.y - b.y));
 
-            containers.sort((a, b) => {
-                const va = this.viewByContainer.get(a);
-                const vb = this.viewByContainer.get(b);
-
-                const za = va?.viewDefinition.position.y ?? 0;
-                const zb = vb?.viewDefinition.position.y ?? 0;
-
-                return za - zb;
-            });
-
-            containers.forEach(c => this.layerContainer.bringToTop(c));
+            sorted.forEach(c => this.layerContainer.bringToTop(c));
         }
     }
 
     public destroy() {
-        for (const view of this.viewsByEntity.values()) {
+        for (const view of this.viewsLocal.values()) {
             view.viewContainer.destroy();
         }
-        this.viewsByEntity.clear();
-        this.viewByContainer.clear();
+        for (const entity of this.viewsLocal.keys()) {
+            this.viewsByEntity.delete(entity);
+        }
+        this.viewsLocal.clear();
     }
 }

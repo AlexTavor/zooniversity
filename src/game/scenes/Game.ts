@@ -18,6 +18,7 @@ import {CloudsModule} from "../display/game/sky/CloudsModule.ts";
 import {WeatherSystem} from "../logic/weather/WeatherSystem.ts";
 import {TimeTintPipeline} from "../../render/pipelines/TimeTintPipeline.ts";
 import {TinterModule} from "../display/game/time_tint/TinterModule.ts";
+import {TreeSwayModule} from "../display/game/trees/TreeSwayModule.ts";
 
 export class Game extends Scene
 {
@@ -63,7 +64,8 @@ export class Game extends Scene
                 new SkyDisplayModule(),
                 new StarfieldModule(),
                 new CloudsModule(),
-                new TinterModule()
+                new TinterModule(),
+                new TreeSwayModule()
             ];
             
             this.gameDisplay.init(this, this.ecs, modules,

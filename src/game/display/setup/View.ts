@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { ViewDefinition } from "./ViewDefinition.ts";
+import {ViewDefinition, ViewType} from "./ViewDefinition.ts";
 import {Naming} from "../../consts/Naming.ts";
 import {Config} from "../../config/Config.ts";
 import {SpriteKey, SpriteLibrary} from "./SpriteLibrary.ts";
@@ -9,7 +9,8 @@ export class View {
     public sprite: Phaser.GameObjects.Sprite;
     public viewContainer: Phaser.GameObjects.Container;
     public subViews: View[] = [];
-
+    public type = ViewType.NONE;
+    
     constructor(
         public id:number,
         views: { [key: number]: ViewDefinition },
@@ -18,6 +19,7 @@ export class View {
         scene: Phaser.Scene
     ) {
         this.viewDefinition = viewDefinition;
+        this.type = viewDefinition.type;
 
         viewDefinition.position.x = Math.round(viewDefinition.position.x);
         viewDefinition.position.y = Math.round(viewDefinition.position.y);

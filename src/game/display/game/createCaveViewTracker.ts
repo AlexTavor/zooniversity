@@ -4,11 +4,13 @@ import { Cave } from "../../logic/components/Cave.ts";
 import { createView } from "../setup/ViewStore.ts";
 import { SpriteKey } from "../setup/SpriteLibrary.ts";
 import { GameDisplayContext } from "../GameDisplay.ts";
+import {ViewType} from "../setup/ViewDefinition.ts";
 
 export function createCaveViewTracker(
     context: GameDisplayContext
 ): ViewTracker {
     return new ViewTracker({
+        viewsByEntity: context.viewsByEntity,
         ecs: context.ecs,
         scene: context.scene,
         componentClasses: [Transform, Cave],
@@ -22,6 +24,7 @@ export function createCaveViewTracker(
                     y: Math.round(transform.y),
                 },
                 frame: 0,
+                type: ViewType.CAVE,
             });
         },
         updateView: (ecs, entity, view) => {

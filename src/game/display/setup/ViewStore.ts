@@ -1,4 +1,4 @@
-import {ViewDefinition} from "./ViewDefinition.ts";
+import {ViewDefinition, ViewType} from "./ViewDefinition.ts";
 
 export type ViewMap = Record<number, ViewDefinition>;
 
@@ -14,6 +14,7 @@ export function createView(def: Partial<ViewDefinition>): ViewDefinition {
         size: def.size ?? { x: 1, y: 1 },
         frame: def.frame ?? 0,
         subViews: [],
+        type: def.type ?? ViewType.NONE,
         ...def,
     };
 
