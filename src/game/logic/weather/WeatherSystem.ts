@@ -44,7 +44,7 @@ export class WeatherSystem extends System {
                 0,
                 1
             );
-
+            
             EventBus.emit(GameEvent.SetWeather, weather);
         }
     }

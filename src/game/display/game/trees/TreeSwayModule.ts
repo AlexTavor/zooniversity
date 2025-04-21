@@ -14,14 +14,8 @@ export namespace TreeSwayConfig {
     export const TimeSpeed = 0.001;
 }
 
-interface SwayEntry {
-    entity: Entity;
-    sprite: Phaser.GameObjects.Sprite;
-}
-
 export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
     private context!: GameDisplayContext;
-    private entries: SwayEntry[] = [];
     private worldEntity!: Entity;
     private time = 0;
     private simplex = new SimplexNoise();

@@ -38,7 +38,7 @@ function createCloudLayer(overrides: Partial<CloudLayerConfig>): CloudLayerConfi
         tintOffset: 0.0,
         yOffset: 0,
         ySpread: 1200,
-        baseDensity: 40,
+        baseDensity: 20,
         scaleMin: 1.0,
         scaleMax: 3.0,
         direction: 1,

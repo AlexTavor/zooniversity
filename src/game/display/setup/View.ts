@@ -3,6 +3,7 @@ import {ViewDefinition, ViewType} from "./ViewDefinition.ts";
 import {Naming} from "../../consts/Naming.ts";
 import {Config} from "../../config/Config.ts";
 import {SpriteKey, SpriteLibrary} from "./SpriteLibrary.ts";
+import {Entity} from "../../ECS.ts";
 
 export class View {
     public readonly viewDefinition: ViewDefinition;
@@ -10,6 +11,7 @@ export class View {
     public viewContainer: Phaser.GameObjects.Container;
     public subViews: View[] = [];
     public type = ViewType.NONE;
+    public selectable = true;
     
     constructor(
         public id:number,
@@ -20,7 +22,7 @@ export class View {
     ) {
         this.viewDefinition = viewDefinition;
         this.type = viewDefinition.type;
-
+        
         viewDefinition.position.x = Math.round(viewDefinition.position.x);
         viewDefinition.position.y = Math.round(viewDefinition.position.y);
         
@@ -63,7 +65,12 @@ export class View {
         this.sprite.name = `${Naming.SPRITE}${id}`;
         this.viewContainer.add(this.sprite);
         this.sprite.setInteractive({ useHandCursor: true });
-        this.sprite.setOrigin(0.5, 0.5);
+        if (viewDefinition.type == ViewType.TREE) {
+            this.sprite.setOrigin(0.5, 1);
+        } else {
+            this.sprite.setOrigin(0.5, 0.5);
+
+        }
         this.sprite.setFrame(viewDefinition.frame);
         this.sprite.setPipeline('TimeTint');
     }

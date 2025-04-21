@@ -3,18 +3,38 @@ import {Pos} from "../../../utils/Math.ts";
 export enum ViewType {
     NONE = 0,
     TREE = 1,
-    CAVE = 2,
-    CLOUD = 3,
-    HILL = 4,
+    CAVE = 2
+}
+
+export enum DisplayTraitType {
+    NONE = 0,
+    WOOD = 1,
+    FOOD = 2
+}
+
+export class DisplayTrait {
+    public type: DisplayTraitType;
+    public value: number;
+}
+
+export class PanelDefinition {
+    public title:string;
+    public description:string;
+    public imagePath:string;
+    public traits?: DisplayTrait[];
+    public entity: number;
 }
 
 export class ViewDefinition {
     public readonly id: number;
+    public entity: number;
     public readonly spriteName: string;
     public readonly position: Pos;
     public readonly size: Pos;
     public frame: number;
     public subViews: number[];
     public type = ViewType.NONE;
+    public selectable = true;
+    public panelDefinition?: PanelDefinition;
 }
 

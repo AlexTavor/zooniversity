@@ -10,7 +10,6 @@ import {loadFromState} from "../logic/serialization/GameStateSerializer.ts";
 import {loadNewGame} from "../logic/serialization/MapSerializer.ts";
 import {SkyDisplayModule} from "../display/game/sky/SkyDisplayModule.ts";
 import {TimeSystem} from "../logic/time/TimeSystem.ts";
-import {InputSystem} from "../logic/input/InputSystem.ts";
 import {createTreeViewTracker} from "../display/game/createTreeViewTracker.ts";
 import {createCaveViewTracker} from "../display/game/createCaveViewTracker.ts";
 import {StarfieldModule} from "../display/game/sky/StarfieldModule.ts";
@@ -19,11 +18,17 @@ import {WeatherSystem} from "../logic/weather/WeatherSystem.ts";
 import {TimeTintPipeline} from "../../render/pipelines/TimeTintPipeline.ts";
 import {TinterModule} from "../display/game/time_tint/TinterModule.ts";
 import {TreeSwayModule} from "../display/game/trees/TreeSwayModule.ts";
+import {SelectionHighlightModule} from "../display/game/selection/SelectionHighlightModule.ts";
+import {SelectionModule} from "../display/game/selection/SelectionModule.ts";
+import {InputSystem} from "../logic/input/InputSystem.ts";
+import {SelectionPanelModule} from "../display/game/selection/SelectionPanelModule.ts";
 
 export class Game extends Scene
 {
     gameDisplay: GameDisplay;
     ecs:ECS;
+    
+    destroyQueue: Array<()=>void> = [];
     
     constructor ()
     {
@@ -48,16 +53,12 @@ export class Game extends Scene
         (this.renderer as Phaser.Renderer.WebGL.WebGLRenderer)
             .pipelines
             .add('TimeTint', pipeline);
-
-        // Apply to main camera
-        // this.cameras.main.setPostPipeline('TimeTint');
-        
+ 
         this.ecs = new ECS();
         
         const initDisplay = ()=>{
             
             this.gameDisplay = new GameDisplay();
-
             
             const modules = [
                 new CameraModule(),
@@ -65,7 +66,10 @@ export class Game extends Scene
                 new StarfieldModule(),
                 new CloudsModule(),
                 new TinterModule(),
-                new TreeSwayModule()
+                new TreeSwayModule(),
+                new SelectionHighlightModule(),
+                new SelectionModule(),
+                new SelectionPanelModule()
             ];
             
             this.gameDisplay.init(this, this.ecs, modules,
@@ -77,8 +81,12 @@ export class Game extends Scene
         
         const initSystems = ()=>{
             this.ecs.addSystem(new TimeSystem());
-            this.ecs.addSystem(new InputSystem());
             this.ecs.addSystem(new WeatherSystem());
+
+            const input = new InputSystem();
+            this.ecs.addSystem(input);
+            const destroyInput = input.initialize();
+            this.destroyQueue.push(destroyInput);
         }
         
         EventBus.on(GameEvent.NewGame, () => {
@@ -92,5 +100,19 @@ export class Game extends Scene
             initDisplay();
             initSystems();
         });
+
+        this.events.on('destroy', this.destroy);
+    }
+
+    private destroy() {
+        this.events.off('destroy', this.destroy);
+
+        this.destroyQueue.forEach(fn => fn());
+        this.destroyQueue = [];
+        
+        this.gameDisplay.destroy();
+
+        EventBus.off(GameEvent.SetTimeSpeed);
+        EventBus.off(GameEvent.SetTime);
     }
 }

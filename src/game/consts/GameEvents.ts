@@ -5,4 +5,5 @@ export enum GameEvent {
     SetTimeSpeed = "set-time-speed",
     SetTime = "set-time",
     SetWeather = "set-weather",
+    SelectionChanged = "selection-changed",
 }

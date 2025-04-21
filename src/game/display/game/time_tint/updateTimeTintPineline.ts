@@ -20,7 +20,7 @@ export function updateTimeTintPipeline(
 
     const color = getColorForMinute(minute, total, SPRITE_TINT_GRADIENT);
     pipeline.setTintColor(Phaser.Display.Color.ValueToColor(color));
-    pipeline.setCloudAlpha(weather.cloudCover ?? 1.0);
+    pipeline.setCloudAlpha(1 - ((weather.cloudCover ?? 0))*.5);
     pipeline.setResolution(scene.scale.width, scene.scale.height);
 
     // Optional lighting RT (e.g. scene.lightingRT)

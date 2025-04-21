@@ -7,6 +7,7 @@ import {Cave} from "../components/Cave.ts";
 import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvents.ts";
 import {createWorldEntity} from "../createWorldEntity.ts";
+import {PanelDataComponent} from "../selection/PanelDataComponent.ts";
 
 function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
     for (const [id, obj] of Object.entries(map.objects)) {
@@ -18,10 +19,17 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
             ecs.addComponent(entity, new Transform(view.position.x, view.position.y, obj.zHint ?? 0));
         }
 
+        const def = obj.components?.view;
+        
+        if (!def) {
+            console.warn(`Object ${id} is missing a view component.`);
+            continue;
+        }
+        
         switch (obj.type) {
             case "tree":
-                if (obj.components?.view?.spriteName) {
-                    ecs.addComponent(entity, new Tree(obj.components.view.spriteName as PlantSpriteKey));
+                if (def.spriteName) {
+                    ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
                 } else {
                     console.warn(`Tree object ${id} is missing a sprite key.`);
                 }
@@ -35,6 +43,14 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
                 console.warn(`Unknown object type: ${obj.type}`);
                 break;
         }
+
+        const panelDef = def.panelDefinition;
+        
+        if (!panelDef) {
+            continue;
+        }
+        
+        ecs.addComponent(entity, new PanelDataComponent({...panelDef, entity}));
     }
 }
 

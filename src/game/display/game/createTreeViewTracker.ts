@@ -26,7 +26,8 @@ export function createTreeViewTracker(
                     y: Math.round(transform.y),
                 },
                 frame: 0,
-                type: ViewType.TREE
+                type: ViewType.TREE,
+                entity
             });
         },
         updateView: (ecs, entity, view) => {

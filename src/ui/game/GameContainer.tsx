@@ -4,6 +4,7 @@ import {EventBus} from "../../game/EventBus.ts";
 import {MainMenu} from "./main_menu/MainMenu.tsx";
 import {TimeControls} from "./time_controls/TimeControls.tsx";
 import {WeatherPanel} from "./weather/WeatherPanel.tsx";
+import {SelectionPanel} from "./selection/SelectionPanel.tsx";
 
 export const GameContainer: React.FC = () => {
     const [gameLoaded, setGameLoaded] = useState(false);
@@ -21,6 +22,7 @@ export const GameContainer: React.FC = () => {
             {!gameLoaded && <MainMenu />}
             {gameLoaded && <TimeControls/>}
             {gameLoaded && <WeatherPanel/>}
+            {gameLoaded && <SelectionPanel/>}
         </>
     );
 };

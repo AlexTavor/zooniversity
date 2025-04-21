@@ -22,7 +22,6 @@ export function useGameTime(): GameTime {
     });
 
     useEffect(() => {
-
         EventBus.on(GameEvent.SetTimeSpeed, (speed: TimeSpeed) =>
             setTime(prev => ({ ...prev, speed }))
         );
@@ -30,10 +29,6 @@ export function useGameTime(): GameTime {
         EventBus.on(GameEvent.SetTime, (time: number) =>
             setTime(prev => ({ ...prev, ...divideTime(time) }))
         );
-
-        return () => {
-            EventBus.off(GameEvent.SetTimeSpeed);
-        };
     }, []);
 
     return time;

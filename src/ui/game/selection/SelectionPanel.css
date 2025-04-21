@@ -1,0 +1,130 @@
+:root {
+    --panel-transition-ms: 300ms;
+}
+
+.selection-panel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 33.333%;
+    height: 80%;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition:
+        transform var(--panel-transition-ms) ease-in-out,
+        height var(--panel-transition-ms) ease-in-out;
+    pointer-events: none;
+}
+
+.selection-panel.open {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+.selection-panel.collapsed {
+    height: 12%;
+}
+
+.selection-panel-content {
+    width: 100%;
+    height: 100%;
+    background-color: rgba(24, 24, 24, 0.95);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    transition: opacity var(--panel-transition-ms) ease-in-out;
+}
+
+.selection-panel-content.fade-in {
+    opacity: 1;
+}
+
+.selection-panel-content.fade-out {
+    opacity: 0;
+}
+
+.selection-panel-bg {
+    height: 100%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.selection-panel-info {
+    padding: 16px;
+    color: #fff;
+    flex-grow: 1;
+    cursor: pointer;
+}
+
+.text-bg {
+    background-color: rgba(0, 0, 0, 0.6);
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+}
+
+.selection-panel-info h2 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+}
+
+.selection-panel-info p {
+    margin: 0;
+    font-size: 1rem;
+    color: #ccc;
+}
+
+.selection-panel-controls {
+    padding: 8px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.selection-panel-close {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    color: white;
+    border: none;
+    font-size: 1.25rem;
+    cursor: pointer;
+}
+
+.traits-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    padding: 0px 4px 4px;
+    pointer-events: none; /* ensures it doesn't block clicks */
+    z-index: 1;
+}
+
+.trait {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background-color: rgba(0, 0, 0, 0.4);
+    padding: 4px 6px;
+    border-radius: 6px;
+    pointer-events: auto;
+}
+
+.trait-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.trait-value {
+    font-size: 1rem;
+    color: #fff;
+    font-weight: 600;
+}

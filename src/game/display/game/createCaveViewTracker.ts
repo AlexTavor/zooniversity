@@ -25,6 +25,7 @@ export function createCaveViewTracker(
                 },
                 frame: 0,
                 type: ViewType.CAVE,
+                entity
             });
         },
         updateView: (ecs, entity, view) => {

@@ -64,7 +64,8 @@ export class GameDisplay implements GameDisplayContext {
         const hillDef = createView({
             size: hillSize,
             position: hillPosition,
-            spriteName: 'hill'
+            spriteName: 'hill',
+            selectable: false,
         });
         
         this.hill = new View(0, {}, hillDef, this.layers.Ground, this.scene);
