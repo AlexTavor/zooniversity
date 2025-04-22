@@ -22,7 +22,7 @@ export class GameDisplay implements GameDisplayContext {
     layers: Layers;
     hill: View;
     private trackers: ViewTracker[];
-    viewsByEntity = new Map();
+    viewsByEntity:Map<Entity, View> = new Map();
 
     init(
         scene: Phaser.Scene, 
@@ -38,7 +38,8 @@ export class GameDisplay implements GameDisplayContext {
         }
         
         this.trackers = trackers?.map(tracker => tracker(this)) ?? [];
-
+        this.trackers.forEach(t=>t.update());
+        
         this.setHill();
     }
     

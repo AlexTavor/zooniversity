@@ -3,6 +3,8 @@ import { ECS, Entity } from "../../ECS.ts";
 import { View } from "../setup/View.ts";
 import { ViewDefinition } from "../setup/ViewDefinition.ts";
 import { getViews } from "../setup/ViewStore.ts";
+import { EventBus } from "../../EventBus.ts";
+import { GameEvent } from "../../consts/GameEvents.ts";
 
 export interface ViewTrackerOptions {
     ecs: ECS;
@@ -53,7 +55,6 @@ export class ViewTracker {
         const entityList = this.ecs.getEntitiesWithComponents(this.componentClasses);
         const currentSet = new Set<Entity>(entityList);
         let changed = this.firstRun;
-        this.firstRun = false;
 
         // Remove destroyed entities
         for (const [entity, view] of this.viewsLocal) {
@@ -91,6 +92,8 @@ export class ViewTracker {
 
             sorted.forEach(c => this.layerContainer.bringToTop(c));
         }
+
+        this.firstRun = false;
     }
 
     public destroy() {

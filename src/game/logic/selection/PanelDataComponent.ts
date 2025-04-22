@@ -1,10 +1,10 @@
 import { Component } from "../../ECS";
-import { PanelDefinition } from "../../display/setup/ViewDefinition.ts";
+import { DisplayTrait, PanelDefinition } from "../../display/setup/ViewDefinition.ts";
 
 export class PanelDataComponent extends Component {
     public title: string;
     public description: string;
-    public traits = [];
+    public traits?: DisplayTrait[];
     public imagePath: string;
 
     constructor(definition: PanelDefinition) {

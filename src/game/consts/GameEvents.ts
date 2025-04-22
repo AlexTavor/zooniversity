@@ -6,4 +6,6 @@ export enum GameEvent {
     SetTime = "set-time",
     SetWeather = "set-weather",
     SelectionChanged = "selection-changed",
+    StoryEventEnded = "StoryEventEnded",
+    StoryEventOptionChosen = "StoryEventOptionChosen",
 }
