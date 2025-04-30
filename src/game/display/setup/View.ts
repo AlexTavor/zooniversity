@@ -3,7 +3,6 @@ import {ViewDefinition, ViewType} from "./ViewDefinition.ts";
 import {Naming} from "../../consts/Naming.ts";
 import {Config} from "../../config/Config.ts";
 import {SpriteKey, SpriteLibrary} from "./SpriteLibrary.ts";
-import {Entity} from "../../ECS.ts";
 
 export class View {
     public readonly viewDefinition: ViewDefinition;

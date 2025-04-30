@@ -4,7 +4,7 @@ import {Config} from "../../config/Config.ts";
 export const PlantSpriteKeys = ['tree0', 'tree1', 'tree2', 'tree3', 'tree4', 'tree5', 'bush0', 'bush1'] as const;
 export type PlantSpriteKey = typeof PlantSpriteKeys[number];
 export type HillSpriteKey = 'hill';
-export const CaveSpriteKeys = ['cave'] as const;
+export const CaveSpriteKeys = ['cave', 'wood_dojo'] as const;
 export type CaveSpriteKey = typeof CaveSpriteKeys[number];
 export type SpriteKey = PlantSpriteKey | HillSpriteKey | CaveSpriteKey;
 
@@ -29,5 +29,6 @@ export const SpriteLibrary: Record<SpriteKey, SpriteDefinition> = {
     bush0: {key: 'bush0', defaultSize: defaultBushSize, path: 'assets/plants/bush0.png'},
     bush1: {key: 'bush1', defaultSize: defaultBushSize, path: 'assets/plants/bush1.png'},
     hill: {key: 'hill', defaultSize: defaultHillSize, path: 'assets/hill/hill.png'},
-    cave: {key: 'cave', defaultSize: defaultCaveSize, path: 'assets/hill/cave.png'}
+    cave: {key: 'cave', defaultSize: defaultCaveSize, path: 'assets/hill/cave.png'},
+    wood_dojo: {key: 'wood_dojo', defaultSize: defaultCaveSize, path: 'assets/hill/wood_dojo.png'},
 };

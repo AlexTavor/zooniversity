@@ -1,1 +1,39 @@
-- 
+- Intro
+    Get correct world state
+        No UI
+        2 caves unexplored
+        1 wood dojo on a cave
+        Prof icon in WD
+    Bag of money on the floor, animated
+        Click on bag
+            Resources UI slides in as money flies to its spot
+            "Students Are On Their Way" banner
+                Shrinks to become the quest pill
+                    Shows timer and icon
+                    When clicked, expand to become the quest explanation
+            Time controls slide in and turn to PLAY from PAUSE
+            CUT DOWN icons appear on selected trees
+            Prof gets to work
+    The caves are not explorable for now (not clickable)
+    Wood Dojo
+        Shows icon of using agent
+            Icon is moving back and forth between dojo and nearest selected tree
+            Waits a bit at each location
+            When near tree, tree gets the chop shake anim
+        When selected shows panel with
+            Tree Selection Tool
+            Current Workers
+            Image
+            Flavor text
+            Trait explanations (4 beds thing)
+    No Selected Trees Alert
+        Since player can deselect trees
+        If no selected trees, show a floaty alert on top of active quests
+        Click to show banner about no trees selected, button for selecting WD
+
+
+TODO:
+    Implement UI management (at first, only show/hide hud)
+    Create, import, and implement Prof icon
+        Icon
+        Agent with position

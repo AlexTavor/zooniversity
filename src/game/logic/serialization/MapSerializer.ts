@@ -2,12 +2,14 @@ import {MapDefinition} from "../../display/editor/map_editor/MapTypes.ts";
 import {ECS} from "../../ECS.ts";
 import {Transform} from "../components/Transform.ts";
 import {Tree} from "../components/Tree.ts";
-import {PlantSpriteKey} from "../../display/setup/SpriteLibrary.ts";
+import {CaveSpriteKey, PlantSpriteKey} from "../../display/setup/SpriteLibrary.ts";
 import {Cave} from "../components/Cave.ts";
 import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvents.ts";
-import {createWorldEntity} from "../createWorldEntity.ts";
+import {createWorldEntity} from "./createWorldEntity.ts";
 import {PanelDataComponent} from "../selection/PanelDataComponent.ts";
+import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
+import { WoodDojo } from "../components/WoodDojo.ts";
 
 function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
     for (const [id, obj] of Object.entries(map.objects)) {
@@ -34,9 +36,12 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
                     console.warn(`Tree object ${id} is missing a sprite key.`);
                 }
                 break;
-
             case "cave":
-                ecs.addComponent(entity, new Cave(false));
+                if (def.spriteName) {
+                    createCave(def, ecs, entity);
+                } else {
+                    console.warn(`Cave object ${id} is missing a sprite key.`);
+                }
                 break;
 
             default:
@@ -51,6 +56,20 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
         }
         
         ecs.addComponent(entity, new PanelDataComponent({...panelDef, entity}));
+    }
+}
+
+function createCave(def: ViewDefinition, ecs: ECS, entity: number) {
+    switch (def.spriteName as CaveSpriteKey) {
+        case 'cave':
+            ecs.addComponent(entity, new Cave(false));
+            break;
+        case 'wood_dojo':
+            ecs.addComponent(entity, new WoodDojo());
+            break;
+        default:
+            console.warn(`Unknown cave sprite key: ${def.spriteName}`);
+            break;
     }
 }
 

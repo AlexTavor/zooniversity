@@ -24,8 +24,7 @@ export function createCaveViewTracker(
                     y: Math.round(transform.y),
                 },
                 frame: 0,
-                type: ViewType.CAVE,
-                entity
+                type: ViewType.CAVE
             });
         },
         updateView: (ecs, entity, view) => {

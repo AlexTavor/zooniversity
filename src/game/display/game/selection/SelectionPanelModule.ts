@@ -26,7 +26,7 @@ export class SelectionPanelModule extends DisplayModule<GameDisplayContext> {
         if (!view) return;
         
         const d = view.viewDefinition.panelDefinition;
-        const obj = d ? {...d, title: `${d.title} #${view.viewDefinition.entity}`} : null;
+        const obj = d ? {...d, title: `${d.title} #${entity}`} : null;
         EventBus.emit(UIEvent.ShowPanel, obj);
     }
 

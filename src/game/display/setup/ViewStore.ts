@@ -18,14 +18,14 @@ const panelDefinitions: Record<ViewType, PanelDefinition> = {
     [ViewType.CAVE]: {
         title: "Cave",
         description: "A dark cave entrance. Mysterious and unexplored.",
-        imagePath: "assets/panels/cave_panel.png",
+        imagePath: "assets/panels/cave_panel.png"
     },
     [ViewType.NONE]: {
         title: "",
         description: "",
         imagePath: "",
-    }
-};
+    } 
+} as Record<ViewType, PanelDefinition>;
 
 export function createView(def: Partial<ViewDefinition>): ViewDefinition {
     const id = nextId++;
@@ -42,7 +42,7 @@ export function createView(def: Partial<ViewDefinition>): ViewDefinition {
         selectable: def.selectable !== false,
         panelDefinition: def.panelDefinition ?? panelDefinitions[type],
         ...def,
-    };
+    } as ViewDefinition;
 
     viewMap[id] = view;
     return view;

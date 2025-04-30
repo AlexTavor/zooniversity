@@ -1,16 +1,17 @@
 import { Pos } from "../../../utils/Math";
-import { ViewDefinition, ViewType } from "../../display/setup/ViewDefinition";
+import { View } from "../../display/setup/View";
+import { ViewType } from "../../display/setup/ViewDefinition";
 
 // Output: caveEntityId → sorted array of nearby tree entityIds
-export function buildCaveTreeLUTFromViews(views: ViewDefinition[]): Record<number, number[]> {
+export function buildCaveTreeLUTFromViews(views: Map<number, View>): Record<number, number[]> {
     const caves: { id: number; pos: Pos }[] = [];
     const trees: { id: number; pos: Pos }[] = [];
 
-    for (const view of views) {
+    for (const [entity, view] of views) {
         if (view.type === ViewType.CAVE) {
-            caves.push({ id: view.entity, pos: view.position });
+            caves.push({ id: entity, pos: view.viewDefinition.position });
         } else if (view.type === ViewType.TREE) {
-            trees.push({ id: view.entity, pos: view.position });
+            trees.push({ id: entity, pos: view.viewDefinition.position });
         }
     }
 

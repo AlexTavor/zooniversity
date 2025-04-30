@@ -8,4 +8,8 @@ export enum GameEvent {
     SelectionChanged = "selection-changed",
     StoryEventEnded = "StoryEventEnded",
     StoryEventOptionChosen = "StoryEventOptionChosen",
+    StoryEventStarted = "StoryEventStarted",
+    StoryEventPageChanged = "StoryEventPageChanged",
+    ViewsInitialized = "ViewsInitialized",
+    ResourcesUpdated = "ResourcesUpdated",
 }

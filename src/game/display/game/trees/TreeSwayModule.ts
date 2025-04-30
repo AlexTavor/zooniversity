@@ -8,10 +8,10 @@ import {TimeComponent} from "../../../logic/time/TimeComponent.ts";
 import {SimplexNoise} from "../../../../utils/SimplexNoise.ts";
 import {ViewType} from "../../setup/ViewDefinition.ts";
 
-export namespace TreeSwayConfig {
-    export const MaxRotation = Phaser.Math.DegToRad(6);
-    export const SpatialFrequency = 0.001;
-    export const TimeSpeed = 0.001;
+export class TreeSwayConfig {
+    public static MaxRotation = Phaser.Math.DegToRad(6);
+    public static SpatialFrequency = 0.001;
+    public static TimeSpeed = 0.001;
 }
 
 export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
@@ -22,20 +22,7 @@ export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
 
     init(context: GameDisplayContext): void {
         this.context = context;
-        const { ecs, viewsByEntity } = context;
-
-        const trees = ecs.getEntitiesWithComponents([Transform, Tree]);
-        this.worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
-
-        for (const entity of trees) {
-            const view = viewsByEntity.get(entity);
-            if (!view?.sprite) continue;
-
-            this.entries.push({
-                entity,
-                sprite: view.sprite,
-            });
-        }
+        this.worldEntity = context.ecs.getEntitiesWithComponent(TimeComponent)[0];
     }
 
     update(delta: number): void {
@@ -68,6 +55,8 @@ export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
 
 
     destroy(): void {
-        this.entries = [];
+        // Clean up if necessary
+        this.context = null!;
+        this.worldEntity = null!;
     }
 }

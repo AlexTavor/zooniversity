@@ -21,6 +21,7 @@ import { TimeSystem } from "../time/TimeSystem";
 import { WeatherSystem } from "../weather/WeatherSystem";
 import {CaveTreeLUTComponent} from "../lut/CaveTreeLUTComponent.ts";
 import {buildCaveTreeLUTFromViews} from "../lut/buildCaveTreeLUTFromViews.ts";
+import { createBuildingViewTracker } from "../../display/game/createBuildingViewTracker.ts";
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -63,8 +64,7 @@ export const initSystems = (game:Game)=>{
 
 const initLut = (game:Game) => {
     const handleViewsInitialized = ()=>{
-        const viewDefs = Array.from(game.gameDisplay.viewsByEntity.values()).map(v=>v.viewDefinition);
-        const lut = new CaveTreeLUTComponent(buildCaveTreeLUTFromViews(viewDefs));
+        const lut = new CaveTreeLUTComponent(buildCaveTreeLUTFromViews(game.gameDisplay.viewsByEntity));
         game.ecs.addComponent(game.ecs.addEntity(), lut);
     }
     
@@ -93,6 +93,7 @@ export const initDisplay = (game:Game)=>{
     game.gameDisplay.init(game, game.ecs, modules,
     [
         (display:GameDisplay)=>createTreeViewTracker(display),
-        (display:GameDisplay)=>createCaveViewTracker(display)
+        (display:GameDisplay)=>createCaveViewTracker(display),
+        (display:GameDisplay)=>createBuildingViewTracker(display)
     ]);
 }

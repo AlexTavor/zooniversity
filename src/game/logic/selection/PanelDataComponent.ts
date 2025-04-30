@@ -1,5 +1,5 @@
 import { Component } from "../../ECS";
-import { DisplayTrait, PanelDefinition } from "../../display/setup/ViewDefinition.ts";
+import { DisplayTrait, PanelActionDefinition, PanelDefinition } from "../../display/setup/ViewDefinition.ts";
 
 export class PanelDataComponent extends Component {
     public title: string;
@@ -14,4 +14,15 @@ export class PanelDataComponent extends Component {
         this.traits = definition.traits ?? [];
         this.imagePath = definition.imagePath;
     }
+}
+
+export interface PanelAction {
+    def: PanelActionDefinition;
+    invoke: () => void;
+}
+
+export interface PanelState {
+    entity: number;
+    panel: PanelDefinition;
+    actions: PanelAction[]; // Fully resolved, runtime-safe
 }

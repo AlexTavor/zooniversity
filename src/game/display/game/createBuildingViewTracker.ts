@@ -1,46 +1,44 @@
-import { ViewTracker } from "./ViewTracker";
+import { ViewTracker } from "./ViewTracker.ts";
 import { Transform } from "../../logic/components/Transform.ts";
-import { Tree } from "../../logic/components/Tree.ts";
 import { createView } from "../setup/ViewStore.ts";
+import { SpriteKey } from "../setup/SpriteLibrary.ts";
 import { GameDisplayContext } from "../GameDisplay.ts";
-import {ViewType} from "../setup/ViewDefinition.ts";
-import { Config } from "../../config/Config.ts";
+import {PanelDefinition, ViewType} from "../setup/ViewDefinition.ts";
+import { WoodDojo } from "../../logic/components/WoodDojo.ts";
 
-
-// TODO - trees fruit display
-
-export function createTreeViewTracker(
+export function createBuildingViewTracker(
     context: GameDisplayContext
 ): ViewTracker {
     return new ViewTracker({
         viewsByEntity: context.viewsByEntity,
         ecs: context.ecs,
         scene: context.scene,
-        componentClasses: [Transform, Tree],
-        layerContainer: context.layers.Trees,
+        componentClasses: [Transform, WoodDojo],
+        layerContainer: context.layers.Caves,
         createDefinition: (ecs, entity) => {
             const transform = ecs.getComponent(entity, Transform);
-            const tree = ecs.getComponent(entity, Tree);
+            const panelDefinition = {...(new PanelDefinition()), ...{
+                title: "Wood Dojo",
+                description: "Center of Wood Mastery",
+                imagePath: "assets/panels/wood_dojo_panel.png"
+            }};
 
             return createView({
-                spriteName: tree.type,
+                spriteName: "wood_dojo" as SpriteKey,
                 position: {
                     x: Math.round(transform.x),
                     y: Math.round(transform.y),
                 },
+                size: {x:2, y:2},
                 frame: 0,
-                type: ViewType.TREE
+                type: ViewType.CAVE,
+                panelDefinition
             });
         },
         updateView: (ecs, entity, view) => {
             const transform = ecs.getComponent(entity, Transform);
-
             view.viewContainer.x = Math.round(transform.x);
-            // That is an artifact of old creation tools output
-            view.viewContainer.y = Math.round(transform.y + Config.AnimImports.FrameHeight/2);
-            // keep frame in sync (if it ever changes)
-            view.sprite?.setFrame(view.viewDefinition.frame);
-            
+            view.viewContainer.y = Math.round(transform.y);
             return false;
         }
     });

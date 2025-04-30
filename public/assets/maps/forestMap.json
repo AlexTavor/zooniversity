@@ -1,5 +1,5 @@
 {
-  "name": "forestMap2",
+  "name": "forestMap",
   "hill": {
     "id": 1,
     "spriteName": "hill",
@@ -25824,27 +25824,6 @@
       },
       "zHint": 99999999999
     },
-    "1339": {
-      "id": 1339,
-      "type": "cave",
-      "components": {
-        "view": {
-          "id": 23,
-          "spriteName": "cave",
-          "position": {
-            "x": 4079,
-            "y": 4421
-          },
-          "size": {
-            "x": 0.00390625,
-            "y": 0.00390625
-          },
-          "frame": 0,
-          "subViews": []
-        }
-      },
-      "zHint": 99999999999
-    },
     "1340": {
       "id": 1340,
       "type": "cave",
@@ -25949,6 +25928,34 @@
         }
       },
       "zHint": 11.574776570393455
+    },
+    "1345": {
+      "id": 1345,
+      "type": "cave",
+      "components": {
+        "view": {
+          "id": 3,
+          "spriteName": "wood_dojo",
+          "position": {
+            "x": 4150,
+            "y": 4414
+          },
+          "size": {
+            "x": 0.00390625,
+            "y": 0.00390625
+          },
+          "frame": 0,
+          "subViews": [],
+          "type": 0,
+          "selectable": true,
+          "panelDefinition": {
+            "title": "",
+            "description": "",
+            "imagePath": ""
+          }
+        }
+      },
+      "zHint": 99999999999
     }
   }
 }

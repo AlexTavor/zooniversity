@@ -8,7 +8,6 @@ import {Naming} from "../../../../../consts/Naming.ts";
 export class MapViewRenderer extends DisplayModule<MapEditorModule> {
     private editor!: MapEditorModule;
 
-    private hillContainer!: Phaser.GameObjects.Container;
     private treeLayer!: Phaser.GameObjects.Container;
     private caveLayer!: Phaser.GameObjects.Container;
     private renderedObjects: Record<number, View> = {};
@@ -20,17 +19,15 @@ export class MapViewRenderer extends DisplayModule<MapEditorModule> {
         this.editor.getViewById = this.getViewById.bind(this);
         
         const scene = editor.display.scene;
-        const ground = editor.display.layers.Ground;
 
-        this.hillContainer = scene.add.container(0, 0);
         this.caveLayer = scene.add.container(0, 0);
         this.treeLayer = scene.add.container(0, 0);
-        ground.add([this.hillContainer, this.treeLayer, this.caveLayer]);
+        editor.display.layers.Caves.add(this.caveLayer);
+        editor.display.layers.Trees.add(this.treeLayer);
     }
 
     public destroy(): void {
         this.clear();
-        this.hillContainer?.destroy();
         this.treeLayer?.destroy();
         this.caveLayer?.destroy();
     }
@@ -46,9 +43,6 @@ export class MapViewRenderer extends DisplayModule<MapEditorModule> {
         this.clear();
 
         const scene = this.editor.display.scene;
-
-        // Render hill
-        new View(def.hill.id, {}, def.hill, this.hillContainer, scene);
 
         this.zById.clear();
         
@@ -77,7 +71,6 @@ export class MapViewRenderer extends DisplayModule<MapEditorModule> {
     }
     
     private clear(): void {
-        this.hillContainer?.removeAll(true);
         this.treeLayer?.removeAll(true);
         this.caveLayer?.removeAll(true);
         this.renderedObjects = {};

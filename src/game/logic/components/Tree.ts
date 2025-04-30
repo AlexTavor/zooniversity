@@ -3,7 +3,7 @@ import {PlantSpriteKey} from "../../display/setup/SpriteLibrary.ts";
 
 export class Tree extends Component {
     constructor(
-        public kind: PlantSpriteKey
+        public type: PlantSpriteKey
     ) {
         super();
     }

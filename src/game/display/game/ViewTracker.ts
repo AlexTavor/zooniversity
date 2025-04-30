@@ -3,8 +3,6 @@ import { ECS, Entity } from "../../ECS.ts";
 import { View } from "../setup/View.ts";
 import { ViewDefinition } from "../setup/ViewDefinition.ts";
 import { getViews } from "../setup/ViewStore.ts";
-import { EventBus } from "../../EventBus.ts";
-import { GameEvent } from "../../consts/GameEvents.ts";
 
 export interface ViewTrackerOptions {
     ecs: ECS;

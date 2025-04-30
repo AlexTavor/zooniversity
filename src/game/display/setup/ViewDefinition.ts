@@ -23,11 +23,16 @@ export class PanelDefinition {
     public imagePath:string;
     public traits?: DisplayTrait[];
     public entity: number;
+    actions?: PanelActionDefinition[];
+}
+
+export interface PanelActionDefinition {
+    label: string;
+    type: string;
 }
 
 export class ViewDefinition {
     public readonly id: number;
-    public entity: number;
     public readonly spriteName: string;
     public readonly position: Pos;
     public readonly size: Pos;
