@@ -3,9 +3,9 @@ import {EditorContext} from "../EditorHost.ts";
 import {Pos} from "../../../../utils/Math.ts";
 import {DisplayModule} from "../../setup/DisplayModule.ts";
 import {View} from "../../setup/View.ts";
-import {PointerEvents} from "../../../consts/PointerEvents.ts";
+import {PointerEvent} from "../../../consts/PointerEvent.ts";
 import {EventBus} from "../../../EventBus.ts";
-import {DnDEvents} from "../../../consts/DnDEvents.ts";
+import {DnDEvent} from "../../../consts/DnDEvent.ts";
 
 
 export class MoveToolContext implements EditorContext {
@@ -27,21 +27,21 @@ export class BaseMoveToolModule extends DisplayModule<MoveToolContext> {
         this.editor = editor;
 
         const scene = editor.scene;
-        scene.input.on(PointerEvents.PointerDown, this.onPointerDown, this);
-        scene.input.on(PointerEvents.PointerMove, this.onPointerMove, this);
-        scene.input.on(PointerEvents.PointerUp, this.onPointerUp, this);
+        scene.input.on(PointerEvent.PointerDown, this.onPointerDown, this);
+        scene.input.on(PointerEvent.PointerMove, this.onPointerMove, this);
+        scene.input.on(PointerEvent.PointerUp, this.onPointerUp, this);
 
-        EventBus.emit(DnDEvents.DragControlStart); // disable camera drag
+        EventBus.emit(DnDEvent.DragControlStart); // disable camera drag
     }
 
     public destroy(): void {
         const scene = this.editor.scene;
-        scene.input.off(PointerEvents.PointerDown, this.onPointerDown, this);
-        scene.input.off(PointerEvents.PointerMove, this.onPointerMove, this);
-        scene.input.off(PointerEvents.PointerUp, this.onPointerUp, this);
+        scene.input.off(PointerEvent.PointerDown, this.onPointerDown, this);
+        scene.input.off(PointerEvent.PointerMove, this.onPointerMove, this);
+        scene.input.off(PointerEvent.PointerUp, this.onPointerUp, this);
 
         this.dragging = false;
-        EventBus.emit(DnDEvents.DragControlEnd); // re-enable camera drag
+        EventBus.emit(DnDEvent.DragControlEnd); // re-enable camera drag
     }
 
     public update(): void {

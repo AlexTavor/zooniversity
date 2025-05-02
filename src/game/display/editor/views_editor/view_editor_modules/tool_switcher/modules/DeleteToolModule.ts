@@ -1,8 +1,8 @@
 import {ViewsEditorModule} from "../../../ViewsEditorModule.ts";
 import {DisplayModule} from "../../../../../setup/DisplayModule.ts";
-import {PointerEvents} from "../../../../../../consts/PointerEvents.ts";
+import {PointerEvent} from "../../../../../../consts/PointerEvent.ts";
 import {EventBus} from "../../../../../../EventBus.ts";
-import {DnDEvents} from "../../../../../../consts/DnDEvents.ts";
+import {DnDEvent} from "../../../../../../consts/DnDEvent.ts";
 import {Naming} from "../../../../../../consts/Naming.ts";
 
 export class DeleteToolModule extends DisplayModule<ViewsEditorModule> {
@@ -12,13 +12,13 @@ export class DeleteToolModule extends DisplayModule<ViewsEditorModule> {
         this.editor = editor;
         const scene = editor.display.scene;
 
-        scene.input.on(PointerEvents.PointerUp, this.handlePointerUp, this);
-        EventBus.emit(DnDEvents.DragControlEnd); // disable camera while deleting
+        scene.input.on(PointerEvent.PointerUp, this.handlePointerUp, this);
+        EventBus.emit(DnDEvent.DragControlEnd); // disable camera while deleting
     }
 
     public destroy(): void {
-        this.editor.display.scene.input.off(PointerEvents.PointerUp, this.handlePointerUp, this);
-        EventBus.emit(DnDEvents.DragControlStart); // re-enable camera
+        this.editor.display.scene.input.off(PointerEvent.PointerUp, this.handlePointerUp, this);
+        EventBus.emit(DnDEvent.DragControlStart); // re-enable camera
     }
 
     public update(): void {

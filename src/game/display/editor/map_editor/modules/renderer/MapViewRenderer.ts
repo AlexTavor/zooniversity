@@ -23,7 +23,7 @@ export class MapViewRenderer extends DisplayModule<MapEditorModule> {
         this.caveLayer = scene.add.container(0, 0);
         this.treeLayer = scene.add.container(0, 0);
         editor.display.layers.Caves.add(this.caveLayer);
-        editor.display.layers.Trees.add(this.treeLayer);
+        editor.display.layers.Surface.add(this.treeLayer);
     }
 
     public destroy(): void {

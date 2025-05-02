@@ -1,8 +1,8 @@
 import { DisplayModule } from "../../setup/DisplayModule";
-import { PointerEvents } from "../../../consts/PointerEvents";
+import { PointerEvent } from "../../../consts/PointerEvent.ts";
 import {getSelectedSpriteKey} from "./PaletteState.ts";
 import {EventBus} from "../../../EventBus.ts";
-import {DnDEvents} from "../../../consts/DnDEvents.ts";
+import {DnDEvent} from "../../../consts/DnDEvent.ts";
 import {EditorContext} from "../EditorHost.ts";
 import {Pos} from "../../../../utils/Math.ts";
 
@@ -24,16 +24,16 @@ export class BasePaintToolModule extends DisplayModule<PaintToolContext> {
     init(editor: PaintToolContext): void {
         this.editor = editor;
         const scene = editor.scene;
-        scene.input.on(PointerEvents.PointerDown, this.handlePointerDown, this);
-        scene.input.on(PointerEvents.PointerUp, this.handlePointerUp, this);
-        scene.input.on(PointerEvents.PointerMove, this.handlePointerMove, this);
+        scene.input.on(PointerEvent.PointerDown, this.handlePointerDown, this);
+        scene.input.on(PointerEvent.PointerUp, this.handlePointerUp, this);
+        scene.input.on(PointerEvent.PointerMove, this.handlePointerMove, this);
     }
 
     public destroy(): void {
         const scene = this.editor.scene;
-        scene.input.off(PointerEvents.PointerDown, this.handlePointerDown, this);
-        scene.input.off(PointerEvents.PointerUp, this.handlePointerUp, this);
-        scene.input.off(PointerEvents.PointerMove, this.handlePointerMove, this);
+        scene.input.off(PointerEvent.PointerDown, this.handlePointerDown, this);
+        scene.input.off(PointerEvent.PointerUp, this.handlePointerUp, this);
+        scene.input.off(PointerEvent.PointerMove, this.handlePointerMove, this);
     }
 
     update(delta: number): void {
@@ -62,12 +62,12 @@ export class BasePaintToolModule extends DisplayModule<PaintToolContext> {
         this.pointerPos = {x: pointer.worldX, y: pointer.worldY};
         this.paintElapsed = 0;
         this.paintReady = false;
-        EventBus.emit(DnDEvents.DragControlStart);
+        EventBus.emit(DnDEvent.DragControlStart);
     };
 
     private handlePointerUp = () => {
         this.pointerDown = false;
-        EventBus.emit(DnDEvents.DragControlEnd);
+        EventBus.emit(DnDEvent.DragControlEnd);
     };
 
     private handlePointerMove = (pointer: Phaser.Input.Pointer) => {

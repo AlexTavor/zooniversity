@@ -1,6 +1,6 @@
 import { System, Entity } from "../../ECS";
 import { EventBus } from "../../EventBus";
-import { GameEvent } from "../../consts/GameEvents";
+import { GameEvent } from "../../consts/GameEvent";
 import { StoryEventStateComponent } from "./StoryEventComponent";
 import { StoryEventDefinition } from "./StoryEventTypes";
 

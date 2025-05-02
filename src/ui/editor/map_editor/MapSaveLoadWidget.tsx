@@ -4,7 +4,7 @@ import {FileManagementUi} from "../../shared/file_management/FileManagementUi.ts
 import {MapDefinition} from "../../../game/display/editor/map_editor/MapTypes.ts";
 import {useMapSnapshot} from "./useMapSnapshot.tsx";
 import {EventBus} from "../../../game/EventBus.ts";
-import {EditorEvents} from "../../../game/consts/EditorEvents.ts";
+import {EditorEvent} from "../../../game/consts/EditorEvent.ts";
 
 export function MapSaveLoadWidget() {
     const state = useMapSnapshot();
@@ -29,7 +29,7 @@ export function MapSaveLoadWidget() {
         if (!result || typeof result !== 'string') return;
         const data: MapDefinition = JSON.parse(result);
         setName(data.name);
-        EventBus.emit(EditorEvents.MapLoaded, data);
+        EventBus.emit(EditorEvent.MapLoaded, data);
     };
 
     return (

@@ -1,7 +1,7 @@
 import {BaseDropToolModule, DropToolContext} from "../../../common/BaseDropToolModule.ts";
 import {DisplayModule} from "../../../../setup/DisplayModule.ts";
 import {MapEditorModule} from "../../MapEditorModule.ts";
-import {PaletteType} from "../../../../../consts/EditorEvents.ts";
+import {PaletteType} from "../../../../../consts/EditorEvent.ts";
 
 export class MapEditorDropToolModule extends DisplayModule<MapEditorModule> {
     private editor!: MapEditorModule;

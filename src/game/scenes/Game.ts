@@ -3,7 +3,7 @@ import { Scene } from 'phaser';
 import {ECS} from "../ECS.ts";
 import {GameDisplay} from "../display/GameDisplay.ts";
 import {setSceneType} from "../../ui/ui_switcher/useActiveSceneType.ts";
-import {GameEvent} from "../consts/GameEvents.ts";
+import {GameEvent} from "../consts/GameEvent.ts";
 import {GameState} from "../logic/serialization/GameState.ts";
 import {loadFromState} from "../logic/serialization/GameStateSerializer.ts";
 import {loadNewGame} from "../logic/serialization/MapSerializer.ts";

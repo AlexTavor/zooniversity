@@ -3,7 +3,8 @@ import {Pos} from "../../../utils/Math.ts";
 export enum ViewType {
     NONE = 0,
     TREE = 1,
-    CAVE = 2
+    CAVE = 2,
+    CHARCTER = 3,
 }
 
 export enum DisplayTraitType {

@@ -1,11 +1,11 @@
 import { useSyncExternalStore } from 'react';
 import {MapDefinition} from "../../../game/display/editor/map_editor/MapTypes.ts";
 import {EventBus} from "../../../game/EventBus.ts";
-import {EditorEvents} from "../../../game/consts/EditorEvents.ts";
+import {EditorEvent} from "../../../game/consts/EditorEvent.ts";
 
 let currentSnapshot: MapDefinition;
 
-EventBus.on(EditorEvents.MapUpdated, (snapshot: MapDefinition) => {
+EventBus.on(EditorEvent.MapUpdated, (snapshot: MapDefinition) => {
     currentSnapshot = snapshot;
     listeners.forEach(fn => fn());
 });

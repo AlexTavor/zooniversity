@@ -7,7 +7,7 @@ import {SpriteLibrary} from "../../setup/SpriteLibrary.ts";
 import {getSelectedSpriteKey} from "../common/PaletteState.ts";
 import { MapObjectsStore } from './MapObjectsStore';
 import {EventBus} from "../../../EventBus.ts";
-import {EditorEvents} from "../../../consts/EditorEvents.ts";
+import {EditorEvent} from "../../../consts/EditorEvent.ts";
 
 export class MapEditorState {
     dirty = false;
@@ -90,7 +90,7 @@ export class MapEditorState {
     
     public markDirty(): void {
         this.dirty = true;
-        EventBus.emit(EditorEvents.MapUpdated, this.getMapDefinition());
+        EventBus.emit(EditorEvent.MapUpdated, this.getMapDefinition());
     }
 
     public consumeDirty(): boolean {

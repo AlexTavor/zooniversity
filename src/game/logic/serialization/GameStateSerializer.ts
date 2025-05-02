@@ -6,7 +6,7 @@ import {Tree} from "../components/Tree.ts";
 import {Cave} from "../components/Cave.ts";
 import {EntityState, GameState} from "./GameState.ts";
 import {EventBus} from "../../EventBus.ts";
-import {GameEvent} from "../../consts/GameEvents.ts";
+import {GameEvent} from "../../consts/GameEvent.ts";
 import {InputComponent} from "../input/InputComponent.ts";
 import {TimeComponent} from "../time/TimeComponent.ts";
 

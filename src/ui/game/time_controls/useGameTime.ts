@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import {TimeSpeed} from "../../../game/logic/input/InputComponent.ts";
 import {EventBus} from "../../../game/EventBus.ts";
-import {GameEvent} from "../../../game/consts/GameEvents.ts";
+import {GameEvent} from "../../../game/consts/GameEvent.ts";
 import {TimeConfig} from "../../../game/config/TimeConfig.ts";
 
 export interface GameTime {

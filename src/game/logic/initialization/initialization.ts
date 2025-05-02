@@ -1,5 +1,5 @@
 import { EventBus } from "../../EventBus";
-import { GameEvent } from "../../consts/GameEvents";
+import { GameEvent } from "../../consts/GameEvent.ts";
 import { GameDisplay } from "../../display/GameDisplay";
 import { CameraModule } from "../../display/camera/CameraModule";
 import { createCaveViewTracker } from "../../display/game/createCaveViewTracker";
@@ -22,6 +22,7 @@ import { WeatherSystem } from "../weather/WeatherSystem";
 import {CaveTreeLUTComponent} from "../lut/CaveTreeLUTComponent.ts";
 import {buildCaveTreeLUTFromViews} from "../lut/buildCaveTreeLUTFromViews.ts";
 import { createBuildingViewTracker } from "../../display/game/createBuildingViewTracker.ts";
+import { createCharacterViewTracker } from "../../display/game/createCharacterViewTracker.ts";
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -94,6 +95,7 @@ export const initDisplay = (game:Game)=>{
     [
         (display:GameDisplay)=>createTreeViewTracker(display),
         (display:GameDisplay)=>createCaveViewTracker(display),
-        (display:GameDisplay)=>createBuildingViewTracker(display)
+        (display:GameDisplay)=>createBuildingViewTracker(display),
+        (display:GameDisplay)=>createCharacterViewTracker(display),
     ]);
 }

@@ -24,6 +24,11 @@ const panelDefinitions: Record<ViewType, PanelDefinition> = {
         title: "",
         description: "",
         imagePath: "",
+    } ,
+    [ViewType.CHARCTER]: {
+        title: "Character",
+        description: "Some character",
+        imagePath: "",
     } 
 } as Record<ViewType, PanelDefinition>;
 

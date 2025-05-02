@@ -3,7 +3,7 @@ import {InputComponent} from "../input/InputComponent.ts";
 import {TimeComponent} from "./TimeComponent.ts";
 import {TimeConfig} from "../../config/TimeConfig.ts";
 import {EventBus} from "../../EventBus.ts";
-import {GameEvent} from "../../consts/GameEvents.ts";
+import {GameEvent} from "../../consts/GameEvent.ts";
 
 export class TimeSystem extends System {
     public componentsRequired = new Set<Function>([TimeComponent, InputComponent]);

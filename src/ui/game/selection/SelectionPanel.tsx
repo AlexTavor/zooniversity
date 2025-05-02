@@ -4,7 +4,7 @@ import { EventBus } from "../../../game/EventBus.ts";
 import "./SelectionPanel.css";
 import { UIEvent } from "../../../game/consts/UIEvent.ts";
 import { UIConfig } from "../../../game/consts/UIConfig.ts";
-import { GameEvent } from "../../../game/consts/GameEvents.ts";
+import { GameEvent } from "../../../game/consts/GameEvent.ts";
 
 const traitIcons: Record<DisplayTraitType, string> = {
     [DisplayTraitType.WOOD]: "assets/icons/wood_icon.png",

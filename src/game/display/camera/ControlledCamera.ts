@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import {CameraConfig} from "../../config/CameraConfig.ts";
-import {PointerEvents} from "../../consts/PointerEvents.ts";
+import {PointerEvent} from "../../consts/PointerEvent.ts";
 
 export class ControlledCamera {
 
@@ -34,10 +34,10 @@ export class ControlledCamera {
 
     public destroy() {
         // Use pointerEvents instance for event names
-        this.scene.input.off(PointerEvents.PointerDown, this.handlePointerDown, this);
-        this.scene.input.off(PointerEvents.PointerUp, this.handlePointerUp, this);
-        this.scene.input.off(PointerEvents.PointerMove, this.handlePointerMove, this);
-        this.scene.input.off(PointerEvents.Wheel, this.handleWheel, this);
+        this.scene.input.off(PointerEvent.PointerDown, this.handlePointerDown, this);
+        this.scene.input.off(PointerEvent.PointerUp, this.handlePointerUp, this);
+        this.scene.input.off(PointerEvent.PointerMove, this.handlePointerMove, this);
+        this.scene.input.off(PointerEvent.Wheel, this.handleWheel, this);
         clearTimeout(this.timeout);
     }
 
@@ -155,10 +155,10 @@ export class ControlledCamera {
         this.camera.setBounds(0, 0, worldWidth, worldHeight);
 
         // Use pointerEvents instance for event names
-        this.scene.input.on(PointerEvents.PointerDown, this.handlePointerDown, this);
-        this.scene.input.on(PointerEvents.PointerUp, this.handlePointerUp, this);
-        this.scene.input.on(PointerEvents.PointerMove, this.handlePointerMove, this);
-        this.scene.input.on(PointerEvents.Wheel, this.handleWheel, this);
+        this.scene.input.on(PointerEvent.PointerDown, this.handlePointerDown, this);
+        this.scene.input.on(PointerEvent.PointerUp, this.handlePointerUp, this);
+        this.scene.input.on(PointerEvent.PointerMove, this.handlePointerMove, this);
+        this.scene.input.on(PointerEvent.Wheel, this.handleWheel, this);
 
         this.resetZoom();
     }

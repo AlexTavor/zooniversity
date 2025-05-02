@@ -1,7 +1,7 @@
 import {ViewsEditorModule} from "../../ViewsEditorModule.ts";
 import {DisplayModule} from "../../../../setup/DisplayModule.ts";
 import {Pos} from "../../../../../../utils/Math.ts";
-import {PointerEvents} from "../../../../../consts/PointerEvents.ts";
+import {PointerEvent} from "../../../../../consts/PointerEvent.ts";
 import {EventBus} from "../../../../../EventBus.ts";
 import {Naming} from "../../../../../consts/Naming.ts";
 
@@ -18,14 +18,14 @@ export class SelectionStateModule extends DisplayModule<ViewsEditorModule> {
         this.editor = editor;
 
         const scene = editor.display.scene;
-        scene.input.on(PointerEvents.PointerDown, this.handlePointerDown, this);
-        scene.input.on(PointerEvents.PointerUp, this.handlePointerUp, this);
+        scene.input.on(PointerEvent.PointerDown, this.handlePointerDown, this);
+        scene.input.on(PointerEvent.PointerUp, this.handlePointerUp, this);
     }
 
     public destroy(): void {
         const scene = this.editor.display.scene;
-        scene.input.off(PointerEvents.PointerDown, this.handlePointerDown, this);
-        scene.input.off(PointerEvents.PointerUp, this.handlePointerUp, this);
+        scene.input.off(PointerEvent.PointerDown, this.handlePointerDown, this);
+        scene.input.off(PointerEvent.PointerUp, this.handlePointerUp, this);
     }
 
     public getSelectedViewId(): number | null {

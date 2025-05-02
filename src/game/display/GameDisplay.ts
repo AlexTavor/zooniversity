@@ -44,14 +44,6 @@ export class GameDisplay implements GameDisplayContext {
     }
     
     public setHill(): void {
-        const wFactor = Config.AnimImports.StaticWidth / Config.Display.Width;
-        const hFactor = Config.AnimImports.StaticHeight / Config.Display.Height;
-
-        const hillSize = {
-            x: Config.Display.Width / Config.Display.PixelsPerUnit * wFactor,
-            y: Config.Display.Height / Config.Display.PixelsPerUnit * hFactor
-        };
-
         // Why offset?
         const hOffset = 100;
         const wOffset = 100;
@@ -63,7 +55,6 @@ export class GameDisplay implements GameDisplayContext {
 
 
         const hillDef = createView({
-            size: hillSize,
             position: hillPosition,
             spriteName: 'hill',
             selectable: false,

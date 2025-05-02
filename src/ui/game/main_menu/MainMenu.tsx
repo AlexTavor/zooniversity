@@ -1,6 +1,6 @@
 import {MenuButton} from "./MenuButton.tsx";
 import {EventBus} from "../../../game/EventBus.ts";
-import {GameEvent} from "../../../game/consts/GameEvents.ts";
+import {GameEvent} from "../../../game/consts/GameEvent.ts";
 import {useSaveManager} from "./useSaveManager.tsx";
 import "./MainMenu.css";
 

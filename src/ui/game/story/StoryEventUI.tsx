@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { StoryEventPage, StoryOption } from "../../../game/logic/story/StoryEventTypes";
-import { GameEvent } from "../../../game/consts/GameEvents";
+import { GameEvent } from "../../../game/consts/GameEvent";
 import { EventBus } from "../../../game/EventBus";
 import "./StoryEventUI.css";
 

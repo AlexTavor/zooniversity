@@ -1,7 +1,7 @@
 import {GameDisplayContext} from "../../GameDisplay.ts";
 import {DisplayModule} from "../../setup/DisplayModule.ts";
 import {EventBus} from "../../../EventBus.ts";
-import {GameEvent} from "../../../consts/GameEvents.ts";
+import {GameEvent} from "../../../consts/GameEvent.ts";
 import {UIEvent} from "../../../consts/UIEvent.ts";
 
 export class SelectionPanelModule extends DisplayModule<GameDisplayContext> {

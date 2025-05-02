@@ -2,7 +2,7 @@ import {ViewsEditorModule} from "../../ViewsEditorModule.ts";
 import {DisplayModule} from "../../../../setup/DisplayModule.ts";
 import {getSelectedTool, ToolType} from "../../../common/ToolboxState.ts";
 import {EventBus} from "../../../../../EventBus.ts";
-import {DnDEvents} from "../../../../../consts/DnDEvents.ts";
+import {DnDEvent} from "../../../../../consts/DnDEvent.ts";
 import {DropToolModule} from "./modules/DropToolModule.ts";
 import {PaintToolModule} from "./modules/PaintToolModule.ts";
 import {DeleteToolModule} from "./modules/DeleteToolModule.ts";
@@ -36,7 +36,7 @@ export class ToolSwitcherModule extends DisplayModule<ViewsEditorModule> {
     private switchTool(tool: ToolType) {
         this.activeToolModule?.destroy();
 
-        EventBus.emit(DnDEvents.DragControlEnd);
+        EventBus.emit(DnDEvent.DragControlEnd);
 
         switch (tool) {
             case 'drop' as ToolType:

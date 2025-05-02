@@ -5,7 +5,7 @@ import { SidebarButton } from "../../shared/sidebar/SidebarButton.tsx";
 import { UndoRedo } from "../../shared/sidebar/UndoRedo.tsx";
 import { MapEditorToolbox } from "./MapEditorToolbox.tsx";
 import { SpritesPalette } from "./SpritesPalette.tsx";
-import {EditorEvents, PaletteType} from "../../../game/consts/EditorEvents.ts";
+import {EditorEvent, PaletteType} from "../../../game/consts/EditorEvent.ts";
 import {CaveSpriteKeys, PlantSpriteKeys} from "../../../game/display/setup/SpriteLibrary.ts";
 import {EventBus} from "../../../game/EventBus.ts";
 
@@ -24,13 +24,13 @@ export const MapSidebar: React.FC = () => {
             id: PaletteType.trees,
             label: 'Trees',
             icon: '🌲',
-            component: <SpritesPalette spriteKeys={[...PlantSpriteKeys]} onSelectedKeyChange={()=>{EventBus.emit(EditorEvents.PaletteTypeSelected, PaletteType.trees);}}/>,
+            component: <SpritesPalette spriteKeys={[...PlantSpriteKeys]} onSelectedKeyChange={()=>{EventBus.emit(EditorEvent.PaletteTypeSelected, PaletteType.trees);}}/>,
         },
         {
             id: PaletteType.caves,
             label: 'Caves',
             icon: '🪨',
-            component: <SpritesPalette spriteKeys={[...CaveSpriteKeys]} onSelectedKeyChange={()=>{EventBus.emit(EditorEvents.PaletteTypeSelected, PaletteType.caves);}}/>,
+            component: <SpritesPalette spriteKeys={[...CaveSpriteKeys]} onSelectedKeyChange={()=>{EventBus.emit(EditorEvent.PaletteTypeSelected, PaletteType.caves);}}/>,
         },
     ], []);
 

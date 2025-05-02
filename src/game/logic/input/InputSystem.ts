@@ -1,6 +1,6 @@
 import { Entity, System } from "../../ECS";
 import { InputComponent, TimeSpeed } from "./InputComponent.ts";
-import { GameEvent } from "../../consts/GameEvents.ts";
+import { GameEvent } from "../../consts/GameEvent.ts";
 import { EventBus } from "../../EventBus.ts";
 
 export class InputSystem extends System {

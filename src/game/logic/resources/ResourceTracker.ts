@@ -1,5 +1,5 @@
 import { EventBus } from "../../EventBus";
-import { GameEvent } from "../../consts/GameEvents";
+import { GameEvent } from "../../consts/GameEvent";
 import { ResourceType } from "./ResourceType";
 
 type ResourceListener = (resources: Partial<Record<ResourceType, number>>) => void;

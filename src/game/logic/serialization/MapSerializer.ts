@@ -5,8 +5,8 @@ import {Tree} from "../components/Tree.ts";
 import {CaveSpriteKey, PlantSpriteKey} from "../../display/setup/SpriteLibrary.ts";
 import {Cave} from "../components/Cave.ts";
 import {EventBus} from "../../EventBus.ts";
-import {GameEvent} from "../../consts/GameEvents.ts";
-import {createWorldEntity} from "./createWorldEntity.ts";
+import {GameEvent} from "../../consts/GameEvent.ts";
+import {createProfessorBooker, createWorldEntity} from "./createWorldEntity.ts";
 import {PanelDataComponent} from "../selection/PanelDataComponent.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../components/WoodDojo.ts";
@@ -86,5 +86,6 @@ export function loadNewGame(ecs: ECS, scene: Phaser.Scene): void {
     const mapDefinition = rawData as MapDefinition;
     loadMapIntoECS(ecs, mapDefinition);
     createWorldEntity(ecs);
+    createProfessorBooker(ecs);
     EventBus.emit(GameEvent.GameLoaded);
 } 

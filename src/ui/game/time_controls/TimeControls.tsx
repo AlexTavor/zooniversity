@@ -3,7 +3,7 @@ import "./TimeControls.css";
 import {useGameTime} from "./useGameTime.ts";
 import {TimeSpeed} from "../../../game/logic/input/InputComponent.ts";
 import {EventBus} from "../../../game/EventBus.ts";
-import {GameEvent} from "../../../game/consts/GameEvents.ts";
+import {GameEvent} from "../../../game/consts/GameEvent.ts";
 
 const speeds: { label: string; value: TimeSpeed }[] = [
     { label: "⏸", value: "paused" },

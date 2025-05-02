@@ -11,7 +11,7 @@ import {View} from "../../setup/View.ts";
 import {Naming} from "../../../consts/Naming.ts";
 import {MapEditorHistoryModule} from "./modules/history/MapEditorHistoryModule.ts";
 import {EventBus} from "../../../EventBus.ts";
-import {EditorEvents, PaletteType} from "../../../consts/EditorEvents.ts";
+import {EditorEvent, PaletteType} from "../../../consts/EditorEvent.ts";
 
 export class MapEditorModule extends DisplayModule<EditorContext> {
     public display!: GameDisplay;
@@ -32,8 +32,8 @@ export class MapEditorModule extends DisplayModule<EditorContext> {
         this.modules.forEach(m => m.init(this));
         this.state.createNew();
         
-        EventBus.on(EditorEvents.MapLoaded, this.state.loadMap.bind(this.state));
-        EventBus.on(EditorEvents.PaletteTypeSelected, this.setPaletteType.bind(this));
+        EventBus.on(EditorEvent.MapLoaded, this.state.loadMap.bind(this.state));
+        EventBus.on(EditorEvent.PaletteTypeSelected, this.setPaletteType.bind(this));
     }
 
     public update(delta: number): void {
@@ -43,8 +43,8 @@ export class MapEditorModule extends DisplayModule<EditorContext> {
     public destroy(): void {
         this.modules.forEach(m => m.destroy());
         clearViews();
-        EventBus.off(EditorEvents.MapLoaded, this.state.loadMap.bind(this.state));
-        EventBus.off(EditorEvents.PaletteTypeSelected, this.setPaletteType.bind(this));
+        EventBus.off(EditorEvent.MapLoaded, this.state.loadMap.bind(this.state));
+        EventBus.off(EditorEvent.PaletteTypeSelected, this.setPaletteType.bind(this));
     }
     
     setPaletteType(paletteType: PaletteType) {

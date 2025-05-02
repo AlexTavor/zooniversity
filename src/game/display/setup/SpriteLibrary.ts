@@ -6,7 +6,9 @@ export type PlantSpriteKey = typeof PlantSpriteKeys[number];
 export type HillSpriteKey = 'hill';
 export const CaveSpriteKeys = ['cave', 'wood_dojo'] as const;
 export type CaveSpriteKey = typeof CaveSpriteKeys[number];
-export type SpriteKey = PlantSpriteKey | HillSpriteKey | CaveSpriteKey;
+export const CharacterKeys = ['booker_char'] as const;
+export type CharacterKey = typeof CharacterKeys[number];
+export type SpriteKey = PlantSpriteKey | HillSpriteKey | CaveSpriteKey | CharacterKey;
 
 interface SpriteDefinition {
     key: SpriteKey;
@@ -31,4 +33,5 @@ export const SpriteLibrary: Record<SpriteKey, SpriteDefinition> = {
     hill: {key: 'hill', defaultSize: defaultHillSize, path: 'assets/hill/hill.png'},
     cave: {key: 'cave', defaultSize: defaultCaveSize, path: 'assets/hill/cave.png'},
     wood_dojo: {key: 'wood_dojo', defaultSize: defaultCaveSize, path: 'assets/hill/wood_dojo.png'},
+    booker_char: {key: 'booker_char', defaultSize: {x: 0.5, y: 0.75}, path: 'assets/characters/booker_char.png'},
 };

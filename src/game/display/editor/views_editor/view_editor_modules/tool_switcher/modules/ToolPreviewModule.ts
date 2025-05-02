@@ -1,7 +1,7 @@
 import {ViewsEditorModule} from "../../../ViewsEditorModule.ts";
 import {DisplayModule} from "../../../../../setup/DisplayModule.ts";
 import {SpriteKey, SpriteLibrary} from "../../../../../setup/SpriteLibrary.ts";
-import {PointerEvents} from "../../../../../../consts/PointerEvents.ts";
+import {PointerEvent} from "../../../../../../consts/PointerEvent.ts";
 import {getSelectedSpriteKey} from "../../../../common/PaletteState.ts";
 import {getSelectedTool} from "../../../../common/ToolboxState.ts";
 
@@ -14,11 +14,11 @@ export class ToolPreviewModule extends DisplayModule<ViewsEditorModule> {
     public init(editor: ViewsEditorModule): void {
         this.editor = editor;
         const scene = editor.display.scene;
-        scene.input.on(PointerEvents.PointerMove, this.handlePointerMove, this);
+        scene.input.on(PointerEvent.PointerMove, this.handlePointerMove, this);
     }
 
     public destroy(): void {
-        this.editor.display.scene.input.off(PointerEvents.PointerMove, this.handlePointerMove, this);
+        this.editor.display.scene.input.off(PointerEvent.PointerMove, this.handlePointerMove, this);
         this.previewSprite?.destroy();
         this.previewSprite = undefined;
     }

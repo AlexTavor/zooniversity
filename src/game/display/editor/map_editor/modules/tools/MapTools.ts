@@ -2,7 +2,7 @@ import { DisplayModule } from "../../../../setup/DisplayModule.ts";
 import { MapEditorModule } from "../../MapEditorModule.ts";
 import {EventBus} from "../../../../../EventBus.ts";
 import {getSelectedTool, ToolType} from "../../../common/ToolboxState.ts";
-import {DnDEvents} from "../../../../../consts/DnDEvents.ts";
+import {DnDEvent} from "../../../../../consts/DnDEvent.ts";
 import {MapEditorPaintToolModule} from "./MapEditorPaintToolModule.ts";
 import {MapEditorDropToolModule} from "./MapEditorDropToolModule.ts";
 import {MapEditorMoveToolModule} from "./MapEditorMoveToolModule.ts";
@@ -34,7 +34,7 @@ export class MapTools extends DisplayModule<MapEditorModule> {
 
     private switchTool(tool: ToolType) {
         this.activeToolModule?.destroy();
-        EventBus.emit(DnDEvents.DragControlEnd);
+        EventBus.emit(DnDEvent.DragControlEnd);
 
         switch (tool) {
             case 'paint':

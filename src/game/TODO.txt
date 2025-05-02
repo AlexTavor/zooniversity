@@ -33,7 +33,11 @@
 
 
 TODO:
+    Solve the whole Character/Icon dillema 
+    Trees 
+        Cut down icon
+        WD tool
+        Cut down toggle
+        Cut down logic
+        Wood drop
     Implement UI management (at first, only show/hide hud)
-    Create, import, and implement Prof icon
-        Icon
-        Agent with position

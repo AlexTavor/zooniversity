@@ -17,7 +17,7 @@ export function createTreeViewTracker(
         ecs: context.ecs,
         scene: context.scene,
         componentClasses: [Transform, Tree],
-        layerContainer: context.layers.Trees,
+        layerContainer: context.layers.Surface,
         createDefinition: (ecs, entity) => {
             const transform = ecs.getComponent(entity, Transform);
             const tree = ecs.getComponent(entity, Tree);

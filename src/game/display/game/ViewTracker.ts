@@ -3,6 +3,7 @@ import { ECS, Entity } from "../../ECS.ts";
 import { View } from "../setup/View.ts";
 import { ViewDefinition } from "../setup/ViewDefinition.ts";
 import { getViews } from "../setup/ViewStore.ts";
+import { Pos } from "../../../utils/Math.ts";
 
 export interface ViewTrackerOptions {
     ecs: ECS;
@@ -103,4 +104,14 @@ export class ViewTracker {
         }
         this.viewsLocal.clear();
     }
+
+    public static getReactCoordsFromPhaser(
+        container: Phaser.GameObjects.Container,
+        camera: Phaser.Cameras.Scene2D.Camera
+      ): Pos {
+        const x = (container.x - camera.worldView.x) * camera.zoom;
+        const y = (container.y - camera.worldView.y) * camera.zoom;
+      
+        return { x, y };
+      }
 }

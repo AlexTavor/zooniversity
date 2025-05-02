@@ -1,5 +1,5 @@
 import {DisplayModule} from "../../../../setup/DisplayModule.ts";
-import {PointerEvents} from "../../../../../consts/PointerEvents.ts";
+import {PointerEvent} from "../../../../../consts/PointerEvent.ts";
 import {getSelectedSpriteKey} from "../../../common/PaletteState.ts";
 import {getSelectedTool} from "../../../common/ToolboxState.ts";
 import {MapEditorModule} from "../../MapEditorModule.ts";
@@ -14,11 +14,11 @@ export class MapEditorToolPreviewModule extends DisplayModule<MapEditorModule> {
 
     public init(editor: MapEditorModule): void {
         this.editor = editor;
-        editor.display.scene.input.on(PointerEvents.PointerMove, this.handlePointerMove, this);
+        editor.display.scene.input.on(PointerEvent.PointerMove, this.handlePointerMove, this);
     }
 
     public destroy(): void {
-        this.editor.display.scene.input.off(PointerEvents.PointerMove, this.handlePointerMove, this);
+        this.editor.display.scene.input.off(PointerEvent.PointerMove, this.handlePointerMove, this);
         this.previewSprite?.destroy();
         this.previewSprite = undefined;
     }

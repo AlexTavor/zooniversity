@@ -35,7 +35,7 @@ export class View {
 
         const config = SpriteLibrary[viewDefinition.spriteName as SpriteKey];
         const pxPerUnit = Config.Display.PixelsPerUnit;
-        this.sprite?.setDisplaySize(config.defaultSize.x * pxPerUnit, config.defaultSize.y * pxPerUnit);
+        this.sprite?.setDisplaySize(config.defaultSize.x * pxPerUnit * viewDefinition.size.x, config.defaultSize.y * pxPerUnit * viewDefinition.size.y);
 
         for (const subViewId of viewDefinition.subViews) {
             const subViewDefinition = views[subViewId];

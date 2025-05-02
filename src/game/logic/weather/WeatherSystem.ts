@@ -4,7 +4,7 @@ import { WeatherComponent } from "./WeatherComponent.ts";
 import {SimplexNoise} from "../../../utils/SimplexNoise.ts";
 import {WeatherConfig} from "../../config/WeatherConfig.ts";
 import {EventBus} from "../../EventBus.ts";
-import {GameEvent} from "../../consts/GameEvents.ts";
+import {GameEvent} from "../../consts/GameEvent.ts";
 import {TimeComponent} from "../time/TimeComponent.ts";
 
 export class WeatherSystem extends System {
