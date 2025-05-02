@@ -33,11 +33,11 @@
 
 
 TODO:
-    Solve the whole Character/Icon dillema 
     Trees 
         Cut down icon
         WD tool
         Cut down toggle
         Cut down logic
         Wood drop
+        Character movement & positioning
     Implement UI management (at first, only show/hide hud)

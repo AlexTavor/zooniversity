@@ -41,6 +41,8 @@ export class SelectionHighlightModule extends DisplayModule<GameDisplayContext> 
         if (!view) return;
 
         this.outlinePlugin.add(view.viewContainer, OUTLINE_CONFIG);
+
+        EventBus.emit(GameEvent.ViewSelected, view.viewContainer);
     }
 
     private clearOutline(): void {

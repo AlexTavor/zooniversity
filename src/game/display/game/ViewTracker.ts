@@ -112,6 +112,13 @@ export class ViewTracker {
         const x = (container.x - camera.worldView.x) * camera.zoom;
         const y = (container.y - camera.worldView.y) * camera.zoom;
       
-        return { x, y };
-      }
+        const canvas = camera.scene.sys.game.canvas;
+        const maxX = canvas.width;
+        const maxY = canvas.height;
+      
+        return {
+          x: Phaser.Math.Clamp(x, 0, maxX),
+          y: Phaser.Math.Clamp(y, 0, maxY),
+        };
+    }
 }

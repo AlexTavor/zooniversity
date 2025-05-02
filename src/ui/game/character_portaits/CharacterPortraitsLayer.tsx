@@ -48,7 +48,7 @@ export const CharacterPortraitsLayer: React.FC = () => {
   return (
     <>
       {Object.entries(portraits).map(([id, data]) => (
-        <CharacterPortrait key={id} data={{...data}} />
+        <CharacterPortrait key={id} data={{...data, entity:+id}} />
       ))}
     </>
   );

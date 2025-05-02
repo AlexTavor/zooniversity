@@ -2,6 +2,7 @@ export class CameraConfig {
     public readonly MaxTimeBetweenClicksMs: number = 200;
     public readonly MaxZoom: number = 8;
     public readonly MinZoom: number = 0.14;
+    public readonly DefaultZoom: number = 1;
     public readonly DragDamping: number = 0.95;
     public readonly InertiaThreshold: number = 0.05;
     public readonly ZoomDurationMs: number = 300;
