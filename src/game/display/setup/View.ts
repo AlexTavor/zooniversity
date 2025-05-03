@@ -17,7 +17,8 @@ export class View {
         views: { [key: number]: ViewDefinition },
         viewDefinition: ViewDefinition,
         parentContainer: Phaser.GameObjects.Container,
-        scene: Phaser.Scene
+        scene: Phaser.Scene,
+        public pipeline: string = 'TimeTint'
     ) {
         this.viewDefinition = viewDefinition;
         this.type = viewDefinition.type;
@@ -33,9 +34,9 @@ export class View {
             this.addSprite(viewDefinition, scene, id);
         }
 
-        const config = SpriteLibrary[viewDefinition.spriteName as SpriteKey];
+        const size = SpriteLibrary[viewDefinition.spriteName as SpriteKey]?.defaultSize ?? { x: 1, y: 1 };
         const pxPerUnit = Config.Display.PixelsPerUnit;
-        this.sprite?.setDisplaySize(config.defaultSize.x * pxPerUnit * viewDefinition.size.x, config.defaultSize.y * pxPerUnit * viewDefinition.size.y);
+        this.sprite?.setDisplaySize(size.x * pxPerUnit * viewDefinition.size.x, size.y * pxPerUnit * viewDefinition.size.y);
 
         for (const subViewId of viewDefinition.subViews) {
             const subViewDefinition = views[subViewId];
@@ -71,6 +72,8 @@ export class View {
 
         }
         this.sprite.setFrame(viewDefinition.frame);
-        this.sprite.setPipeline('TimeTint');
+        
+        if (this.pipeline)
+            this.sprite.setPipeline(this.pipeline);
     }
 }

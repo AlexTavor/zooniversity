@@ -23,6 +23,7 @@ import {CaveTreeLUTComponent} from "../lut/CaveTreeLUTComponent.ts";
 import {buildCaveTreeLUTFromViews} from "../lut/buildCaveTreeLUTFromViews.ts";
 import { createBuildingViewTracker } from "../../display/game/createBuildingViewTracker.ts";
 import { createCharacterViewTracker } from "../../display/game/createCharacterViewTracker.ts";
+import { createTreeCutIconViewTracker } from "../../display/game/createTreeCutIconViewTracker.ts";
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -97,5 +98,6 @@ export const initDisplay = (game:Game)=>{
         (display:GameDisplay)=>createCaveViewTracker(display),
         (display:GameDisplay)=>createBuildingViewTracker(display),
         (display:GameDisplay)=>createCharacterViewTracker(display),
+        (display:GameDisplay)=>createTreeCutIconViewTracker(display),
     ]);
 }

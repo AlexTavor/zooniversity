@@ -5,6 +5,7 @@ export enum ViewType {
     TREE = 1,
     CAVE = 2,
     CHARCTER = 3,
+    ICON = 4,
 }
 
 export enum DisplayTraitType {

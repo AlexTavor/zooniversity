@@ -30,7 +30,6 @@ export class Preloader extends Scene
     {
         this.load.setPath('assets/plants');
 
-
         const animFrameConfig =                 {
             frameWidth: Config.AnimImports.FrameWidth*2,
             frameHeight: Config.AnimImports.FrameHeight*2,
@@ -103,6 +102,9 @@ export class Preloader extends Scene
         this.load.setPath('assets/characters/booker');
         this.load.spritesheet('booker_char', 'booker_char.png', charFrameConfig);
         this.load.spritesheet('booker_icon', 'booker_icon.png', caveFrameConfig);
+
+        this.load.setPath('assets/icons');
+        this.load.spritesheet('axe_icon', 'axe_icon.png', caveFrameConfig);
     }
 
     create ()

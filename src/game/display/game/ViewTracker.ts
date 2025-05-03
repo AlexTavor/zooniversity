@@ -12,6 +12,9 @@ export interface ViewTrackerOptions {
     layerContainer: Phaser.GameObjects.Container;
     createDefinition: (ecs: ECS, entity: Entity) => ViewDefinition;
     updateView: (ecs: ECS, entity: Entity, view: View) => boolean;
+    createView?: (id:number,
+        views: { [key: number]: ViewDefinition },
+        viewDefinition: ViewDefinition) => View;
     viewsByEntity: Map<Entity, View>; // 👈 Shared view map
 }
 
@@ -26,6 +29,7 @@ export class ViewTracker {
     private layerContainer: Phaser.GameObjects.Container;
     private createDefinition: (ecs: ECS, entity: Entity) => ViewDefinition;
     private updateView: (ecs: ECS, entity: Entity, view: View) => boolean;
+    createView: ((id: number, views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition) => View) | undefined;
 
     constructor({
                     ecs,
@@ -34,6 +38,7 @@ export class ViewTracker {
                     layerContainer,
                     createDefinition,
                     updateView,
+                    createView,
                     viewsByEntity
                 }: ViewTrackerOptions) {
         this.ecs = ecs;
@@ -42,6 +47,7 @@ export class ViewTracker {
         this.layerContainer = layerContainer;
         this.createDefinition = createDefinition;
         this.updateView = updateView;
+        this.createView = createView;
         this.viewsByEntity = viewsByEntity;
     }
 
@@ -69,7 +75,7 @@ export class ViewTracker {
         for (const entity of entityList) {
             if (!this.viewsLocal.has(entity)) {
                 const def = this.createDefinition(this.ecs, entity);
-                const view = new View(def.id, getViews(), def, this.layerContainer, this.scene);
+                const view = this.createView ? this.createView(def.id, getViews(), def) : new View(def.id, getViews(), def, this.layerContainer, this.scene);
                 this.viewsLocal.set(entity, view);
                 this.viewsByEntity.set(entity, view); // 🔁 global map update
                 changed = true;

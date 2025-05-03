@@ -11,6 +11,7 @@ export interface GameDisplayContext {
     layers: Layers;
     ecs: ECS;
     viewsByEntity: Map<Entity, View>;
+    iconsByEntity: Map<Entity, View>;
 }
 
 export type GameDisplayModule = DisplayModule<GameDisplayContext>;
@@ -23,6 +24,7 @@ export class GameDisplay implements GameDisplayContext {
     hill: View;
     private trackers: ViewTracker[];
     viewsByEntity:Map<Entity, View> = new Map();
+    iconsByEntity:Map<Entity, View> = new Map();
 
     init(
         scene: Phaser.Scene, 

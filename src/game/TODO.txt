@@ -35,7 +35,7 @@
 TODO:
     Trees 
         Cut down icon
-        WD tool
+        WD tools
         Cut down toggle
         Cut down logic
         Wood drop
