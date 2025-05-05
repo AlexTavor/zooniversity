@@ -4,17 +4,20 @@ import {ControlledCamera} from "./ControlledCamera.ts";
 import {Config} from "../../config/Config.ts";
 import { EventBus } from "../../EventBus.ts";
 import { GameEvent } from "../../consts/GameEvent.ts";
+import { UIEvent } from "../../consts/UIEvent.ts";
 
 export class CameraModule extends DisplayModule<GameDisplay> {
     public Camera: ControlledCamera;
 
     override init(display: GameDisplay) {
         this.Camera = new ControlledCamera(display.scene, Config.GameWidth, Config.GameHeight, Config.Camera);
-        EventBus.on(GameEvent.ViewSelected, this.handleSelectionChanged.bind(this));
+        EventBus.on(UIEvent.FindViewRequested, this.handleFindViewRequested.bind(this));
     }
 
-    private handleSelectionChanged(view:Phaser.GameObjects.Container) {
-        this.Camera.lookAt(view.x, view.y);
+    private handleFindViewRequested(view: Phaser.GameObjects.Container) {
+        if (view) {
+            this.Camera.lookAt(view.x, view.y);
+        }
     }
 
     override update(delta: number) {

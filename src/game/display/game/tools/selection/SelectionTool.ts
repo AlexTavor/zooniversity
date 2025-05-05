@@ -5,6 +5,7 @@ import { EventBus } from "../../../../EventBus.ts";
 import { ITool, ToolType } from "../GameTools.ts";
 import { UIEvent } from "../../../../consts/UIEvent.ts";
 import { ClickThresholdHandler } from "../../../utils/ClickThresholdHandler.ts";
+import { AlphaSampler } from "../../../utils/AlphaSampler.ts";
 
 export class SelectionTool extends DisplayModule<GameDisplayContext> implements ITool {
   type: ToolType = ToolType.Selection;
@@ -12,9 +13,11 @@ export class SelectionTool extends DisplayModule<GameDisplayContext> implements 
   private cycleStack: number[] = [];
   private cycleIndex = 0;
   private clickHandler!: ClickThresholdHandler;
+  private alphaSampler!: AlphaSampler;
 
   init(context: GameDisplayContext): void {
     this.context = context;
+    this.alphaSampler = new AlphaSampler(context.scene);
     this.clickHandler = new ClickThresholdHandler(
       context.scene,
       this.handleClick.bind(this),
@@ -33,7 +36,8 @@ export class SelectionTool extends DisplayModule<GameDisplayContext> implements 
   }
 
   destroy(): void {
-    this.stop();
+    this.clickHandler.stop();
+    this.alphaSampler.destroy();
   }
 
   update(): void {}
@@ -42,7 +46,7 @@ export class SelectionTool extends DisplayModule<GameDisplayContext> implements 
     EventBus.emit(GameEvent.SelectionChanged, selected);
   }
 
-  private handleClick(pointer: Phaser.Input.Pointer): void {
+  private async handleClick(pointer: Phaser.Input.Pointer): Promise<void> {
     const camera = this.context.scene.cameras.main;
     const worldPoint = pointer.positionToCamera(camera) as Phaser.Math.Vector2;
 
@@ -50,10 +54,14 @@ export class SelectionTool extends DisplayModule<GameDisplayContext> implements 
     const overlapping: number[] = [];
 
     for (const [entity, view] of allViews) {
-      if (!view.selectable || !view.sprite?.input?.enabled) continue;
+      const sprite = view.sprite;
+      if (!view.selectable || !sprite?.input?.enabled) continue;
 
-      const bounds = view.sprite.getBounds();
-      if (bounds.contains(worldPoint.x, worldPoint.y)) {
+      const bounds = sprite.getBounds();
+      if (!bounds.contains(worldPoint.x, worldPoint.y)) continue;
+
+      const alpha = await this.alphaSampler.getAlphaAt(sprite, worldPoint.x, worldPoint.y);
+      if (alpha > 0) {
         overlapping.push(entity);
       }
     }
