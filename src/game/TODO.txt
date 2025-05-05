@@ -34,9 +34,13 @@
 
 TODO:
     Trees 
-        Cut down icon
-        WD tools
-        Cut down toggle
+        * Cut down icon
+        * Tools mechanism
+        * Cut down toggle
+        Panel actions
+            Fix action buttons
+            Make SHOW a button, not auto on selection
+            Handle closing logic
         Cut down logic
         Wood drop
         Character movement & positioning

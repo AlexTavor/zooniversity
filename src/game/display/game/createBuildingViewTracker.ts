@@ -5,6 +5,7 @@ import { SpriteKey } from "../setup/SpriteLibrary.ts";
 import { GameDisplayContext } from "../GameDisplay.ts";
 import {PanelDefinition, ViewType} from "../setup/ViewDefinition.ts";
 import { WoodDojo } from "../../logic/components/WoodDojo.ts";
+import { ToolType } from "./tools/GameTools.ts";
 
 export function createBuildingViewTracker(
     context: GameDisplayContext
@@ -20,7 +21,11 @@ export function createBuildingViewTracker(
             const panelDefinition = {...(new PanelDefinition()), ...{
                 title: "Wood Dojo",
                 description: "Center of Wood Mastery",
-                imagePath: "assets/panels/wood_dojo_panel.png"
+                imagePath: "assets/panels/wood_dojo_panel.png",
+                actions: [{
+                    label: "Select Trees to Harvest",
+                    type: ToolType.TreeCutting
+                }]
             }};
 
             return createView({

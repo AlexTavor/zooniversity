@@ -1,4 +1,3 @@
-//@ts-ignore
 import React from 'react';
 import {EditorTool} from "../../game/display/editor/EditorHost.ts";
 import {ToolButton} from "./ToolButton.tsx";

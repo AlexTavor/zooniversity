@@ -5,6 +5,9 @@ import "./SelectionPanel.css";
 import { UIEvent } from "../../../game/consts/UIEvent.ts";
 import { UIConfig } from "../../../game/consts/UIConfig.ts";
 import { GameEvent } from "../../../game/consts/GameEvent.ts";
+import { PanelActionImplementation } from "../../../game/display/game/tools/selection/SelectionPanelModule.ts";
+import { ActionButton } from "./ActionButton.tsx";
+import { useSelectedTool } from "./useSelectedTool.ts";
 
 const traitIcons: Record<DisplayTraitType, string> = {
     [DisplayTraitType.WOOD]: "assets/icons/wood_icon.png",
@@ -12,8 +15,10 @@ const traitIcons: Record<DisplayTraitType, string> = {
     [DisplayTraitType.NONE]: "",
 };
 
+type PanelData = { actionsImpl?: PanelActionImplementation[] } & PanelDefinition;
+
 export const SelectionPanel: React.FC = () => {
-    const [visiblePanel, setVisiblePanel] = useState<PanelDefinition | null>(null);
+    const [visiblePanel, setVisiblePanel] = useState<PanelData | null>(null);
     const [isVisible, setIsVisible] = useState(false);
     const [fadeState, setFadeState] = useState<"fade-in" | "fade-out">("fade-in");
     const [isCollapsed, setIsCollapsed] = useState(false);
@@ -21,7 +26,7 @@ export const SelectionPanel: React.FC = () => {
     const timeoutRef = useRef<number | null>(null);
 
     useEffect(() => {
-        const handleShow = (panel: PanelDefinition | null) => {
+        const handleShow = (panel: PanelData | null) => {
             if (!panel) {
                 setFadeState("fade-out");
                 setIsVisible(false);
@@ -47,9 +52,9 @@ export const SelectionPanel: React.FC = () => {
             }, UIConfig.PanelTransitionMs);
         };
 
-        EventBus.on(UIEvent.ShowPanel, handleShow);
+        EventBus.on(UIEvent.ShowPanelCalled, handleShow);
         return () => {
-            EventBus.off(UIEvent.ShowPanel, handleShow);
+            EventBus.off(UIEvent.ShowPanelCalled, handleShow);
             if (timeoutRef.current) clearTimeout(timeoutRef.current);
         };
     }, [visiblePanel]);
@@ -94,6 +99,15 @@ export const SelectionPanel: React.FC = () => {
                     </div>
                 )}
             </div>
+
+            {/* Always-visible action bar */}
+            {visiblePanel?.actionsImpl && visiblePanel.actionsImpl.length > 0 && (
+                <div className="selection-panel-actions">
+                    {visiblePanel.actionsImpl.map((action, index) => (
+                        <ActionButton key={index} action={action}/>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };

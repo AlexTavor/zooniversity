@@ -23,7 +23,7 @@ export function createCharacterViewTracker(
 
             const panelDef = {
                 title: "Professor Booker",
-                description: "The kind, wise, absent-minded founder of Zooniversity.",
+                description: "The kind, absent-minded founder of Zooniversity.",
                 imagePath: "assets/characters/booker/booker_panel.png"
             };
 

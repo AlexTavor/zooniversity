@@ -1,3 +1,4 @@
 export enum UIEvent {
-    ShowPanel = "show-panel"
+    ShowPanelCalled = "show-panel",
+    PortraitClicked = "portrait-clicked",
 }

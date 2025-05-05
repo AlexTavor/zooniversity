@@ -1,7 +1,7 @@
-import { DisplayModule } from "../../setup/DisplayModule.ts";
-import { GameDisplayContext } from "../../GameDisplay.ts";
-import { GameEvent } from "../../../consts/GameEvent.ts";
-import { EventBus } from "../../../EventBus.ts";
+import { DisplayModule } from "../../../setup/DisplayModule.ts";
+import { GameDisplayContext } from "../../../GameDisplay.ts";
+import { GameEvent } from "../../../../consts/GameEvent.ts";
+import { EventBus } from "../../../../EventBus.ts";
 import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
 
 const OUTLINE_CONFIG = {

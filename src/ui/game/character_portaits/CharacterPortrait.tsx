@@ -1,7 +1,7 @@
 import React from 'react';
 import './CharacterPortraits.css';
-import { GameEvent } from '../../../game/consts/GameEvent';
 import { EventBus } from '../../../game/EventBus';
+import { UIEvent } from '../../../game/consts/UIEvent';
 
 type CharacterPortraitProps = {
   data: {
@@ -24,7 +24,7 @@ export const CharacterPortrait: React.FC<CharacterPortraitProps> = ({ data }) =>
         pointerEvents: 'all',
       }}
       onClick={() => {
-        EventBus.emit(GameEvent.SelectionChanged, data.entity);
+        EventBus.emit(UIEvent.PortraitClicked, data.entity);
     }}
     >
       <img src={data.character.icon} alt={`${data.character.type} Icon`} />

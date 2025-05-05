@@ -14,5 +14,7 @@ export enum GameEvent {
     ResourcesUpdated = "ResourcesUpdated",
     InitGame = "init-game",
     CharacterUpdate = "character-update",
-    ViewSelected = "ViewSelected"
+    ViewSelected = "ViewSelected",
+    TreeSelectedForCutting = "TreeSelectedForCutting",
+    ToolSelected = "ToolSelected",
 }
