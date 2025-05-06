@@ -5,6 +5,7 @@ import { createView } from "../setup/ViewStore.ts";
 import { GameDisplayContext } from "../GameDisplay.ts";
 import {ViewType} from "../setup/ViewDefinition.ts";
 import { Config } from "../../config/Config.ts";
+import { Harvestable } from "../../logic/work/Harvestable.ts";
 
 
 // TODO - trees fruit display
@@ -16,7 +17,7 @@ export function createTreeViewTracker(
         viewsByEntity: context.viewsByEntity,
         ecs: context.ecs,
         scene: context.scene,
-        componentClasses: [Transform, Tree],
+        componentClasses: [Transform, Tree, Harvestable],
         layerContainer: context.layers.Surface,
         createDefinition: (ecs, entity) => {
             const transform = ecs.getComponent(entity, Transform);
@@ -41,6 +42,11 @@ export function createTreeViewTracker(
             // keep frame in sync (if it ever changes)
             view.sprite?.setFrame(view.viewDefinition.frame);
             
+            const harvestable = ecs.getComponent(entity, Harvestable);
+            const harvested = harvestable.harvested;
+
+            view.viewContainer.scaleY = harvested ? 0 : 1;
+
             return false;
         }
     });

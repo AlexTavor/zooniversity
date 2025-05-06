@@ -47,6 +47,7 @@ export function createCharacterViewTracker(
             view.viewContainer.x = rx;
             view.viewContainer.y = ry;
             view.sprite?.setFrame(view.viewDefinition.frame);
+            view.viewContainer.scaleX = view.viewDefinition.size.x * transform.direction;
 
             const updateData = {
                 id:entity,

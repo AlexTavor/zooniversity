@@ -167,6 +167,7 @@ export class ECS {
     public getComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>): T {
         return this.entities.get(entity)?.get(componentClass)!;
     }
+
     public removeComponent(
         entity: Entity, componentClass: Function
     ): void {
@@ -269,5 +270,9 @@ export class ECS {
 
     hasEntity(enemy: number) {
         return this.entities.has(enemy);
+    }
+
+    hasComponent(entity: Entity, componentClass: Function) {
+        return this.entities.get(entity)?.has(componentClass) ?? false;
     }
 }

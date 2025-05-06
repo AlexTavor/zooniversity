@@ -24,6 +24,9 @@ import { createBuildingViewTracker } from "../../display/game/createBuildingView
 import { createCharacterViewTracker } from "../../display/game/createCharacterViewTracker.ts";
 import { createTreeCutIconViewTracker } from "../../display/game/createTreeCutIconViewTracker.ts";
 import { GameTools } from "../../display/game/tools/GameTools.ts";
+import { WoodDojoSystem } from "../work/WoodDojoSystem.ts";
+import { LocomotionSystem } from "../locomotion/LocomotionSystem.ts";
+import { TreeHarvestingSystem } from "../work/TreeHarvestingSystem.ts";
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -59,6 +62,9 @@ export const initInput = (game:Game) => {
 export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
     game.ecs.addSystem(new WeatherSystem());
+    game.ecs.addSystem(new WoodDojoSystem());
+    game.ecs.addSystem(new LocomotionSystem());
+    game.ecs.addSystem(new TreeHarvestingSystem());
     initInput(game);
     initStory(game);
     initLut(game);

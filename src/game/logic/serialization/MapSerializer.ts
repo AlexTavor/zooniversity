@@ -10,6 +10,7 @@ import {createProfessorBooker, createWorldEntity} from "./createWorldEntity.ts";
 import {PanelDataComponent} from "../selection/PanelDataComponent.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../components/WoodDojo.ts";
+import { Harvestable, HarvestableType } from "../work/Harvestable.ts";
 
 function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
     for (const [id, obj] of Object.entries(map.objects)) {
@@ -18,7 +19,7 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
         // Use view position if available, otherwise skip
         if (obj.components?.view) {
             const view = obj.components.view;
-            ecs.addComponent(entity, new Transform(view.position.x, view.position.y, obj.zHint ?? 0));
+            ecs.addComponent(entity, new Transform(view.position.x, view.position.y));
         }
 
         const def = obj.components?.view;
@@ -32,6 +33,7 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
             case "tree":
                 if (def.spriteName) {
                     ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
+                    ecs.addComponent(entity, new Harvestable(HarvestableType.TREE, 1000));
                 } else {
                     console.warn(`Tree object ${id} is missing a sprite key.`);
                 }
