@@ -1,10 +1,10 @@
 import { DisplayModule } from "./setup/DisplayModule.ts";
 import {ECS, Entity} from "../ECS.ts";
 import { Layers } from "./setup/Layers.ts";
-import {ViewTracker} from "./game/ViewTracker.ts";
 import {Config} from "../config/Config.ts";
 import {createView} from "./setup/ViewStore.ts";
 import {View} from "./setup/View.ts";
+import { EffectType } from "./setup/ViewEffectController.ts";
 
 export interface GameDisplayContext {
     scene: Phaser.Scene;
@@ -22,14 +22,15 @@ export class GameDisplay implements GameDisplayContext {
     ecs: ECS;
     layers: Layers;
     hill: View;
-    private trackers: ViewTracker[];
+    
     viewsByEntity:Map<Entity, View> = new Map();
     iconsByEntity:Map<Entity, View> = new Map();
 
     init(
         scene: Phaser.Scene, 
-        ecs: ECS, modules: GameDisplayModule[], 
-        trackers?: Array<(context: GameDisplay)=>ViewTracker>) {
+        ecs: ECS, 
+        modules: GameDisplayModule[])
+    {
         this.scene = scene;
         this.ecs = ecs;
         this.layers = new Layers(scene);
@@ -38,9 +39,6 @@ export class GameDisplay implements GameDisplayContext {
         for (const module of this.modules) {
             module.init(this);
         }
-        
-        this.trackers = trackers?.map(tracker => tracker(this)) ?? [];
-        this.trackers.forEach(t=>t.update());
         
         this.setHill();
     }
@@ -63,16 +61,15 @@ export class GameDisplay implements GameDisplayContext {
         });
         
         this.hill = new View(0, {}, hillDef, this.layers.Ground, this.scene);
+        this.hill.applyEffect(EffectType.Shader, { shader: "TimeTint" });
     }
 
     public destroy() {
         this.modules.forEach(module => module.destroy());
-        this.trackers.forEach(tracker => tracker.destroy());
         this.layers.destroy();
     }
 
     public update(delta: number) {
-        this.trackers.forEach(tracker => tracker.update());
         this.modules.forEach(module => module.update(delta));
     }
 }

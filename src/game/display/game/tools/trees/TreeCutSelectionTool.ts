@@ -47,7 +47,8 @@ export class TreeCutSelectionTool extends DisplayModule<GameDisplayContext> impl
     const overlapping: number[] = [];
   
     for (const [entity, view] of allViews) {
-      const sprite = view.sprite;
+      const sprite = view.getSprite();
+      if (!sprite) continue;
       if (!view.selectable || !sprite?.input?.enabled) continue;
   
       const bounds = sprite.getBounds();
@@ -62,7 +63,7 @@ export class TreeCutSelectionTool extends DisplayModule<GameDisplayContext> impl
     overlapping.sort((a, b) => {
       const va = this.context.viewsByEntity.get(a);
       const vb = this.context.viewsByEntity.get(b);
-      return (vb?.sprite?.depth ?? 0) - (va?.sprite?.depth ?? 0);
+      return (vb?.getSprite()?.depth ?? 0) - (va?.getSprite()?.depth ?? 0);
     });
   
     if (overlapping.length === 0) return;

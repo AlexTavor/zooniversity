@@ -39,7 +39,7 @@ export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
         for (const [entity, view] of viewsByEntity) {
             if (view.type !== ViewType.TREE) continue;
 
-            const sprite = view.sprite;
+            const sprite = view.getSprite() as Phaser.GameObjects.Sprite;
 
             const sway = this.simplex.noise3D(
                 sprite.x * freq,

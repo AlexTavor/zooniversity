@@ -1,4 +1,4 @@
-import {ViewTracker} from "../game/ViewTracker.ts";
+import {ViewTracker} from "./ViewTracker.ts";
 import {GameDisplayContext} from "../GameDisplay.ts";
 
 export abstract class DisplayModule<T> {

@@ -35,7 +35,7 @@ export interface PanelActionDefinition {
 
 export class ViewDefinition {
     public readonly id: number;
-    public readonly spriteName: string;
+    public spriteName: string;
     public readonly position: Pos;
     public readonly size: Pos;
     public frame: number;

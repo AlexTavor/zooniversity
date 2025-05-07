@@ -27,15 +27,17 @@ export class SelectionHighlightModule extends DisplayModule<ViewsEditorModule> {
         if (viewId == null) return;
 
         const view = this.editor.findViewInstance(viewId);
-        if (!view?.sprite) return;
+        const sprite = view?.getSprite() as Phaser.GameObjects.Sprite;
 
-        this.outlinePlugin.add(view.sprite, {
+        if (!sprite) return;
+
+        this.outlinePlugin.add(sprite, {
             thickness: 1,
             outlineColor: 0xff0000,
             quality: 0.1,
         });
 
-        this.currentSprite = view.sprite;
+        this.currentSprite = sprite;
     };
 
     private clearHighlight(): void {

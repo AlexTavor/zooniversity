@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import { ECS, Entity } from "../../ECS.ts";
-import { View } from "../setup/View.ts";
-import { ViewDefinition } from "../setup/ViewDefinition.ts";
-import { getViews } from "../setup/ViewStore.ts";
+import { View } from "./View.ts";
+import { ViewDefinition } from "./ViewDefinition.ts";
+import { getViews } from "./ViewStore.ts";
 import { Pos } from "../../../utils/Math.ts";
 
 export interface ViewTrackerOptions {

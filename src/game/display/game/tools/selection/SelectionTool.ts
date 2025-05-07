@@ -54,7 +54,7 @@ export class SelectionTool extends DisplayModule<GameDisplayContext> implements 
     const overlapping: number[] = [];
 
     for (const [entity, view] of allViews) {
-      const sprite = view.sprite;
+      const sprite = view.getSprite();
       if (!view.selectable || !sprite?.input?.enabled) continue;
 
       const bounds = sprite.getBounds();
@@ -69,7 +69,7 @@ export class SelectionTool extends DisplayModule<GameDisplayContext> implements 
     overlapping.sort((a, b) => {
       const va = this.context.viewsByEntity.get(a);
       const vb = this.context.viewsByEntity.get(b);
-      return (vb?.sprite?.depth ?? 0) - (va?.sprite?.depth ?? 0);
+      return (vb?.getSprite()?.depth ?? 0) - (va?.getSprite()?.depth ?? 0);
     });
 
     if (overlapping.length === 0) {

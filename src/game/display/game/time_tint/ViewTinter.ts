@@ -21,9 +21,7 @@ export class ViewTinter {
         const color = getColorForMinute(minute, totalMinutesInDay, SPRITE_TINT_GRADIENT);
 
         for (const view of this.views) {
-            if (view.sprite) {
-                view.sprite.setTint(color);
-            }
+            view.getSprite()?.setTint(color);
         }
     }
 }

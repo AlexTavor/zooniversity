@@ -2,8 +2,6 @@ import { EventBus } from "../../EventBus";
 import { GameEvent } from "../../consts/GameEvent.ts";
 import { GameDisplay } from "../../display/GameDisplay";
 import { CameraModule } from "../../display/camera/CameraModule";
-import { createCaveViewTracker } from "../../display/game/createCaveViewTracker";
-import { createTreeViewTracker } from "../../display/game/createTreeViewTracker";
 import { SelectionHighlightModule } from "../../display/game/tools/selection/SelectionHighlightModule.ts";
 import { SelectionPanelModule } from "../../display/game/tools/selection/SelectionPanelModule.ts";
 import { CloudsModule } from "../../display/game/sky/CloudsModule";
@@ -20,13 +18,15 @@ import { TimeSystem } from "../time/TimeSystem";
 import { WeatherSystem } from "../weather/WeatherSystem";
 import {CaveTreeLUTComponent} from "../lut/CaveTreeLUTComponent.ts";
 import {buildCaveTreeLUTFromViews} from "../lut/buildCaveTreeLUTFromViews.ts";
-import { createBuildingViewTracker } from "../../display/game/createBuildingViewTracker.ts";
-import { createCharacterViewTracker } from "../../display/game/createCharacterViewTracker.ts";
-import { createTreeCutIconViewTracker } from "../../display/game/createTreeCutIconViewTracker.ts";
 import { GameTools } from "../../display/game/tools/GameTools.ts";
 import { WoodDojoSystem } from "../work/WoodDojoSystem.ts";
 import { LocomotionSystem } from "../locomotion/LocomotionSystem.ts";
 import { TreeHarvestingSystem } from "../work/TreeHarvestingSystem.ts";
+import { CaveViewModule } from "../../display/game/buildings/CaveViewModule.ts";
+import { BuildingViewModule } from "../../display/game/buildings/BuildingViewModule.ts";
+import { TreeViewModule } from "../../display/game/trees/TreeViewModule.ts";
+import { TreeCutIconViewModule } from "../../display/game/trees/TreeCutIconViewModule.ts";
+import { CharacterViewModule } from "../../display/game/characters/CharacterViewModule.ts";
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -95,15 +95,13 @@ export const initDisplay = (game:Game)=>{
         new TreeSwayModule(),
         new SelectionHighlightModule(),
         new GameTools(),
-        new SelectionPanelModule()
+        new SelectionPanelModule(),
+        new CaveViewModule(),
+        new BuildingViewModule(),
+        new TreeViewModule(),
+        new TreeCutIconViewModule(),
+        new CharacterViewModule()
     ];
     
-    game.gameDisplay.init(game, game.ecs, modules,
-    [
-        (display:GameDisplay)=>createTreeViewTracker(display),
-        (display:GameDisplay)=>createCaveViewTracker(display),
-        (display:GameDisplay)=>createBuildingViewTracker(display),
-        (display:GameDisplay)=>createCharacterViewTracker(display),
-        (display:GameDisplay)=>createTreeCutIconViewTracker(display),
-    ]);
+    game.gameDisplay.init(game, game.ecs, modules);
 }

@@ -25,7 +25,7 @@ export function createProfessorBooker(ecs: ECS): number {
 
     // and add the booker entity to the ECS
     const booker = ecs.addEntity();
-    ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y, 0));
+    ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y));
     ecs.addComponent(booker, new Character({
         name: "Professor Booker",
         description: "The professor of the academy. He is a master of the wood element.",

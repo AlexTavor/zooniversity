@@ -1,79 +1,130 @@
 import Phaser from "phaser";
-import {ViewDefinition, ViewType} from "./ViewDefinition.ts";
-import {Naming} from "../../consts/Naming.ts";
-import {Config} from "../../config/Config.ts";
-import {SpriteKey, SpriteLibrary} from "./SpriteLibrary.ts";
+import { ViewDefinition, ViewType } from "./ViewDefinition";
+import { Naming } from "../../consts/Naming";
+import { Config } from "../../config/Config";
+import { SpriteKey, SpriteLibrary } from "./SpriteLibrary";
+import { EffectType, ViewEffectController } from "./ViewEffectController";
 
 export class View {
-    public readonly viewDefinition: ViewDefinition;
-    public sprite: Phaser.GameObjects.Sprite;
-    public viewContainer: Phaser.GameObjects.Container;
-    public subViews: View[] = [];
-    public type = ViewType.NONE;
-    public selectable = true;
-    
-    constructor(
-        public id:number,
-        views: { [key: number]: ViewDefinition },
-        viewDefinition: ViewDefinition,
-        parentContainer: Phaser.GameObjects.Container,
-        scene: Phaser.Scene,
-        public pipeline: string = 'TimeTint'
-    ) {
-        this.viewDefinition = viewDefinition;
-        this.type = viewDefinition.type;
-        
-        viewDefinition.position.x = Math.round(viewDefinition.position.x);
-        viewDefinition.position.y = Math.round(viewDefinition.position.y);
-        
-        this.viewContainer = scene.add.container(viewDefinition.position.x, viewDefinition.position.y);
-        parentContainer.add(this.viewContainer);
-        this.viewContainer.name = `${Naming.VIEW}${id}`;
-        
-        if (viewDefinition.spriteName) {
-            this.addSprite(viewDefinition, scene, id);
-        }
+  public readonly id: number;
+  public readonly viewDefinition: ViewDefinition;
+  public readonly viewContainer: Phaser.GameObjects.Container;
+  public readonly subViews: View[] = [];
 
-        const size = SpriteLibrary[viewDefinition.spriteName as SpriteKey]?.defaultSize ?? { x: 1, y: 1 };
-        const pxPerUnit = Config.Display.PixelsPerUnit;
-        this.sprite?.setDisplaySize(size.x * pxPerUnit * viewDefinition.size.x, size.y * pxPerUnit * viewDefinition.size.y);
+  public type = ViewType.NONE;
+  public selectable = true;
 
-        for (const subViewId of viewDefinition.subViews) {
-            const subViewDefinition = views[subViewId];
-            if (subViewDefinition) {
-                const subView = new View(subViewId, views, subViewDefinition, this.viewContainer, scene);
-                this.subViews.push(subView);
-            }
-        }
-    }
+  private sprite?: Phaser.GameObjects.Sprite;
+  private readonly effects: ViewEffectController;
 
-    public sortSubviewsByY(): void {
-        const containers = this.viewContainer.list.filter(
-            obj => obj instanceof Phaser.GameObjects.Container
-        ) as Phaser.GameObjects.Container[];
+  constructor(
+    id: number,
+    views: { [key: number]: ViewDefinition },
+    viewDefinition: ViewDefinition,
+    parentContainer: Phaser.GameObjects.Container,
+    scene: Phaser.Scene
+  ) {
+    this.id = id;
+    this.viewDefinition = viewDefinition;
+    this.type = viewDefinition.type;
+    this.selectable = viewDefinition.selectable ?? true;
 
-        containers.sort((a, b) =>
-            ((a.y * a.scaleY) - a.height/2) - ((b.y * b.scaleY) - (b.height/2))
+    viewDefinition.position.x = Math.round(viewDefinition.position.x);
+    viewDefinition.position.y = Math.round(viewDefinition.position.y);
+
+    this.viewContainer = scene.add.container(
+      viewDefinition.position.x,
+      viewDefinition.position.y
+    );
+    this.viewContainer.name = `${Naming.VIEW}${id}`;
+    parentContainer.add(this.viewContainer);
+
+    this.initSprite(scene);
+
+    for (const subViewId of viewDefinition.subViews) {
+      const subDef = views[subViewId];
+      if (subDef) {
+        const subView = new View(
+          subViewId,
+          views,
+          subDef,
+          this.viewContainer,
+          scene
         );
-        containers.forEach(c => this.viewContainer.bringToTop(c));
-        
-        this.subViews.forEach(subView => subView.sortSubviewsByY());
+        this.subViews.push(subView);
+      }
     }
 
-    private addSprite(viewDefinition: ViewDefinition, scene: Phaser.Scene, id: number = this.id): void {
-        this.sprite = scene.add.sprite(0, 0, viewDefinition.spriteName);
-        this.sprite.name = `${Naming.SPRITE}${id}`;
-        this.viewContainer.add(this.sprite);
-        this.sprite.setInteractive({ useHandCursor: true });
-        if (viewDefinition.type == ViewType.TREE) {
-            this.sprite.setOrigin(0.5, 1);
-        } else {
-            this.sprite.setOrigin(0.5, 0.5);
+    this.effects = new ViewEffectController(this);
+  }
 
-        }
-        this.sprite.setFrame(viewDefinition.frame);
-        
-        if (this.pipeline)
-            this.sprite.setPipeline(this.pipeline);
-    }
+  private initSprite(scene: Phaser.Scene): void {
+    const { spriteName, frame, size, type } = this.viewDefinition;
+    if (!spriteName) return;
+
+    const sprite = scene.add.sprite(0, 0, spriteName);
+    sprite.name = `${Naming.SPRITE}${this.id}`;
+    this.viewContainer.add(sprite);
+
+    sprite.setOrigin(0.5, type === ViewType.TREE ? 1 : 0.5);
+    sprite.setFrame(frame);
+    sprite.setInteractive({ useHandCursor: true });
+
+    const defaultSize = SpriteLibrary[spriteName as SpriteKey]?.defaultSize ?? { x: 1, y: 1 };
+    const pxPerUnit = Config.Display.PixelsPerUnit;
+    sprite.setDisplaySize(
+      defaultSize.x * pxPerUnit * size.x,
+      defaultSize.y * pxPerUnit * size.y
+    );
+
+    this.sprite = sprite;
+  }
+
+  public getSprite(): Phaser.GameObjects.Sprite | undefined {
+    return this.sprite;
+  }
+
+  public syncSprite(spriteName: string): void {
+    if (this.viewDefinition.spriteName === spriteName) return;
+
+    this.sprite?.destroy();
+    this.sprite = undefined;
+
+    this.viewDefinition.spriteName = spriteName;
+    this.initSprite(this.viewContainer.scene);
+  }
+
+  public applyEffect(type: EffectType, opts?: any): void {
+    this.effects.apply(type, opts);
+  }
+
+  public clearEffect(type: EffectType): void {
+    this.effects.clear(type);
+  }
+
+  public clearAllEffects(): void {
+    this.effects.clearAll();
+  }
+
+  public update(delta: number): void {
+    this.effects.update(delta);
+  }
+
+  public sortSubviewsByY(): void {
+    const containers = this.viewContainer.list.filter(
+      obj => obj instanceof Phaser.GameObjects.Container
+    ) as Phaser.GameObjects.Container[];
+
+    containers
+      .sort((a, b) => (a.y * a.scaleY - a.height / 2) - (b.y * b.scaleY - b.height / 2))
+      .forEach(c => this.viewContainer.bringToTop(c));
+
+    this.subViews.forEach(subView => subView.sortSubviewsByY());
+  }
+
+  public destroy(): void {
+    this.clearAllEffects();
+    this.sprite?.destroy();
+    this.viewContainer.destroy();
+  }
 }
