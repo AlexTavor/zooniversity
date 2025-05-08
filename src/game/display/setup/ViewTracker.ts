@@ -12,7 +12,7 @@ export interface ViewTrackerOptions {
     layerContainer: Phaser.GameObjects.Container;
     createDefinition: (ecs: ECS, entity: Entity) => ViewDefinition;
     updateView: (ecs: ECS, entity: Entity, view: View) => boolean;
-    createView?: (id:number,
+    createView: (ecs: ECS, entity: Entity,
         views: { [key: number]: ViewDefinition },
         viewDefinition: ViewDefinition) => View;
     viewsByEntity: Map<Entity, View>; // 👈 Shared view map
@@ -24,16 +24,14 @@ export class ViewTracker {
     private firstRun = true;
 
     private ecs: ECS;
-    private scene: Phaser.Scene;
     private componentClasses: Function[];
     private layerContainer: Phaser.GameObjects.Container;
     private createDefinition: (ecs: ECS, entity: Entity) => ViewDefinition;
     private updateView: (ecs: ECS, entity: Entity, view: View) => boolean;
-    createView: ((id: number, views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition) => View) | undefined;
+    createView: ((ecs: ECS, entity: Entity,views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition) => View);
 
     constructor({
                     ecs,
-                    scene,
                     componentClasses,
                     layerContainer,
                     createDefinition,
@@ -42,7 +40,6 @@ export class ViewTracker {
                     viewsByEntity
                 }: ViewTrackerOptions) {
         this.ecs = ecs;
-        this.scene = scene;
         this.componentClasses = componentClasses;
         this.layerContainer = layerContainer;
         this.createDefinition = createDefinition;
@@ -75,7 +72,7 @@ export class ViewTracker {
         for (const entity of entityList) {
             if (!this.viewsLocal.has(entity)) {
                 const def = this.createDefinition(this.ecs, entity);
-                const view = this.createView ? this.createView(def.id, getViews(), def) : new View(def.id, getViews(), def, this.layerContainer, this.scene);
+                const view = this.createView(this.ecs, entity, getViews(), def);
                 this.viewsLocal.set(entity, view);
                 this.viewsByEntity.set(entity, view); // 🔁 global map update
                 changed = true;

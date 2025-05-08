@@ -70,9 +70,9 @@ export class BuildingViewModule extends ViewDisplayModule {
     return false;
   }
 
-  createView(id: number, views: { [key: number]: ViewDefinition }, viewDefinition: ViewDefinition): View {
-    const view = new View(id, views, viewDefinition, this.context.layers.Caves, this.context.scene);
+  createView(ecs: ECS, entity: number, views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition): View {
+    const view = new View(viewDefinition.id, views, viewDefinition, this.context.layers.Surface, this.context.scene);
     view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
     return view;
-  }
+}
 }

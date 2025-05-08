@@ -71,5 +71,7 @@ export class GameDisplay implements GameDisplayContext {
 
     public update(delta: number) {
         this.modules.forEach(module => module.update(delta));
+        this.viewsByEntity.forEach(view => view.update(delta));
+        this.iconsByEntity.forEach(view => view.update(delta));
     }
 }

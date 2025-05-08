@@ -1,3 +1,4 @@
+import { ProgressBar, ProgressBarConfig } from "../game/effects/ProgressBar";
 import { View } from "./View";
 
 interface EffectInstance {
@@ -11,7 +12,10 @@ export enum EffectType {
   Highlight = "highlight",
   Shader = "shader",
   Shake = "shake",
+  Progress = "progress",
 }
+
+export type ProgressBarOptions = ProgressBarConfig & { container: Phaser.GameObjects.Container };
 
 export class ViewEffectController {
   private readonly view: View;
@@ -38,6 +42,9 @@ export class ViewEffectController {
         break;
       case EffectType.Shake:
         instance = this.makeShake(opts);
+        break;
+      case EffectType.Progress:
+        instance = this.makeProgress(opts as ProgressBarOptions);
         break;
     }
 
@@ -107,6 +114,16 @@ export class ViewEffectController {
     return {
       start: () => sprite.setPipeline(shader),
       stop: () => sprite.resetPipeline(),
+    };
+  }
+
+  private makeProgress(config: ProgressBarOptions): EffectInstance {
+    const bar = new ProgressBar(config.container, config);
+  
+    return {
+      start: bar.show.bind(bar),
+      stop: bar.hide.bind(bar),
+      update: (delta: number) => bar.update(delta, this.view.viewDefinition.position)
     };
   }
 }

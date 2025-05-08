@@ -15,7 +15,7 @@ export abstract class ViewDisplayModule implements DisplayModule<GameDisplayCont
   
     abstract updateView(ecs: ECS, entity: Entity, view: View): boolean;
   
-    abstract createView(id: number, views: { [key: number]: ViewDefinition }, viewDefinition: ViewDefinition): View;
+    abstract createView(ecs: ECS, entity: Entity, views: { [key: number]: ViewDefinition }, viewDefinition: ViewDefinition): View;
   
     abstract getLayerContainer(): Phaser.GameObjects.Container;
   
