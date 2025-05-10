@@ -27,55 +27,55 @@ export class CharacterViewModule extends ViewDisplayModule {
     }
       
     getComponentClasses(): Function[] {
-    return [Transform, Character];
+       return [Transform, Character];
     }
 
     getLayerContainer(): Phaser.GameObjects.Container {
-    return this.context.layers.Surface;
+        return this.context.layers.Surface;
     }
 
     createDefinition(ecs: ECS, entity: Entity): ViewDefinition {
-    const transform = ecs.getComponent(entity, Transform);
+        const transform = ecs.getComponent(entity, Transform);
 
-    const panelDefinition = new PanelDefinition();
-    panelDefinition.title = "Professor Booker";
-    panelDefinition.description = "The kind, absent-minded founder of Zooniversity.";
-    panelDefinition.imagePath = "assets/characters/booker/booker_panel.png";
+        const panelDefinition = new PanelDefinition();
+        panelDefinition.title = "Professor Booker";
+        panelDefinition.description = "The kind, absent-minded founder of Zooniversity.";
+        panelDefinition.imagePath = "assets/characters/booker/booker_panel.png";
 
-    return createView({
-        spriteName: "booker_char",
-        position: {
-        x: Math.round(transform.x),
-        y: Math.round(transform.y),
-        },
-        frame: 0,
-        type: ViewType.CHARCTER,
-        panelDefinition
-    });
+        return createView({
+            spriteName: "booker_char",
+            position: {
+            x: Math.round(transform.x),
+            y: Math.round(transform.y),
+            },
+            frame: 0,
+            type: ViewType.CHARCTER,
+            panelDefinition
+        });
     }
 
     updateView(ecs: ECS, entity: Entity, view: View): boolean {
-    const transform = ecs.getComponent(entity, Transform);
-    const rx = Math.round(transform.x);
-    const ry = Math.round(transform.y);
-    const isChanged = view.viewContainer.x !== rx || view.viewContainer.y !== ry;
+        const transform = ecs.getComponent(entity, Transform);
+        const rx = Math.round(transform.x);
+        const ry = Math.round(transform.y);
+        const isChanged = view.viewContainer.x !== rx || view.viewContainer.y !== ry;
 
-    view.viewContainer.x = rx;
-    view.viewContainer.y = ry;
-    view.viewContainer.scaleX = view.viewDefinition.size.x * transform.direction;
+        view.viewContainer.x = rx;
+        view.viewContainer.y = ry;
+        view.viewContainer.scaleX = view.viewDefinition.size.x * transform.direction;
 
-    const updateData = {
-        id: entity,
-        pos: ViewTracker.getReactCoordsFromPhaser(view.viewContainer, this.context.scene.cameras.main),
-        character: {
-        icon: "assets/characters/booker/booker_icon.png",
-        type: CharacterType.PROFESSOR
-        }
-    };
+        const updateData = {
+            id: entity,
+            pos: ViewTracker.getReactCoordsFromPhaser(view.viewContainer, this.context.scene.cameras.main),
+            character: {
+            icon: "assets/characters/booker/booker_icon.png",
+            type: CharacterType.PROFESSOR
+            }
+        };
 
-    EventBus.emit(GameEvent.CharacterUpdate, updateData);
+        EventBus.emit(GameEvent.CharacterUpdate, updateData);
 
-    return isChanged;
+        return isChanged;
     }
 
 

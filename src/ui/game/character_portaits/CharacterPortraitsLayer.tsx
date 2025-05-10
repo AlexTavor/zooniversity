@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import './CharacterPortraits.css';
 import { CharacterPortrait } from './CharacterPortrait';
 import { EventBus } from '../../../game/EventBus';
@@ -15,28 +15,29 @@ type CharacterUpdateData = {
 
 export const CharacterPortraitsLayer: React.FC = () => {
   const [portraits, setPortraits] = useState<Record<number, CharacterUpdateData>>({});
-  const seenThisFrameRef = useRef<Record<number, number>>({});
+  const seenThisFrameRef = useRef<Set<number>>(new Set());
+  const tickRef = useRef(0);
+
+  // Reset seenThisFrame every animation frame
+  useEffect(() => {
+    let raf: number;
+    const loop = () => {
+      seenThisFrameRef.current.clear();
+      tickRef.current++;
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   useEffect(() => {
-    const seenThisFrame = seenThisFrameRef.current;
-
     const handleUpdate = (data: CharacterUpdateData) => {
-      const count = seenThisFrame[data.id] || 0;
-      const isNewTick = count >= 1;
+      seenThisFrameRef.current.add(data.id);
 
-      if (isNewTick) {
-        // Reset seenThisFrame to only include this entity
-        seenThisFrameRef.current = { [data.id]: 1 };
-
-        setPortraits({ [data.id]: data });
-      } else {
-        seenThisFrame[data.id] = count + 1;
-
-        setPortraits(prev => ({
-          ...prev,
-          [data.id]: data,
-        }));
-      }
+      setPortraits(prev => ({
+        ...prev,
+        [data.id]: data
+      }));
     };
 
     EventBus.on(GameEvent.CharacterUpdate, handleUpdate);
@@ -48,7 +49,7 @@ export const CharacterPortraitsLayer: React.FC = () => {
   return (
     <>
       {Object.entries(portraits).map(([id, data]) => (
-        <CharacterPortrait key={id} data={{...data, entity:+id}} />
+        <CharacterPortrait key={id} data={{ ...data, entity: +id }} />
       ))}
     </>
   );

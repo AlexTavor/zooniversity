@@ -10,7 +10,9 @@ import {createProfessorBooker, createWorldEntity} from "./createWorldEntity.ts";
 import {PanelDataComponent} from "../selection/PanelDataComponent.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../components/WoodDojo.ts";
-import { Harvestable, HarvestableType } from "../work/Harvestable.ts";
+import { Harvestable } from "../work/Harvestable.ts";
+import { ResourceType } from "../resources/ResourceType.ts";
+import { InteractionSlots, SlotLayout } from "../work/InteractionSlots.ts";
 
 function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
     for (const [id, obj] of Object.entries(map.objects)) {
@@ -33,7 +35,8 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
             case "tree":
                 if (def.spriteName) {
                     ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
-                    ecs.addComponent(entity, new Harvestable(HarvestableType.TREE, 1000));
+                    ecs.addComponent(entity, new Harvestable(1000, [{type:ResourceType.WOOD, amount:10}]));
+                    ecs.addComponent(entity, new InteractionSlots(SlotLayout.RADIAL, 120, 2));
                 } else {
                     console.warn(`Tree object ${id} is missing a sprite key.`);
                 }
@@ -88,6 +91,10 @@ export function loadNewGame(ecs: ECS, scene: Phaser.Scene): void {
     const mapDefinition = rawData as MapDefinition;
     loadMapIntoECS(ecs, mapDefinition);
     createWorldEntity(ecs);
+    createProfessorBooker(ecs);
+    createProfessorBooker(ecs);
+    createProfessorBooker(ecs);
+    createProfessorBooker(ecs);
     createProfessorBooker(ecs);
     EventBus.emit(GameEvent.GameLoaded);
 } 

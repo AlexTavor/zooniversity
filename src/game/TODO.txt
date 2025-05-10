@@ -34,9 +34,4 @@
 
 TODO:
     Trees
-        Cut progress
-        Agent action anim
-        Cut Animation
-        Fall down Animation
         Get resources
-    Implement UI management (at first, only show/hide hud)

@@ -25,14 +25,18 @@ export class LocomotionSystem extends System {
       const harvester = this.ecs.getComponent(entity, Harvester);
 
       const targetId = intent.targetEntityId;
-      if (targetId === -1 || !this.ecs.hasEntity(targetId)){
+      if (targetId === -1 || !this.ecs.hasEntity(targetId)) {
         locomotion.arrived = false;
         continue;
-      } 
+      }
 
       const targetTransform = this.ecs.getComponent(targetId, Transform);
-      const dx = targetTransform.x - transform.x;
-      const dy = targetTransform.y - transform.y;
+      const offset = intent.slotOffset ?? { x: 0, y: 0 };
+      const targetX = targetTransform.x + offset.x;
+      const targetY = targetTransform.y + offset.y;
+
+      const dx = targetX - transform.x;
+      const dy = targetY - transform.y;
 
       const distSq = Math.floor(dx * dx + dy * dy);
       const arrivalThresholdSq = Math.floor(harvester.range * harvester.range);
@@ -42,8 +46,8 @@ export class LocomotionSystem extends System {
           const dist = Math.sqrt(distSq);
           if (dist > 0 && dist > harvester.range) {
             const clampRatio = harvester.range / dist;
-            transform.x = targetTransform.x - dx * clampRatio;
-            transform.y = targetTransform.y - dy * clampRatio;
+            transform.x = targetX - dx * clampRatio;
+            transform.y = targetY - dy * clampRatio;
           }
           locomotion.arrived = true;
         }
@@ -54,16 +58,15 @@ export class LocomotionSystem extends System {
 
       const dist = Math.sqrt(distSq);
       const step = locomotion.speed * scaledDelta;
-      
+
       const newDist = dist - step;
       const desiredDist = Math.max(newDist, harvester.range);
       const ratio = desiredDist / dist;
-      
+
       transform.direction = dx >= 0 ? -1 : 1;
-      
-      transform.x = targetTransform.x - dx * ratio;
-      transform.y = targetTransform.y - dy * ratio;
-      
+
+      transform.x = targetX - dx * ratio;
+      transform.y = targetY - dy * ratio;
     }
   }
 }

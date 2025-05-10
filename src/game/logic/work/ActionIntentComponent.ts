@@ -7,6 +7,7 @@ export enum AgentActionType {
 }
 
 export class ActionIntentComponent extends Component {
+  slotOffset: { x: number; y: number; } | null = null;
   constructor(
     public actionType: AgentActionType,
     public targetEntityId: number,

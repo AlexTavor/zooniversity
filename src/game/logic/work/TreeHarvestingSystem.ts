@@ -3,9 +3,11 @@ import { ActionIntentComponent, AgentActionType } from "./ActionIntentComponent.
 import { Transform } from "../components/Transform.ts";
 import { Tree } from "../components/Tree.ts";
 import { LocomotionComponent } from "../locomotion/LocomotionComponent.ts";
-import { Harvestable, HarvestableType } from "./Harvestable.ts";
+import { Harvestable } from "./Harvestable.ts";
 import { Harvester } from "./Harvester.ts";
 import { TimeComponent } from "../time/TimeComponent.ts";
+import { ResourceComponent } from "../resources/ResourceComponent.ts";
+import { InteractionSlots } from "./InteractionSlots.ts";
 
 export class TreeHarvestingSystem extends System {
   componentsRequired = new Set<Function>([
@@ -30,35 +32,67 @@ export class TreeHarvestingSystem extends System {
       const tree = this.ecs.getComponent(targetId, Tree);
 
       if (!harvestable || !tree) {
-        return;
-    }
-
-      if (
-        harvestable.type !== HarvestableType.TREE ||
-        !harvestable.harvestable ||
-        harvestable.harvested ||
-        !tree.selectedForCutting
-      ) {
+        this.cleanIntent(targetId, entity, intent);
         continue;
       }
+
+      const shouldAbort =
+        !harvestable.harvestable ||
+        harvestable.harvested ||
+        !tree.selectedForCutting;
+
+      if (shouldAbort) {
+        if (tree.isBeingCut) {
+          tree.isBeingCut = false;
+          this.cleanIntent(targetId, entity, intent);
+        }
+        continue;
+      }
+
+      tree.isBeingCut = true;
 
       const worldEntity = this.ecs.getEntitiesWithComponent(TimeComponent)[0];
       const time = this.ecs.getComponent(worldEntity, TimeComponent);
       const scaledDelta = delta * time.speedFactor;
-  
+
       const harvester = this.ecs.getComponent(entity, Harvester);
       const harvestPerFrame = harvester.harvestPerMinute * (scaledDelta / 60);
 
       harvestable.amount -= harvestPerFrame;
       if (harvestable.amount <= 0) {
-        this.handleHarvestReady(harvestable, intent);
+        this.handleHarvestReady(harvestable);
+        this.collectHarvestedResources(harvestable);
+        this.cleanIntent(targetId, entity, intent);
       }
     }
   }
 
-    private handleHarvestReady(harvestable: Harvestable, intent: ActionIntentComponent) {
-        harvestable.amount = 0;
-        harvestable.harvested = true;
-        harvestable.harvestable = false;
+  private cleanIntent(targetId: number, entity: number, intent: ActionIntentComponent) {
+    this.releaseSlot(targetId, entity);
+    // intent.targetEntityId = -1;
+    intent.slotOffset = null;
+  }
+
+  private collectHarvestedResources(harvestable: Harvestable) {
+    const resourcesEntity = this.ecs.getEntitiesWithComponent(ResourceComponent)[0];
+    const resources = this.ecs.getComponent(resourcesEntity, ResourceComponent);
+    if (resources) {
+      harvestable.drops.forEach((drop) => {
+        resources.amounts[drop.type] += drop.amount;
+      });
     }
+  }
+
+  private handleHarvestReady(harvestable: Harvestable) {
+    harvestable.amount = 0;
+    harvestable.harvested = true;
+    harvestable.harvestable = false;
+  }
+
+  private releaseSlot(targetId: Entity, agentId: Entity) {
+    const slots = this.ecs.getComponent(targetId, InteractionSlots);
+    if (slots) {
+      (slots as InteractionSlots).release(agentId);
+    }
+  }
 }

@@ -27,6 +27,7 @@ import { BuildingViewModule } from "../../display/game/buildings/BuildingViewMod
 import { TreeViewModule } from "../../display/game/trees/TreeViewModule.ts";
 import { TreeCutIconViewModule } from "../../display/game/trees/TreeCutIconViewModule.ts";
 import { CharacterViewModule } from "../../display/game/characters/CharacterViewModule.ts";
+import { ResourceSystem } from "../resources/ResourceSystem.ts";
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -65,6 +66,7 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new WoodDojoSystem());
     game.ecs.addSystem(new LocomotionSystem());
     game.ecs.addSystem(new TreeHarvestingSystem());
+    game.ecs.addSystem(new ResourceSystem());
     initInput(game);
     initStory(game);
     initLut(game);
@@ -100,7 +102,7 @@ export const initDisplay = (game:Game)=>{
         new BuildingViewModule(),
         new TreeViewModule(),
         new TreeCutIconViewModule(),
-        new CharacterViewModule()
+        new CharacterViewModule(),
     ];
     
     game.gameDisplay.init(game, game.ecs, modules);

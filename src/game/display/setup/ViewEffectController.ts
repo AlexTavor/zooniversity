@@ -1,7 +1,8 @@
 import { ProgressBar, ProgressBarConfig } from "../game/effects/ProgressBar";
+import { ShudderEffect, ShudderEffectConfig } from "../game/effects/ShudderEffect";
 import { View } from "./View";
 
-interface EffectInstance {
+export interface EffectInstance {
   start(): void;
   stop(): void;
   update?(delta: number): void;
@@ -13,6 +14,7 @@ export enum EffectType {
   Shader = "shader",
   Shake = "shake",
   Progress = "progress",
+  Shudder = "shudder",
 }
 
 export type ProgressBarOptions = ProgressBarConfig & { container: Phaser.GameObjects.Container };
@@ -45,6 +47,9 @@ export class ViewEffectController {
         break;
       case EffectType.Progress:
         instance = this.makeProgress(opts as ProgressBarOptions);
+        break;
+      case EffectType.Shudder:
+        instance = new ShudderEffect(this.view, opts as ShudderEffectConfig);
         break;
     }
 

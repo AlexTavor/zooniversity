@@ -11,13 +11,13 @@ export const SKY_TINT_GRADIENT: [number, number][] = [
 ];
 
 export const SPRITE_TINT_GRADIENT: [number, number][] = [
-    [0.0, 0x334466],   // deep night
-    [0.25, 0x334466],  // night holds
+    [0.0, 0x4c5b88],   // deep night
+    [0.25, 0x4c5b88],  // night holds
     [0.375, 0xfff2cc], // dawn
     [0.5, 0xffffff],   // full day
     [0.75, 0xffffff],  // hold day
     [0.875, 0xfff2cc], // dusk
-    [1.0, 0x334466],   // back to night
+    [1.0, 0x4c5b88],   // back to night
 ];
 
 

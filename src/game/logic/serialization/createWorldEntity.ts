@@ -8,13 +8,15 @@ import { Character, CharacterType } from "../components/Character.ts";
 import { ActionIntentComponent, AgentActionType } from "../work/ActionIntentComponent.ts";
 import { LocomotionComponent } from "../locomotion/LocomotionComponent.ts";
 import { Harvester } from "../work/Harvester.ts";
+import { ResourceComponent } from "../resources/ResourceComponent.ts";
 
 export function createWorldEntity(ecs: ECS): number {
     const world = ecs.addEntity();
     ecs.addComponent(world, new TimeComponent());
     ecs.addComponent(world, new InputComponent());
     ecs.addComponent(world, new WeatherComponent());
-
+    ecs.addComponent(world, new ResourceComponent());
+    
     return world;
 }
 
@@ -24,6 +26,12 @@ export function createProfessorBooker(ecs: ECS): number {
     const woodDojoTransform = ecs.getComponent(woodDojoEntity, Transform);
 
     // and add the booker entity to the ECS
+    const booker = addBooker(ecs, woodDojoTransform, woodDojoEntity);
+    
+    return booker;
+}
+
+function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojoEntity: number) {
     const booker = ecs.addEntity();
     ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y));
     ecs.addComponent(booker, new Character({
@@ -38,6 +46,5 @@ export function createProfessorBooker(ecs: ECS): number {
 
     const woodDojo = ecs.getComponent(woodDojoEntity, WoodDojo);
     woodDojo.assignedAgents.push(booker);
-    
     return booker;
 }

@@ -1,21 +1,19 @@
 import { Component } from "../../ECS";
+import { ResourceType } from "../resources/ResourceType";
 
-export enum HarvestableType {
-    NONE = 0,
-    TREE = 1
+export type ResourceDrop = {
+    type:ResourceType,
+    amount:number
 }
 
 export class Harvestable extends Component {
-    public amount: number = 0;
     public maxAmount: number = 0;
     public harvestable: boolean = true;
     public harvested: boolean = false;
-    public type: HarvestableType;
     
-    constructor(type:HarvestableType, amount: number, maxAmount: number | null = null) {
+    constructor(public amount: number, public drops: ResourceDrop[]) {
         super();
-        this.type = type;
         this.amount = amount;
-        this.maxAmount = maxAmount == null ? amount : maxAmount;
+        this.maxAmount = amount;
     }
 }
