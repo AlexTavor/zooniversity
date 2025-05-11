@@ -8,7 +8,7 @@ import {GameState} from "../logic/serialization/GameState.ts";
 import {loadFromState} from "../logic/serialization/GameStateSerializer.ts";
 import {loadNewGame} from "../logic/serialization/MapSerializer.ts";
 import {TimeTintPipeline} from "../../render/pipelines/TimeTintPipeline.ts";
-import { initDisplay, initSystems } from '../logic/initialization/initialization.ts';
+import { initDisplay, initSystems } from '../logic/serialization/init.ts';
 
 export class Game extends Scene
 {

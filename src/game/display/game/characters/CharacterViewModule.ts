@@ -6,7 +6,7 @@ import { GameEvent } from "../../../consts/GameEvent";
 import { Character, CharacterType } from "../../../logic/components/Character";
 import { Transform } from "../../../logic/components/Transform";
 import { View } from "../../setup/View";
-import { ViewDefinition, PanelDefinition, ViewType } from "../../setup/ViewDefinition";
+import { ViewDefinition, PanelDefinition, ViewType, PanelType } from "../../setup/ViewDefinition";
 import { ViewDisplayModule, registerViewDisplayModule } from "../../setup/ViewDisplayModule";
 import { EffectType } from "../../setup/ViewEffectController";
 import { createView } from "../../setup/ViewStore";
@@ -41,12 +41,13 @@ export class CharacterViewModule extends ViewDisplayModule {
         panelDefinition.title = "Professor Booker";
         panelDefinition.description = "The kind, absent-minded founder of Zooniversity.";
         panelDefinition.imagePath = "assets/characters/booker/booker_panel.png";
+        panelDefinition.panelType = PanelType.CHARACTER;
 
         return createView({
             spriteName: "booker_char",
             position: {
-            x: Math.round(transform.x),
-            y: Math.round(transform.y),
+                x: Math.round(transform.x),
+                y: Math.round(transform.y),
             },
             frame: 0,
             type: ViewType.CHARCTER,
@@ -68,8 +69,8 @@ export class CharacterViewModule extends ViewDisplayModule {
             id: entity,
             pos: ViewTracker.getReactCoordsFromPhaser(view.viewContainer, this.context.scene.cameras.main),
             character: {
-            icon: "assets/characters/booker/booker_icon.png",
-            type: CharacterType.PROFESSOR
+                icon: "assets/characters/booker/booker_icon.png",
+                type: CharacterType.PROFESSOR
             }
         };
 

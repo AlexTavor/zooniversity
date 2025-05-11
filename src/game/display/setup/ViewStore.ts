@@ -1,4 +1,4 @@
-import {DisplayTraitType, PanelDefinition, ViewDefinition, ViewType} from "./ViewDefinition.ts";
+import {DisplayTraitType, PanelDefinition, PanelType, ViewDefinition, ViewType} from "./ViewDefinition.ts";
 
 export type ViewMap = Record<number, ViewDefinition>;
 
@@ -14,11 +14,13 @@ const panelDefinitions: Record<ViewType, PanelDefinition> = {
             { type: DisplayTraitType.WOOD, value: 10 },
             { type: DisplayTraitType.FOOD, value: 5 },
         ],
+        panelType: PanelType.TREE,
     },
     [ViewType.CAVE]: {
         title: "Cave",
         description: "A dark cave entrance. Mysterious and unexplored.",
-        imagePath: "assets/panels/cave_panel.png"
+        imagePath: "assets/panels/cave_panel.png",
+        panelType: PanelType.CAVE
     },
     [ViewType.NONE]: {
         title: "",
@@ -29,6 +31,7 @@ const panelDefinitions: Record<ViewType, PanelDefinition> = {
         title: "Character",
         description: "Some character",
         imagePath: "",
+        panelType: PanelType.CHARACTER
     } 
 } as Record<ViewType, PanelDefinition>;
 

@@ -1,21 +1,21 @@
-import { EventBus } from "../../EventBus";
+import { EventBus } from "../../EventBus.ts";
 import { GameEvent } from "../../consts/GameEvent.ts";
-import { GameDisplay } from "../../display/GameDisplay";
-import { CameraModule } from "../../display/camera/CameraModule";
+import { GameDisplay } from "../../display/GameDisplay.ts";
+import { CameraModule } from "../../display/camera/CameraModule.ts";
 import { SelectionHighlightModule } from "../../display/game/tools/selection/SelectionHighlightModule.ts";
 import { SelectionPanelModule } from "../../display/game/tools/selection/SelectionPanelModule.ts";
-import { CloudsModule } from "../../display/game/sky/CloudsModule";
-import { SkyDisplayModule } from "../../display/game/sky/SkyDisplayModule";
-import { StarfieldModule } from "../../display/game/sky/StarfieldModule";
-import { TinterModule } from "../../display/game/time_tint/TinterModule";
-import { TreeSwayModule } from "../../display/game/trees/TreeSwayModule";
-import { Game } from "../../scenes/Game";
-import { InputSystem } from "../input/InputSystem";
-import { CaveExploreStory } from "../story/CaveExploreStory";
-import { StoryEventSystem } from "../story/StoryEventSystem";
-import { StoryOption } from "../story/StoryEventTypes";
-import { TimeSystem } from "../time/TimeSystem";
-import { WeatherSystem } from "../weather/WeatherSystem";
+import { CloudsModule } from "../../display/game/sky/CloudsModule.ts";
+import { SkyDisplayModule } from "../../display/game/sky/SkyDisplayModule.ts";
+import { StarfieldModule } from "../../display/game/sky/StarfieldModule.ts";
+import { TinterModule } from "../../display/game/time_tint/TinterModule.ts";
+import { TreeSwayModule } from "../../display/game/trees/TreeSwayModule.ts";
+import { Game } from "../../scenes/Game.ts";
+import { InputSystem } from "../input/InputSystem.ts";
+import { CaveExploreStory } from "../story/CaveExploreStory.ts";
+import { StoryEventSystem } from "../story/StoryEventSystem.ts";
+import { StoryOption } from "../story/StoryEventTypes.ts";
+import { TimeSystem } from "../time/TimeSystem.ts";
+import { WeatherSystem } from "../weather/WeatherSystem.ts";
 import {CaveTreeLUTComponent} from "../lut/CaveTreeLUTComponent.ts";
 import {buildCaveTreeLUTFromViews} from "../lut/buildCaveTreeLUTFromViews.ts";
 import { GameTools } from "../../display/game/tools/GameTools.ts";
@@ -28,6 +28,7 @@ import { TreeViewModule } from "../../display/game/trees/TreeViewModule.ts";
 import { TreeCutIconViewModule } from "../../display/game/trees/TreeCutIconViewModule.ts";
 import { CharacterViewModule } from "../../display/game/characters/CharacterViewModule.ts";
 import { ResourceSystem } from "../resources/ResourceSystem.ts";
+import { ScheduleSystem } from "../scheduling/ScheduleSystem.ts";
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -52,7 +53,6 @@ export const initStory = (game:Game) => {
     });
 }
 
-
 export const initInput = (game:Game) => {
     const input = new InputSystem();
     game.ecs.addSystem(input);
@@ -67,6 +67,7 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new LocomotionSystem());
     game.ecs.addSystem(new TreeHarvestingSystem());
     game.ecs.addSystem(new ResourceSystem());
+    game.ecs.addSystem(new ScheduleSystem());
     initInput(game);
     initStory(game);
     initLut(game);

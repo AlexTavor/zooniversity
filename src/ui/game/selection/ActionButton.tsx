@@ -1,7 +1,6 @@
 import React from "react";
-import { PanelActionImplementation } from "../../../game/display/game/tools/selection/SelectionPanelModule.ts";
-import "./ActionButton.css";
 import { useSelectedTool } from "./useSelectedTool.ts";
+import { PanelActionImplementation } from "../../../game/display/game/tools/selection/PanelAction.ts";
 
 interface ActionButtonProps {
     action: PanelActionImplementation;

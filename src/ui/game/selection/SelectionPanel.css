@@ -51,13 +51,34 @@
     background-repeat: no-repeat;
     background-position: center;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
 }
 
-.selection-panel-info {
+.selection-panel-header {
     padding: 16px;
     color: #fff;
-    flex-grow: 1;
     cursor: pointer;
+    flex-shrink: 0;
+}
+
+.selection-panel-header h2 {
+    margin: 0 0 8px;
+    font-size: 1.5rem;
+}
+
+.selection-panel-header p {
+    margin: 0;
+    font-size: 1rem;
+    color: #ccc;
+}
+
+.selection-panel-body {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 16px 16px;
 }
 
 .text-bg {
@@ -66,15 +87,8 @@
     border-radius: 4px;
 }
 
-.selection-panel-info h2 {
-    margin: 0 0 8px;
-    font-size: 1.5rem;
-}
-
-.selection-panel-info p {
-    margin: 0;
-    font-size: 1rem;
-    color: #ccc;
+.info-line {
+    display: flex;
 }
 
 .selection-panel-controls {
@@ -104,7 +118,7 @@
     justify-content: center;
     gap: 16px;
     padding: 0px 4px 4px;
-    pointer-events: none; /* ensures it doesn't block clicks */
+    pointer-events: none;
     z-index: 1;
 }
 
@@ -141,7 +155,6 @@
     z-index: 101;
 }
 
-
 .action-button {
     background-size: cover;
     background-position: center;
@@ -152,12 +165,28 @@
     font-weight: bold;
     font-size: 1rem;
     color: white;
-    background-color: rgba(0, 0, 0, 0.6); /* fallback */
+    background-color: rgba(0, 0, 0, 0.6);
     cursor: pointer;
     min-width: 100px;
-    height: 48px;
+    width: 64px;
+    height: 64px;
+    min-width: 0px;
+    aspect-ratio: 1 / 1;
     display: flex;
     align-items: center;
     justify-content: center;
     text-shadow: 0 0 4px black;
+}
+
+.action-button.active {
+    box-shadow: inset 0 0 6px 2px rgba(255, 255, 255, 0.8);
+    transform: scale(0.95);
+}
+
+.schedule-bar {
+    margin-top: auto;
+    padding: 8px;
+    background-color: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
 }

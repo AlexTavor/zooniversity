@@ -33,5 +33,11 @@
 
 
 TODO:
-    Trees
-        Get resources
+    Panel
+        Handle WD assigned display
+    Handle Sleep
+        Handle WD sleep display
+    Tree Panel
+        Show Wood value
+        Show Food value
+        Show cut down progress

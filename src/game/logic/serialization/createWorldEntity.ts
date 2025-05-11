@@ -9,6 +9,7 @@ import { ActionIntentComponent, AgentActionType } from "../work/ActionIntentComp
 import { LocomotionComponent } from "../locomotion/LocomotionComponent.ts";
 import { Harvester } from "../work/Harvester.ts";
 import { ResourceComponent } from "../resources/ResourceComponent.ts";
+import { createStandardSchedule } from "../scheduling/ScheduleComponent.ts";
 
 export function createWorldEntity(ecs: ECS): number {
     const world = ecs.addEntity();
@@ -46,5 +47,9 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojoEntity: numbe
 
     const woodDojo = ecs.getComponent(woodDojoEntity, WoodDojo);
     woodDojo.assignedAgents.push(booker);
+
+
+    ecs.addComponent(booker, createStandardSchedule());
+
     return booker;
 }

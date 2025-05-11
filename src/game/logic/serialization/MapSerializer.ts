@@ -7,7 +7,6 @@ import {Cave} from "../components/Cave.ts";
 import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvent.ts";
 import {createProfessorBooker, createWorldEntity} from "./createWorldEntity.ts";
-import {PanelDataComponent} from "../selection/PanelDataComponent.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../components/WoodDojo.ts";
 import { Harvestable } from "../work/Harvestable.ts";
@@ -59,8 +58,6 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
         if (!panelDef) {
             continue;
         }
-        
-        ecs.addComponent(entity, new PanelDataComponent({...panelDef, entity}));
     }
 }
 

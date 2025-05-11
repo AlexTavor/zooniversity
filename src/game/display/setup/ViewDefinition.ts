@@ -14,6 +14,13 @@ export enum DisplayTraitType {
     FOOD = 2
 }
 
+export enum PanelType {
+    CHARACTER = "CHARACTER",
+    WOOD_DOJO = "WOOD_DOJO",
+    TREE = "TREE",
+    CAVE = "CAVE"
+}
+
 export class DisplayTrait {
     public type: DisplayTraitType;
     public value: number;
@@ -26,6 +33,7 @@ export class PanelDefinition {
     public traits?: DisplayTrait[];
     public entity: number;
     actions?: PanelActionDefinition[];
+    panelType: PanelType;
 }
 
 export interface PanelActionDefinition {

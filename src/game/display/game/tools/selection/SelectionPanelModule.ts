@@ -1,74 +1,75 @@
-import {GameDisplayContext} from "../../../GameDisplay.ts";
-import {DisplayModule} from "../../../setup/DisplayModule.ts";
-import {EventBus} from "../../../../EventBus.ts";
-import {UIEvent} from "../../../../consts/UIEvent.ts";
+import { GameDisplayContext } from "../../../GameDisplay.ts";
+import { DisplayModule } from "../../../setup/DisplayModule.ts";
+import { EventBus } from "../../../../EventBus.ts";
+import { UIEvent } from "../../../../consts/UIEvent.ts";
 import { GameEvent } from "../../../../consts/GameEvent.ts";
 import { PanelDefinition } from "../../../setup/ViewDefinition.ts";
-import { ToolType } from "../GameTools.ts";
-import { View } from "../../../setup/View.ts";
+import { PanelTypeReducer, PanelTypeReducers } from "./PanelTypeReducers.ts";
+import { PanelActionImplementation, SelectionPanelReducer, SelectionPanelReducers, createPanelActions } from "./PanelAction.ts";
 
-type PanelActionMaker = (def: PanelDefinition, entity: number, view: View) => ()=>void;
+export type PanelData = {
+  actionsImpl?: PanelActionImplementation[];
+  panelTypeData?: unknown;
+} & PanelDefinition;
 
-const actionFunctions: Record<string, PanelActionMaker> = {
-    "tree_cutting": (def: PanelDefinition, entity: number, view: View) => ()=>{
-        EventBus.emit(GameEvent.ToolSelected, ToolType.TreeCutting);
-    },
-    "find": (def: PanelDefinition, entity: number, view: View) => ()=>{
-        EventBus.emit(UIEvent.FindViewRequested, view.viewContainer);
-    },
-}
-
-const actionIcons: Record<string, string> = {
-    "tree_cutting": "assets/icons/axe_icon.png",
-    "find": "assets/icons/find_icon.png",
-}
-
-export type PanelActionImplementation = {
-    label: string;
-    type: string;
-    action: () => void;
-    icon?: string;
-}
-
+const findActionDefinition = {
+  label: "find",
+  type: "find",
+};
 
 export class SelectionPanelModule extends DisplayModule<GameDisplayContext> {
-    private display: GameDisplayContext;
-    public init(display: GameDisplayContext): void {
-        this.display = display;
-        
-        EventBus.on(GameEvent.SelectionChanged, this.handleSelectionChanged, this);
+  private display: GameDisplayContext;
+  private activeEntity: number = -1;
+  private lastPayload: string = "";
+
+  public init(display: GameDisplayContext): void {
+    this.display = display;
+    EventBus.on(GameEvent.SelectionChanged, this.handleSelectionChanged, this);
+  }
+
+  public destroy(): void {
+    EventBus.off(GameEvent.SelectionChanged, this.handleSelectionChanged, this);
+  }
+
+  private handleSelectionChanged(entity: number): void {
+    this.activeEntity = entity;
+    this.updatePanel();
+  }
+
+  public update(_: number): void {
+    this.updatePanel();
+  }
+
+  private updatePanel(): void {
+    if (this.activeEntity === -1) {
+        EventBus.emit(UIEvent.ShowPanelCalled, null);
+        this.lastPayload = "";
+        return;
     }
 
-    destroy(): void {
-        EventBus.off(GameEvent.SelectionChanged, this.handleSelectionChanged, this);
-    }
+    const view = this.display.viewsByEntity.get(this.activeEntity);
+    if (!view) return;
 
-    private handleSelectionChanged(entity: number): void {
-        if (entity == -1) {
-            EventBus.emit(UIEvent.ShowPanelCalled, null);
-            return;
+    const baseDef = view.viewDefinition.panelDefinition;
+    if (!baseDef) return;
+
+    const reducer: SelectionPanelReducer | undefined = SelectionPanelReducers[view.viewDefinition.type];
+    const reduced = reducer ? reducer(this.activeEntity, this.display.ecs) : {};
+
+    const typeReducer: PanelTypeReducer | undefined = baseDef.panelType ? PanelTypeReducers[baseDef.panelType] : undefined;
+    const panelTypeData = typeReducer ? typeReducer(this.activeEntity, this.display.ecs) : undefined;
+
+    const fullDef: PanelData = {
+            ...baseDef,
+            ...reduced,
+            actionsImpl: createPanelActions({...baseDef, actions:[findActionDefinition, ...(baseDef.actions || [])]}, this.activeEntity, view),
+            panelTypeData
+        };
+
+        const payload = JSON.stringify(fullDef);
+        if (payload !== this.lastPayload) {
+            this.lastPayload = payload;
+            EventBus.emit(UIEvent.ShowPanelCalled, fullDef);
         }
-        
-        const view = this.display.viewsByEntity.get(entity);
-        if (!view) return;
-        
-        const d = view.viewDefinition.panelDefinition;
-        const obj = d ? {...d, title: `${d.title}`, actionsImpl:this.createPanelActions({...d, actions:[{type:"find", label:"find"}, ...(d.actions||[])]}, entity, view)} : null;
-        EventBus.emit(UIEvent.ShowPanelCalled, obj);
-    }
-
-    public update(_: number): void {
-        // Update logic for the selection panel
-    }
-
-    private createPanelActions(def:PanelDefinition, entity:number, view:View): PanelActionImplementation[] {
-        if (!def.actions) return [];
-
-        return def.actions.map(action => ({
-            label: action.label,
-            type: action.type,
-            action: actionFunctions[action.type]? actionFunctions[action.type](def, entity, view) : () => {},
-            icon: actionIcons[action.type] || undefined
-        }));
     }
 }
