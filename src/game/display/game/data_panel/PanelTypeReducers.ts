@@ -1,10 +1,12 @@
-import { Entity, ECS } from "../../../../ECS";
-import { WoodDojo } from "../../../../logic/components/WoodDojo";
-import { LocomotionComponent } from "../../../../logic/locomotion/LocomotionComponent";
-import { ScheduleComponent } from "../../../../logic/scheduling/ScheduleComponent";
-import { TimeComponent } from "../../../../logic/time/TimeComponent";
-import { ActionIntentComponent, AgentActionType } from "../../../../logic/work/ActionIntentComponent";
-import { PanelType } from "../../../setup/ViewDefinition";
+import { Entity, ECS } from "../../../ECS";
+import { Tree } from "../../../logic/components/Tree";
+import { WoodDojo } from "../../../logic/components/WoodDojo";
+import { LocomotionComponent } from "../../../logic/locomotion/LocomotionComponent";
+import { ScheduleComponent } from "../../../logic/scheduling/ScheduleComponent";
+import { TimeComponent } from "../../../logic/time/TimeComponent";
+import { ActionIntentComponent, AgentActionType } from "../../../logic/work/ActionIntentComponent";
+import { Harvestable } from "../../../logic/work/Harvestable";
+import { PanelType } from "../../setup/ViewDefinition";
 
 export type PanelTypeReducer = (entity: Entity, ecs: ECS) => unknown;
 
@@ -81,6 +83,14 @@ export const PanelTypeReducers: Partial<Record<PanelType, PanelTypeReducer>> = {
     };
   },
 
-  [PanelType.CAVE]: () => ({}),
-  [PanelType.TREE]: () => ({})
+  [PanelType.CAVE]: (entity, ecs) => ({}),
+  [PanelType.TREE]: (entity, ecs) => {
+    const harvestable = ecs.getComponent(entity, Harvestable);
+
+    return {
+        drops: harvestable?.drops ?? [],
+        cutProgress: Math.floor(harvestable?.amount ?? 0),
+        maxCutProgress: harvestable?.maxAmount ?? 0,
+    }
+  }
 };

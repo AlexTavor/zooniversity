@@ -5,11 +5,13 @@ import { GameEvent } from "../../../game/consts/GameEvent.ts";
 import { ActionButton } from "./ActionButton.tsx";
 import { PanelType } from "../../../game/display/setup/ViewDefinition.ts";
 import "./SelectionPanel.css";
-import { PanelData } from "../../../game/display/game/tools/selection/SelectionPanelModule.ts";
-import { CharacterPanelDataView } from "./CharacterPanelDataView.tsx";
+import { PanelData } from "../../../game/display/game/data_panel/DataPanelModule.ts";
+import { CharacterPanelDataView } from "./character/CharacterPanelDataView.tsx";
+import { TreePanelDataView } from "./tree/TreePanelDataView.tsx";
 
 const PanelTypeComponentMap: Partial<Record<PanelType, React.FC<{ data: any; collapsed: boolean }>>> = {
-    [PanelType.CHARACTER]: CharacterPanelDataView
+    [PanelType.CHARACTER]: CharacterPanelDataView,
+    [PanelType.TREE]: TreePanelDataView
 };
 
 export const SelectionPanel: React.FC = () => {

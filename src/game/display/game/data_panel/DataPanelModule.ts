@@ -1,9 +1,9 @@
-import { GameDisplayContext } from "../../../GameDisplay.ts";
-import { DisplayModule } from "../../../setup/DisplayModule.ts";
-import { EventBus } from "../../../../EventBus.ts";
-import { UIEvent } from "../../../../consts/UIEvent.ts";
-import { GameEvent } from "../../../../consts/GameEvent.ts";
-import { PanelDefinition } from "../../../setup/ViewDefinition.ts";
+import { GameDisplayContext } from "../../GameDisplay.ts";
+import { DisplayModule } from "../../setup/DisplayModule.ts";
+import { EventBus } from "../../../EventBus.ts";
+import { UIEvent } from "../../../consts/UIEvent.ts";
+import { GameEvent } from "../../../consts/GameEvent.ts";
+import { PanelDefinition } from "../../setup/ViewDefinition.ts";
 import { PanelTypeReducer, PanelTypeReducers } from "./PanelTypeReducers.ts";
 import { PanelActionImplementation, SelectionPanelReducer, SelectionPanelReducers, createPanelActions } from "./PanelAction.ts";
 
@@ -17,7 +17,7 @@ const findActionDefinition = {
   type: "find",
 };
 
-export class SelectionPanelModule extends DisplayModule<GameDisplayContext> {
+export class DataPanelModule extends DisplayModule<GameDisplayContext> {
   private display: GameDisplayContext;
   private activeEntity: number = -1;
   private lastPayload: string = "";

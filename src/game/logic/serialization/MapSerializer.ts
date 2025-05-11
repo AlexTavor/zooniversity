@@ -6,12 +6,12 @@ import {CaveSpriteKey, PlantSpriteKey} from "../../display/setup/SpriteLibrary.t
 import {Cave} from "../components/Cave.ts";
 import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvent.ts";
-import {createProfessorBooker, createWorldEntity} from "./createWorldEntity.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../components/WoodDojo.ts";
 import { Harvestable } from "../work/Harvestable.ts";
 import { ResourceType } from "../resources/ResourceType.ts";
 import { InteractionSlots, SlotLayout } from "../work/InteractionSlots.ts";
+import { initWorld, createProfessorBooker } from "./init.ts";
 
 function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
     for (const [id, obj] of Object.entries(map.objects)) {
@@ -87,7 +87,7 @@ export function loadNewGame(ecs: ECS, scene: Phaser.Scene): void {
 
     const mapDefinition = rawData as MapDefinition;
     loadMapIntoECS(ecs, mapDefinition);
-    createWorldEntity(ecs);
+    initWorld(ecs);
     createProfessorBooker(ecs);
     createProfessorBooker(ecs);
     createProfessorBooker(ecs);

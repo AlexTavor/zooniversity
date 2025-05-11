@@ -1,10 +1,10 @@
-import { Entity, ECS } from "../../../../ECS";
-import { EventBus } from "../../../../EventBus";
-import { GameEvent } from "../../../../consts/GameEvent";
-import { UIEvent } from "../../../../consts/UIEvent";
-import { View } from "../../../setup/View";
-import { PanelDefinition, DisplayTrait } from "../../../setup/ViewDefinition";
-import { ToolType } from "../GameTools";
+import { Entity, ECS } from "../../../ECS";
+import { EventBus } from "../../../EventBus";
+import { GameEvent } from "../../../consts/GameEvent";
+import { UIEvent } from "../../../consts/UIEvent";
+import { View } from "../../setup/View";
+import { PanelDefinition, DisplayTrait } from "../../setup/ViewDefinition";
+import { ToolType } from "../tools/GameTools";
 
 export type PanelActionImplementation = {
     label: string;

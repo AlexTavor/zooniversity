@@ -3,7 +3,7 @@ import { GameEvent } from "../../consts/GameEvent.ts";
 import { GameDisplay } from "../../display/GameDisplay.ts";
 import { CameraModule } from "../../display/camera/CameraModule.ts";
 import { SelectionHighlightModule } from "../../display/game/tools/selection/SelectionHighlightModule.ts";
-import { SelectionPanelModule } from "../../display/game/tools/selection/SelectionPanelModule.ts";
+import { DataPanelModule } from "../../display/game/data_panel/DataPanelModule.ts";
 import { CloudsModule } from "../../display/game/sky/CloudsModule.ts";
 import { SkyDisplayModule } from "../../display/game/sky/SkyDisplayModule.ts";
 import { StarfieldModule } from "../../display/game/sky/StarfieldModule.ts";
@@ -29,6 +29,18 @@ import { TreeCutIconViewModule } from "../../display/game/trees/TreeCutIconViewM
 import { CharacterViewModule } from "../../display/game/characters/CharacterViewModule.ts";
 import { ResourceSystem } from "../resources/ResourceSystem.ts";
 import { ScheduleSystem } from "../scheduling/ScheduleSystem.ts";
+import { ECS } from "../../ECS.ts";
+import { Character, CharacterType } from "../components/Character.ts";
+import { Transform } from "../components/Transform.ts";
+import { WoodDojo } from "../components/WoodDojo.ts";
+import { InputComponent } from "../input/InputComponent.ts";
+import { LocomotionComponent } from "../locomotion/LocomotionComponent.ts";
+import { ResourceComponent } from "../resources/ResourceComponent.ts";
+import { createStandardSchedule } from "../scheduling/ScheduleComponent.ts";
+import { TimeComponent } from "../time/TimeComponent.ts";
+import { WeatherComponent } from "../weather/WeatherComponent.ts";
+import { ActionIntentComponent, AgentActionType } from "../work/ActionIntentComponent.ts";
+import { Harvester } from "../work/Harvester.ts";
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -98,7 +110,7 @@ export const initDisplay = (game:Game)=>{
         new TreeSwayModule(),
         new SelectionHighlightModule(),
         new GameTools(),
-        new SelectionPanelModule(),
+        new DataPanelModule(),
         new CaveViewModule(),
         new BuildingViewModule(),
         new TreeViewModule(),
@@ -107,4 +119,47 @@ export const initDisplay = (game:Game)=>{
     ];
     
     game.gameDisplay.init(game, game.ecs, modules);
+}
+
+export function initWorld(ecs: ECS): number {
+    const world = ecs.addEntity();
+    ecs.addComponent(world, new TimeComponent());
+    ecs.addComponent(world, new InputComponent());
+    ecs.addComponent(world, new WeatherComponent());
+    ecs.addComponent(world, new ResourceComponent());
+    
+    return world;
+}
+
+export function createProfessorBooker(ecs: ECS): number {
+    // Get the wood dojo transform, get position from it for the booker
+    const woodDojoEntity = ecs.getEntitiesWithComponent(WoodDojo)[0];
+    const woodDojoTransform = ecs.getComponent(woodDojoEntity, Transform);
+
+    // and add the booker entity to the ECS
+    const booker = addBooker(ecs, woodDojoTransform, woodDojoEntity);
+    
+    return booker;
+}
+
+function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojoEntity: number) {
+    const booker = ecs.addEntity();
+    ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y));
+    ecs.addComponent(booker, new Character({
+        name: "Professor Booker",
+        description: "The professor of the academy. He is a master of the wood element.",
+        type: CharacterType.PROFESSOR,
+    }));
+    ecs.addComponent(booker, new ActionIntentComponent(AgentActionType.HARVEST, -1));
+
+    ecs.addComponent(booker, new LocomotionComponent());
+    ecs.addComponent(booker, new Harvester());
+
+    const woodDojo = ecs.getComponent(woodDojoEntity, WoodDojo);
+    woodDojo.assignedAgents.push(booker);
+
+
+    ecs.addComponent(booker, createStandardSchedule());
+
+    return booker;
 }

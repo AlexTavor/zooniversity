@@ -33,11 +33,12 @@
 
 
 TODO:
-    Panel
-        Handle WD assigned display
-    Handle Sleep
-        Handle WD sleep display
     Tree Panel
         Show Wood value
         Show Food value
         Show cut down progress
+    Handle Sleep
+    Handle Relax
+    WD Panel
+        Handle assigned display
+        Handle sleep display

@@ -13,12 +13,12 @@ export function createStandardSchedule(): ScheduleComponent {
   // 8-hour schedule: [SLEEP, SLEEP, HARVEST, HARVEST, HARVEST, HARVEST, REST, SLEEP]
   return new ScheduleComponent([
     AgentActionType.SLEEP,
-    AgentActionType.SLEEP,
-    AgentActionType.HARVEST,
-    AgentActionType.HARVEST,
     AgentActionType.HARVEST,
     AgentActionType.HARVEST,
     AgentActionType.REST,
+    AgentActionType.HARVEST,
+    AgentActionType.HARVEST,
+    AgentActionType.HARVEST,
     AgentActionType.SLEEP
   ]);
 }

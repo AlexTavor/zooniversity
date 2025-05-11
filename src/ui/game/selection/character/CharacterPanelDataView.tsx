@@ -1,6 +1,6 @@
 import React from "react";
 import "./CharacterPanelDataView.css";
-import { CharacterAction, CharacterScheduleType } from "../../../game/display/game/tools/selection/PanelTypeReducers";
+import { CharacterAction, CharacterScheduleType } from "../../../../game/display/game/data_panel/PanelTypeReducers";
 
 interface CharacterPanelData {
   currentScheduleIndex: number;
