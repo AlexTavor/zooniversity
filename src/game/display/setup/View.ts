@@ -14,7 +14,7 @@ export class View {
   public type = ViewType.NONE;
   public selectable = true;
 
-  private sprite?: Phaser.GameObjects.Sprite;
+  sprite: Phaser.GameObjects.Sprite;
   private readonly effects: ViewEffectController;
 
   constructor(
@@ -88,7 +88,6 @@ export class View {
     if (this.viewDefinition.spriteName === spriteName) return;
 
     this.sprite?.destroy();
-    this.sprite = undefined;
 
     this.viewDefinition.spriteName = spriteName;
     this.initSprite(this.viewContainer.scene);

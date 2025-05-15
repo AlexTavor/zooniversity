@@ -10,7 +10,6 @@ export class ScheduleComponent extends Component {
 }
 
 export function createStandardSchedule(): ScheduleComponent {
-  // 8-hour schedule: [SLEEP, SLEEP, HARVEST, HARVEST, HARVEST, HARVEST, REST, SLEEP]
   return new ScheduleComponent([
     AgentActionType.SLEEP,
     AgentActionType.HARVEST,

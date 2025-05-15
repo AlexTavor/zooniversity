@@ -1,6 +1,6 @@
 import { ECS, Entity } from "../../../ECS";
-import { Cave } from "../../../logic/components/Cave";
-import { Transform } from "../../../logic/components/Transform";
+import { Cave } from "../../../logic/buildings/Cave";
+import { Transform } from "../../../components/Transform";
 import { GameDisplayContext } from "../../GameDisplay";
 import { SpriteKey } from "../../setup/SpriteLibrary";
 import { View } from "../../setup/View";

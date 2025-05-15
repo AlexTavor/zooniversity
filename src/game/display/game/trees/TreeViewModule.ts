@@ -1,8 +1,8 @@
 import Phaser from "phaser";
 import { ECS, Entity } from "../../../ECS";
 import { Config } from "../../../config/Config";
-import { Transform } from "../../../logic/components/Transform";
-import { Tree } from "../../../logic/components/Tree";
+import { Transform } from "../../../components/Transform";
+import { Tree } from "../../../logic/trees/Tree";
 import { Harvestable } from "../../../logic/work/Harvestable";
 import { View } from "../../setup/View";
 import { ViewDefinition, ViewType } from "../../setup/ViewDefinition";

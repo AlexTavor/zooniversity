@@ -1,8 +1,8 @@
 
 import Phaser from "phaser";
 import { ECS, Entity } from "../../../ECS";
-import { Transform } from "../../../logic/components/Transform";
-import { Tree } from "../../../logic/components/Tree";
+import { Transform } from "../../../components/Transform";
+import { Tree } from "../../../logic/trees/Tree";
 import { GameDisplayContext } from "../../GameDisplay";
 import { View } from "../../setup/View";
 import { ViewDefinition, ViewType } from "../../setup/ViewDefinition";

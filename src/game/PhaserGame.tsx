@@ -1,4 +1,3 @@
-// @ts-ignore
 import React, { forwardRef, useEffect, useLayoutEffect, useRef } from 'react';
 import StartGame from './main';
 import { EventBus } from './EventBus';

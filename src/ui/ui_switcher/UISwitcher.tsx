@@ -1,6 +1,5 @@
 import React from 'react';
 import {useActiveSceneType} from "./useActiveSceneType.ts";
-import {ToolsContainer} from "../tools/ToolsContainer.tsx";
 import {GameContainer} from "../game/GameContainer.tsx";
 
 export const UISwitcher: React.FC = () => {
@@ -8,7 +7,7 @@ export const UISwitcher: React.FC = () => {
 
     switch (sceneType) {
         case 'editor':
-            return <ToolsContainer />;
+            return <></>;
         case 'game':
             return <GameContainer />;
         default:

@@ -8,7 +8,7 @@ import {GameState} from "../logic/serialization/GameState.ts";
 import {loadFromState} from "../logic/serialization/GameStateSerializer.ts";
 import {loadNewGame} from "../logic/serialization/MapSerializer.ts";
 import {TimeTintPipeline} from "../../render/pipelines/TimeTintPipeline.ts";
-import { initDisplay, initSystems } from '../logic/serialization/init.ts';
+import { init} from '../logic/serialization/init.ts';
 
 export class Game extends Scene
 {
@@ -43,16 +43,12 @@ export class Game extends Scene
         
         EventBus.on(GameEvent.NewGame, () => {
             loadNewGame(this.ecs, this);
-            initDisplay(this);
-            initSystems(this);
-            EventBus.emit(GameEvent.ViewsInitialized);
+            init(this)
         });
 
         EventBus.on(GameEvent.LoadGame, (state: GameState) => {
             loadFromState(this.ecs, state);
-            initDisplay(this);
-            initSystems(this);
-            EventBus.emit(GameEvent.ViewsInitialized);
+            init(this)
         });
 
         this.events.on('destroy', this.destroy);

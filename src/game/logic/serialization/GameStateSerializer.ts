@@ -1,9 +1,9 @@
 
 // Registry to map component names to classes for deserialization
 import {Component, ECS} from "../../ECS.ts";
-import {Transform} from "../components/Transform.ts";
-import {Tree} from "../components/Tree.ts";
-import {Cave} from "../components/Cave.ts";
+import {Transform} from "../../components/Transform.ts";
+import {Tree} from "../trees/Tree.ts";
+import {Cave} from "../buildings/Cave.ts";
 import {EntityState, GameState} from "./GameState.ts";
 import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvent.ts";

@@ -196,3 +196,23 @@ export class ProgressBar {
     }
   }
 }
+
+export const harvestBarConfig: ProgressBarConfig = {
+  position: "left",
+  offset: 50,
+  valueRef: { current: 0, max: 1 },
+  size: {
+    minWidth: 20,
+    maxWidth: 120,
+    minWidthValue: 0.1,
+    maxWidthValue: 1
+  },
+  fillColor: 0xffaa00,
+  backgroundColor: 0x111111,
+  border: {
+    color: 0xffffff,
+    thickness: 2,
+    radius: 6,
+    opacity: 0.8
+  }
+};

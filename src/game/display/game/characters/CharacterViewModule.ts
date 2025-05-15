@@ -3,8 +3,8 @@ import Phaser from "phaser";
 import { ECS, Entity } from "../../../ECS";
 import { EventBus } from "../../../EventBus";
 import { GameEvent } from "../../../consts/GameEvent";
-import { Character, CharacterType } from "../../../logic/components/Character";
-import { Transform } from "../../../logic/components/Transform";
+import { Character, CharacterType } from "../../../logic/characters/Character";
+import { LocationState, Transform } from "../../../components/Transform";
 import { View } from "../../setup/View";
 import { ViewDefinition, PanelDefinition, ViewType, PanelType } from "../../setup/ViewDefinition";
 import { ViewDisplayModule, registerViewDisplayModule } from "../../setup/ViewDisplayModule";
@@ -59,6 +59,7 @@ export class CharacterViewModule extends ViewDisplayModule {
         const transform = ecs.getComponent(entity, Transform);
         const rx = Math.round(transform.x);
         const ry = Math.round(transform.y);
+        view.viewContainer.visible = transform.locationState != LocationState.INSIDE;
         const isChanged = view.viewContainer.x !== rx || view.viewContainer.y !== ry;
 
         view.viewContainer.x = rx;

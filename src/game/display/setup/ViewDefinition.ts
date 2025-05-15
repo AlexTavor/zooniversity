@@ -31,7 +31,6 @@ export class PanelDefinition {
     public description:string;
     public imagePath:string;
     public traits?: DisplayTrait[];
-    public entity: number;
     actions?: PanelActionDefinition[];
     panelType: PanelType;
 }

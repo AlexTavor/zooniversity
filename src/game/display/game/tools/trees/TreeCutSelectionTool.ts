@@ -4,7 +4,7 @@ import { GameEvent } from "../../../../consts/GameEvent.ts";
 import { EventBus } from "../../../../EventBus.ts";
 import { ITool, ToolType } from "../GameTools.ts";
 import { ClickThresholdHandler } from "../../../utils/ClickThresholdHandler.ts";
-import { Tree } from "../../../../logic/components/Tree.ts";
+import { Tree } from "../../../../logic/trees/Tree.ts";
 import { AlphaSampler } from "../../../utils/AlphaSampler.ts";
 
 export class TreeCutSelectionTool extends DisplayModule<GameDisplayContext> implements ITool {

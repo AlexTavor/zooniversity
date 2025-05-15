@@ -54,7 +54,7 @@ export const TreePanelDataView: React.FC<{
       <div className="progress-line">
         <span className="label">Chop Progress:</span>
         <span className="value">
-          {isCutDown ? "CUT DOWN" : `${cutProgress} / ${maxCutProgress}`}
+          {isCutDown ? "CUT DOWN" : `${maxCutProgress-cutProgress} / ${maxCutProgress}`}
         </span>
       </div>
     </div>

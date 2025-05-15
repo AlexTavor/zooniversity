@@ -1,0 +1,33 @@
+{
+    "char_booker": {
+      "title": "Professor Booker",
+      "description": "The kind, absent-minded founder of Zooniversity.",
+      "imagePath": "assets/characters/booker/booker_panel.png",
+      "panelType": "CHARACTER"
+    },
+    "building_wood_dojo": {
+      "title": "Wood Dojo",
+      "description": "Center of Wood Mastery",
+      "imagePath": "assets/panels/wood_dojo_panel.png",
+      "panelType": "WOOD_DOJO",
+      "actions": [
+        {
+          "label": "Select Trees to Harvest",
+          "type": "TreeCutting"
+        }
+      ]
+    },
+    "tree_generic": {
+      "title": "Tree",
+      "description": "A sturdy tree.",
+      "imagePath": "assets/panels/tree_panel.png",
+      "panelType": "TREE"
+    },
+    "cave_generic": {
+      "title": "Cave",
+      "description": "A dark, unexplored cave. Caves can be explored and then built upon.",
+      "imagePath": "assets/panels/cave_panel.png",
+      "panelType": "CAVE"
+    }
+  }
+  

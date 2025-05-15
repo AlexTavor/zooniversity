@@ -1,17 +1,19 @@
-import {MapDefinition} from "../../display/editor/map_editor/MapTypes.ts";
+import {MapDefinition} from "./MapTypes.ts";
 import {ECS} from "../../ECS.ts";
-import {Transform} from "../components/Transform.ts";
-import {Tree} from "../components/Tree.ts";
+import {Transform} from "../../components/Transform.ts";
+import {Tree} from "../trees/Tree.ts";
 import {CaveSpriteKey, PlantSpriteKey} from "../../display/setup/SpriteLibrary.ts";
-import {Cave} from "../components/Cave.ts";
+import {Cave} from "../buildings/Cave.ts";
 import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvent.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
-import { WoodDojo } from "../components/WoodDojo.ts";
+import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
 import { Harvestable } from "../work/Harvestable.ts";
 import { ResourceType } from "../resources/ResourceType.ts";
-import { InteractionSlots, SlotLayout } from "../work/InteractionSlots.ts";
+import { InteractionSlots, SlotLayout, SlotType } from "../work/InteractionSlots.ts";
 import { initWorld, createProfessorBooker } from "./init.ts";
+import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
+import { InsideLocationComponent } from "../locomotion/InsideLocationComponent.ts";
 
 function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
     for (const [id, obj] of Object.entries(map.objects)) {
@@ -35,8 +37,11 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
                 if (def.spriteName) {
                     ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
                     ecs.addComponent(entity, new Harvestable(1000, [{type:ResourceType.WOOD, amount:10}]));
-                    ecs.addComponent(entity, new InteractionSlots(SlotLayout.RADIAL, 120, 2));
-                } else {
+                    ecs.addComponent(entity, new InteractionSlots({
+                        [SlotType.WORK]: { layout: SlotLayout.RADIAL, radius: 120, count: 2 }
+                      }));
+                    } 
+                else {
                     console.warn(`Tree object ${id} is missing a sprite key.`);
                 }
                 break;
@@ -64,10 +69,16 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
 function createCave(def: ViewDefinition, ecs: ECS, entity: number) {
     switch (def.spriteName as CaveSpriteKey) {
         case 'cave':
+            ecs.addComponent(entity, new InsideLocationComponent());
             ecs.addComponent(entity, new Cave(false));
             break;
         case 'wood_dojo':
+            ecs.addComponent(entity, new InsideLocationComponent());
             ecs.addComponent(entity, new WoodDojo());
+            ecs.addComponent(entity, new DormitoryComponent());
+            ecs.addComponent(entity, new InteractionSlots({
+                [SlotType.SLEEP]: { layout: SlotLayout.RADIAL, radius: 100, count: 5 }
+              }));
             break;
         default:
             console.warn(`Unknown cave sprite key: ${def.spriteName}`);

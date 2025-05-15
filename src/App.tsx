@@ -1,4 +1,3 @@
-// @ts-ignore
 import React, { useRef } from 'react';
 import { IRefPhaserGame, PhaserGame } from './game/PhaserGame';
 import {UISwitcher} from "./ui/ui_switcher/UISwitcher.tsx"; 

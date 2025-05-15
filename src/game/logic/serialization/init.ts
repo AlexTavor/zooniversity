@@ -19,9 +19,9 @@ import { WeatherSystem } from "../weather/WeatherSystem.ts";
 import {CaveTreeLUTComponent} from "../lut/CaveTreeLUTComponent.ts";
 import {buildCaveTreeLUTFromViews} from "../lut/buildCaveTreeLUTFromViews.ts";
 import { GameTools } from "../../display/game/tools/GameTools.ts";
-import { WoodDojoSystem } from "../work/WoodDojoSystem.ts";
+import { WoodDojoSystem } from "../buildings/wood_dojo/WoodDojoSystem.ts";
 import { LocomotionSystem } from "../locomotion/LocomotionSystem.ts";
-import { TreeHarvestingSystem } from "../work/TreeHarvestingSystem.ts";
+import { TreeHarvestingSystem } from "../trees/TreeHarvestingSystem.ts";
 import { CaveViewModule } from "../../display/game/buildings/CaveViewModule.ts";
 import { BuildingViewModule } from "../../display/game/buildings/BuildingViewModule.ts";
 import { TreeViewModule } from "../../display/game/trees/TreeViewModule.ts";
@@ -30,17 +30,27 @@ import { CharacterViewModule } from "../../display/game/characters/CharacterView
 import { ResourceSystem } from "../resources/ResourceSystem.ts";
 import { ScheduleSystem } from "../scheduling/ScheduleSystem.ts";
 import { ECS } from "../../ECS.ts";
-import { Character, CharacterType } from "../components/Character.ts";
-import { Transform } from "../components/Transform.ts";
-import { WoodDojo } from "../components/WoodDojo.ts";
+import { Character, CharacterType } from "../characters/Character.ts";
+import { Transform } from "../../components/Transform.ts";
+import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
 import { InputComponent } from "../input/InputComponent.ts";
 import { LocomotionComponent } from "../locomotion/LocomotionComponent.ts";
 import { ResourceComponent } from "../resources/ResourceComponent.ts";
 import { createStandardSchedule } from "../scheduling/ScheduleComponent.ts";
 import { TimeComponent } from "../time/TimeComponent.ts";
 import { WeatherComponent } from "../weather/WeatherComponent.ts";
-import { ActionIntentComponent, AgentActionType } from "../work/ActionIntentComponent.ts";
+import { ActionIntentComponent } from "../work/ActionIntentComponent.ts";
 import { Harvester } from "../work/Harvester.ts";
+import { loadPanelRegistry } from "../../display/game/data_panel/PanelRegistry.tsx";
+import { DormitorySystem } from "../buildings/dormitory/DormitorySystem.ts";
+import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
+
+export const init = (game:Game) => {
+    initData(game);
+    initDisplay(game);
+    initSystems(game);
+    EventBus.emit(GameEvent.ViewsInitialized);
+}
 
 export const initStory = (game:Game) => {
     const story = new StoryEventSystem({
@@ -76,6 +86,7 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
     game.ecs.addSystem(new WeatherSystem());
     game.ecs.addSystem(new WoodDojoSystem());
+    game.ecs.addSystem(new DormitorySystem());
     game.ecs.addSystem(new LocomotionSystem());
     game.ecs.addSystem(new TreeHarvestingSystem());
     game.ecs.addSystem(new ResourceSystem());
@@ -96,6 +107,10 @@ const initLut = (game:Game) => {
     game.destroyQueue.push(() => {
         EventBus.off(GameEvent.ViewsInitialized, handleViewsInitialized);
     });
+}
+
+export const initData = (game:Game) => {
+    loadPanelRegistry(game);
 }
 
 export const initDisplay = (game:Game)=>{
@@ -132,34 +147,37 @@ export function initWorld(ecs: ECS): number {
 }
 
 export function createProfessorBooker(ecs: ECS): number {
-    // Get the wood dojo transform, get position from it for the booker
+    // Get the wood dojo transform, get position from it for booker
     const woodDojoEntity = ecs.getEntitiesWithComponent(WoodDojo)[0];
     const woodDojoTransform = ecs.getComponent(woodDojoEntity, Transform);
+    const woodDojo = ecs.getComponent(woodDojoEntity, WoodDojo);
 
-    // and add the booker entity to the ECS
-    const booker = addBooker(ecs, woodDojoTransform, woodDojoEntity);
+    const dormEntity = ecs.getEntitiesWithComponent(DormitoryComponent)[0];
+    const dorm = ecs.getComponent(dormEntity, DormitoryComponent);
+
+    // and add booker entity to the ECS
+    const booker = addBooker(ecs, woodDojoTransform, woodDojo, dorm);
     
     return booker;
 }
 
-function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojoEntity: number) {
+function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, dorm:DormitoryComponent) {
     const booker = ecs.addEntity();
+    
     ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y));
     ecs.addComponent(booker, new Character({
         name: "Professor Booker",
         description: "The professor of the academy. He is a master of the wood element.",
         type: CharacterType.PROFESSOR,
     }));
-    ecs.addComponent(booker, new ActionIntentComponent(AgentActionType.HARVEST, -1));
-
+    ecs.addComponent(booker, new ActionIntentComponent());
     ecs.addComponent(booker, new LocomotionComponent());
     ecs.addComponent(booker, new Harvester());
-
-    const woodDojo = ecs.getComponent(woodDojoEntity, WoodDojo);
-    woodDojo.assignedAgents.push(booker);
-
-
     ecs.addComponent(booker, createStandardSchedule());
+
+    woodDojo.assignedAgents.push(booker);
+    dorm.assignedAgents.push(booker);
+
 
     return booker;
 }

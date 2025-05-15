@@ -1,6 +1,6 @@
 import { Entity, ECS } from "../../../ECS";
-import { Tree } from "../../../logic/components/Tree";
-import { WoodDojo } from "../../../logic/components/WoodDojo";
+import { Tree } from "../../../logic/trees/Tree";
+import { WoodDojo } from "../../../logic/buildings/wood_dojo/WoodDojo";
 import { LocomotionComponent } from "../../../logic/locomotion/LocomotionComponent";
 import { ScheduleComponent } from "../../../logic/scheduling/ScheduleComponent";
 import { TimeComponent } from "../../../logic/time/TimeComponent";

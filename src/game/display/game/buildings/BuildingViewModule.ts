@@ -1,8 +1,8 @@
 
 import Phaser from "phaser";
 import { ECS, Entity } from "../../../ECS";
-import { Transform } from "../../../logic/components/Transform";
-import { WoodDojo } from "../../../logic/components/WoodDojo";
+import { Transform } from "../../../components/Transform";
+import { WoodDojo } from "../../../logic/buildings/wood_dojo/WoodDojo";
 import { SpriteKey } from "../../setup/SpriteLibrary";
 import { View } from "../../setup/View";
 import { ViewDefinition, ViewType, PanelDefinition } from "../../setup/ViewDefinition";
@@ -73,6 +73,7 @@ export class BuildingViewModule extends ViewDisplayModule {
   createView(ecs: ECS, entity: number, views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition): View {
     const view = new View(viewDefinition.id, views, viewDefinition, this.context.layers.Surface, this.context.scene);
     view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+
     return view;
 }
 }
