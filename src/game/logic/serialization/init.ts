@@ -39,11 +39,12 @@ import { ResourceComponent } from "../resources/ResourceComponent.ts";
 import { createStandardSchedule } from "../scheduling/ScheduleComponent.ts";
 import { TimeComponent } from "../time/TimeComponent.ts";
 import { WeatherComponent } from "../weather/WeatherComponent.ts";
-import { ActionIntentComponent } from "../work/ActionIntentComponent.ts";
 import { Harvester } from "../work/Harvester.ts";
-import { loadPanelRegistry } from "../../display/game/data_panel/PanelRegistry.tsx";
+import { loadPanelRegistry } from "../../display/game/data_panel/PanelRegistry.ts";
 import { DormitorySystem } from "../buildings/dormitory/DormitorySystem.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
+import { ActionIntentComponent } from "../action-intent/ActionIntentComponent.ts";
+import { ActionIntentSystem } from "../action-intent/ActionIntentSystem.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -84,13 +85,14 @@ export const initInput = (game:Game) => {
 
 export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
+    game.ecs.addSystem(new ScheduleSystem());
     game.ecs.addSystem(new WeatherSystem());
     game.ecs.addSystem(new WoodDojoSystem());
     game.ecs.addSystem(new DormitorySystem());
+    game.ecs.addSystem(new ActionIntentSystem());
+    game.ecs.addSystem(new TreeHarvestingSystem())
     game.ecs.addSystem(new LocomotionSystem());
-    game.ecs.addSystem(new TreeHarvestingSystem());
     game.ecs.addSystem(new ResourceSystem());
-    game.ecs.addSystem(new ScheduleSystem());
     initInput(game);
     initStory(game);
     initLut(game);

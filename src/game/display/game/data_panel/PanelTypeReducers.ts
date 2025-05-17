@@ -1,78 +1,59 @@
-import { Entity, ECS } from "../../../ECS";
-import { Tree } from "../../../logic/trees/Tree";
-import { WoodDojo } from "../../../logic/buildings/wood_dojo/WoodDojo";
-import { LocomotionComponent } from "../../../logic/locomotion/LocomotionComponent";
-import { ScheduleComponent } from "../../../logic/scheduling/ScheduleComponent";
-import { TimeComponent } from "../../../logic/time/TimeComponent";
-import { ActionIntentComponent, AgentActionType } from "../../../logic/work/ActionIntentComponent";
-import { Harvestable } from "../../../logic/work/Harvestable";
+import { Entity, ECS } from "../../../ECS"; // Adjust path
+import { WoodDojo } from "../../../logic/buildings/wood_dojo/WoodDojo"; // Adjust path
+import { ScheduleComponent } from "../../../logic/scheduling/ScheduleComponent"; // Adjust path
+import { TimeComponent } from "../../../logic/time/TimeComponent"; // Adjust path
+import { Harvestable } from "../../../logic/work/Harvestable"; // Adjust path
 import { PanelType } from "../../setup/ViewDefinition";
+
+// Import new enums and component
+import { ActionIntentComponent } from "../../../logic/action-intent/ActionIntentComponent"; // New
+import { CharacterIntent, CharacterAction } from "../../../logic/action-intent/actionIntentData"; // New
 
 export type PanelTypeReducer = (entity: Entity, ecs: ECS) => unknown;
 
-export enum CharacterAction {
-  NONE = "None",
-  WALKING = "Walking",
-  CHOPPING = "Chopping",
-  BUILDING = "Building",
-  STUDYING = "Studying",
-  WAITING = "Waiting",
-  SLEEPING = "Sleeping",
-  RELAXING = "Relaxing"
-}
-
-export enum CharacterScheduleType {
+// This enum is for UI display purposes for the schedule.
+export enum CharacterScheduleDisplayType {
   HARVEST = "Harvest",
   SLEEP = "Sleep",
   STUDY = "Study",
-  REST = "Rest"
+  REST = "Rest",
+  BUILD = "Build", // Added example
+  NONE = "None",
 }
 
-
-function resolveCharacterAction(entity: Entity, ecs: ECS): CharacterAction {
-  const intent = ecs.getComponent(entity, ActionIntentComponent);
-  if (!intent) return CharacterAction.NONE;
-
-  switch (intent.actionType) {
-    case AgentActionType.HARVEST: {
-      if (intent.targetEntityId === -1) return CharacterAction.WAITING;
-      const locomotion = ecs.getComponent(entity, LocomotionComponent);
-      if (!locomotion?.arrived) return CharacterAction.WALKING;
-      return CharacterAction.CHOPPING;
-    }
-
-    case AgentActionType.SLEEP:
-      return CharacterAction.SLEEPING;
-
-    case AgentActionType.REST:
-      return CharacterAction.RELAXING;
-
+/** Converts a CharacterIntent from the schedule into a display-friendly string/type. */
+function convertScheduleIntentToDisplay(intent: CharacterIntent): CharacterScheduleDisplayType {
+  switch (intent) {
+    case CharacterIntent.HARVEST: return CharacterScheduleDisplayType.HARVEST;
+    case CharacterIntent.SLEEP: return CharacterScheduleDisplayType.SLEEP;
+    case CharacterIntent.STUDY: return CharacterScheduleDisplayType.STUDY;
+    case CharacterIntent.REST: return CharacterScheduleDisplayType.REST;
+    case CharacterIntent.BUILD: return CharacterScheduleDisplayType.BUILD;
+    case CharacterIntent.NONE: return CharacterScheduleDisplayType.NONE;
     default:
-      return CharacterAction.NONE;
+      // Log unhandled intent if necessary, or return a default
+      // const _exhaustiveCheck: never = intent; // For exhaustive checks at compile time
+      return CharacterScheduleDisplayType.NONE;
   }
 }
-
-const convertSchedule = (a: AgentActionType): CharacterScheduleType => {
-  switch (a) {
-    case AgentActionType.HARVEST: return CharacterScheduleType.HARVEST;
-    case AgentActionType.SLEEP: return CharacterScheduleType.SLEEP;
-    case AgentActionType.REST: return CharacterScheduleType.REST;
-    case AgentActionType.STUDY: return CharacterScheduleType.STUDY;
-    default: return CharacterScheduleType.REST;
-  }
-};
 
 export const PanelTypeReducers: Partial<Record<PanelType, PanelTypeReducer>> = {
   [PanelType.CHARACTER]: (entity, ecs) => {
+    const actionIntent = ecs.getComponent(entity, ActionIntentComponent);
     const schedule = ecs.getComponent(entity, ScheduleComponent);
-    const time = ecs.getEntitiesWithComponent(TimeComponent)[0];
-    const hour = time ? ecs.getComponent(time, TimeComponent).hour : 0;
+    const timeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+    const hour = timeEntity ? ecs.getComponent(timeEntity, TimeComponent).hour : 0;
+
+    const currentScheduleIntent = schedule?.entries[hour] ?? CharacterIntent.NONE;
 
     return {
-      currentAction: resolveCharacterAction(entity, ecs),
+      // currentAction is now directly read from the new ActionIntentComponent
+      currentAction: actionIntent?.currentPerformedAction ?? CharacterAction.IDLE,
       currentScheduleIndex: hour,
-      currentSchedule: convertSchedule(schedule?.entries[hour] ?? AgentActionType.NONE),
-      schedule: schedule?.entries.map(convertSchedule) ?? []
+      // currentSchedule now reflects the display type of the *intent* for that hour
+      currentSchedule: convertScheduleIntentToDisplay(currentScheduleIntent),
+      // schedule also maps intents to display types
+      schedule: schedule?.entries.map(convertScheduleIntentToDisplay) ?? []
     };
   },
 
@@ -83,14 +64,17 @@ export const PanelTypeReducers: Partial<Record<PanelType, PanelTypeReducer>> = {
     };
   },
 
-  [PanelType.CAVE]: (entity, ecs) => ({}),
+  [PanelType.CAVE]: (entity, ecs) => ({
+    // Keep existing CAVE panel logic if any, or default to empty
+  }),
+
   [PanelType.TREE]: (entity, ecs) => {
     const harvestable = ecs.getComponent(entity, Harvestable);
-
     return {
         drops: harvestable?.drops ?? [],
-        cutProgress: Math.floor(harvestable?.amount ?? 0),
+        // Assuming cutProgress and maxCutProgress are still relevant from Harvestable
+        cutProgress: harvestable ? Math.max(0, Math.floor(harvestable.amount)) : 0,
         maxCutProgress: harvestable?.maxAmount ?? 0,
-    }
+    };
   }
 };

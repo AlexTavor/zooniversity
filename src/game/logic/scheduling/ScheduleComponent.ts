@@ -1,7 +1,7 @@
-import { Component } from "../../ECS.ts";
-import { AgentActionType } from "../work/ActionIntentComponent.ts";
+import { Component } from "../../ECS";
+import { CharacterIntent } from "../action-intent/actionIntentData";
 
-export type ScheduleEntry = AgentActionType; // One entry per hour
+export type ScheduleEntry = CharacterIntent; // One entry per hour
 
 export class ScheduleComponent extends Component {
   constructor(public entries: ScheduleEntry[]) {
@@ -11,13 +11,13 @@ export class ScheduleComponent extends Component {
 
 export function createStandardSchedule(): ScheduleComponent {
   return new ScheduleComponent([
-    AgentActionType.SLEEP,
-    AgentActionType.HARVEST,
-    AgentActionType.HARVEST,
-    AgentActionType.REST,
-    AgentActionType.HARVEST,
-    AgentActionType.HARVEST,
-    AgentActionType.HARVEST,
-    AgentActionType.SLEEP
+    CharacterIntent.SLEEP,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.REST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.SLEEP
   ]);
 }

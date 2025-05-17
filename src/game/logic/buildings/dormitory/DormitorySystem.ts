@@ -1,29 +1,18 @@
 import { System, Entity } from "../../../ECS";
-import { ActionIntentComponent, AgentActionType } from "../../work/ActionIntentComponent";
-import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
 import { DormitoryComponent } from "./DormitoryComponent";
 
 export class DormitorySystem extends System {
-    componentsRequired = new Set<Function>([DormitoryComponent]);
-  
-    update(entities: Set<Entity>, _: number): void {
-        for (const entity of entities) {
-            const slots = this.ecs.getComponent(entity, InteractionSlots);
-            if (!slots) continue;
-            
-            const dorm = this.ecs.getComponent(entity, DormitoryComponent);
+    public componentsRequired = new Set<Function>([DormitoryComponent]);
 
-            for (const agentId of dorm.assignedAgents) {
-                if (!this.ecs.hasEntity(agentId)) continue;
+    public update(dormitoryEntities: Set<Entity>, delta: number): void {
+        for (const dormitoryEntity of dormitoryEntities) {
+            const dorm = this.ecs.getComponent(dormitoryEntity, DormitoryComponent);
 
-                const intent = this.ecs.getComponent(agentId, ActionIntentComponent);
-                if (!intent || intent.actionType !== AgentActionType.SLEEP) continue;
-
-                const slotOffset = slots.reserve(agentId, SlotType.SLEEP);
-                if (!slotOffset) continue;
-
-                intent.targetEntityId = entity;
-                intent.slotOffset = slotOffset;
+            for (let i = dorm.assignedAgents.length - 1; i >= 0; i--) {
+                const agentId = dorm.assignedAgents[i];
+                if (!this.ecs.hasEntity(agentId)) {
+                    dorm.assignedAgents.splice(i, 1);
+                }
             }
         }
     }

@@ -57,12 +57,23 @@ export class InteractionSlots {
     return null;
   }
 
-  public release(entity: Entity): void {
+  public releaseAll(entity: Entity): void {
     for (const group of this.slots.values()) {
       for (const slot of group) {
         if (slot.occupiedBy === entity) {
           slot.occupiedBy = null;
         }
+      }
+    }
+  }
+
+  public release(entity: Entity, slotType: SlotType): void {
+    const group = this.slots.get(slotType);
+    if (!group) return;
+
+    for (const slot of group) {
+      if (slot.occupiedBy === entity) {
+        slot.occupiedBy = null;
       }
     }
   }

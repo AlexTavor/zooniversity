@@ -1,64 +1,21 @@
-// Updated WoodDojoSystem.ts with slot reservation logic
-
-import { System, Entity } from "../../../ECS.ts";
-import { WoodDojo } from "./WoodDojo.ts";
-import { Tree } from "../../trees/Tree.ts";
-import { ActionIntentComponent, AgentActionType } from "../../work/ActionIntentComponent.ts";
-import { CaveTreeLUTComponent } from "../../lut/CaveTreeLUTComponent.ts";
-import { Harvestable } from "../../work/Harvestable.ts";
-import { InteractionSlots } from "../../work/InteractionSlots.ts";
+import { System, Entity } from "../../../ECS";
+import { WoodDojo } from "./WoodDojo";
 
 export class WoodDojoSystem extends System {
-  componentsRequired = new Set<Function>([WoodDojo]);
+    public componentsRequired = new Set<Function>([WoodDojo]);
 
-  update(entities: Set<Entity>, _: number): void {
-    const lutEntity = this.ecs.getEntitiesWithComponent(CaveTreeLUTComponent)[0];
-    if (lutEntity === undefined) return;
-    const lut = this.ecs.getComponent(lutEntity, CaveTreeLUTComponent).lut;
+    public update(dojoEntities: Set<Entity>, delta: number): void {
+        for (const dojoEntity of dojoEntities) {
+            const dojo = this.ecs.getComponent(dojoEntity, WoodDojo);
 
-    for (const dojoEntity of entities) {
-      const dojo = this.ecs.getComponent(dojoEntity, WoodDojo);
-      const treeIds = lut[dojoEntity];
-      if (!treeIds) continue;
-
-      for (const agentId of dojo.assignedAgents) {
-        if (!this.ecs.hasEntity(agentId)) continue;
-
-        const intent = this.ecs.getComponent(agentId, ActionIntentComponent);
-        if (!intent || intent.actionType !== AgentActionType.HARVEST) continue;
-
-        // If already targeting a tree, validate it
-        if (intent.targetEntityId !== -1) {
-          const tree = this.ecs.getComponent(intent.targetEntityId, Tree);
-          const canHarvest = this.ecs.getComponent(intent.targetEntityId, Harvestable)?.harvestable;
-          const treeSelected = tree.selectedForCutting;
-
-          if (!canHarvest || !treeSelected) {
-            tree.selectedForCutting = false;
-            intent.targetEntityId = -1;
-            intent.slotOffset = null;
-            return;
-          } else {
-            continue;
-          }
+            // Clean up non-existent characters from the assignedAgents list
+            // Iterate backwards when removing elements from an array during iteration
+            for (let i = dojo.assignedAgents.length - 1; i >= 0; i--) {
+                const agentId = dojo.assignedAgents[i];
+                if (!this.ecs.hasEntity(agentId)) {
+                    dojo.assignedAgents.splice(i, 1);
+                }
+            }
         }
-
-        for (const treeId of treeIds) {
-          if (!this.ecs.hasEntity(treeId)) continue;
-          const tree = this.ecs.getComponent(treeId, Tree);
-          if (!tree.selectedForCutting) continue;
-
-          const slots = this.ecs.getComponent(treeId, InteractionSlots);
-          if (!slots) continue;
-
-          const slotOffset = slots.reserve(agentId);
-          if (!slotOffset) continue;
-
-          intent.targetEntityId = treeId;
-          intent.slotOffset = slotOffset;
-          break;
-        }
-      }
     }
-  }
 }
