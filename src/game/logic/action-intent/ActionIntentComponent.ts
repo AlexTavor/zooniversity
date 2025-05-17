@@ -13,6 +13,8 @@ export class ActionIntentComponent extends Component {
     /** The specific, observable action the character is currently performing. */
     public currentPerformedAction: CharacterAction = CharacterAction.IDLE;
     
+    public schduleOverrideStartHour: number = -1; // -1 means no override
+    
     /** * Holds data specific to the `currentPerformedAction`. 
      * Its structure is determined by the action (e.g., WalkingData, ChoppingData).
      * Managed by IntentActionSystem (and its helpers). Should be null if no data needed.

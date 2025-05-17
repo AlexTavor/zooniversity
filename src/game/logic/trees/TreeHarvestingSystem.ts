@@ -58,7 +58,7 @@ export class TreeHarvestingSystem extends System {
 
             tree.isBeingCut = true;
 
-            const harvestAmountThisFrame = harvester.harvestPerMinute * (scaledDeltaSeconds / 60);
+            const harvestAmountThisFrame = harvester.harvestPerMinute * scaledDeltaSeconds;
             harvestable.amount -= harvestAmountThisFrame;
 
             if (harvestable.amount <= 0) {
@@ -73,6 +73,7 @@ export class TreeHarvestingSystem extends System {
         harvestable.harvested = true;
         harvestable.harvestable = false;
         tree.isBeingCut = false;
+        tree.selectedForCutting = false;
 
         const resourcesEntity = ecs.getEntitiesWithComponent(ResourceComponent)[0];
         if (resourcesEntity) {
@@ -81,8 +82,6 @@ export class TreeHarvestingSystem extends System {
                 resources.amounts[drop.type as ResourceType] = (resources.amounts[drop.type as ResourceType] || 0) + drop.amount;
             });
         }
-
-        this.clearActionState(ecs.getComponent(resourcesEntity, ActionIntentComponent), resourcesEntity, null);
     }
 
     private clearActionState(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity | null, treeComponent?: Tree) {

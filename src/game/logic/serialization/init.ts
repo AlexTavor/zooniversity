@@ -29,7 +29,7 @@ import { TreeCutIconViewModule } from "../../display/game/trees/TreeCutIconViewM
 import { CharacterViewModule } from "../../display/game/characters/CharacterViewModule.ts";
 import { ResourceSystem } from "../resources/ResourceSystem.ts";
 import { ScheduleSystem } from "../scheduling/ScheduleSystem.ts";
-import { ECS } from "../../ECS.ts";
+import { ECS, Entity } from "../../ECS.ts";
 import { Character, CharacterType } from "../characters/Character.ts";
 import { Transform } from "../../components/Transform.ts";
 import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
@@ -45,6 +45,9 @@ import { DormitorySystem } from "../buildings/dormitory/DormitorySystem.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
 import { ActionIntentComponent } from "../action-intent/ActionIntentComponent.ts";
 import { ActionIntentSystem } from "../action-intent/ActionIntentSystem.ts";
+import { HomeComponent } from "../buildings/dormitory/HomeComponent.ts";
+import { IdleBehaviorSystem } from "../action-intent/IdleBehaviorSystem.ts";
+import { RelaxBehaviorSystem } from "../action-intent/RelaxBehaviorSystem.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -87,6 +90,8 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
     game.ecs.addSystem(new ScheduleSystem());
     game.ecs.addSystem(new WeatherSystem());
+    game.ecs.addSystem(new IdleBehaviorSystem());
+    game.ecs.addSystem(new RelaxBehaviorSystem());
     game.ecs.addSystem(new WoodDojoSystem());
     game.ecs.addSystem(new DormitorySystem());
     game.ecs.addSystem(new ActionIntentSystem());
@@ -158,12 +163,12 @@ export function createProfessorBooker(ecs: ECS): number {
     const dorm = ecs.getComponent(dormEntity, DormitoryComponent);
 
     // and add booker entity to the ECS
-    const booker = addBooker(ecs, woodDojoTransform, woodDojo, dorm);
+    const booker = addBooker(ecs, woodDojoTransform, woodDojo, dorm, dormEntity);
     
     return booker;
 }
 
-function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, dorm:DormitoryComponent) {
+function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, dorm:DormitoryComponent, homeEntity:Entity) {
     const booker = ecs.addEntity();
     
     ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y));
@@ -172,6 +177,7 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, d
         description: "The professor of the academy. He is a master of the wood element.",
         type: CharacterType.PROFESSOR,
     }));
+    ecs.addComponent(booker, new HomeComponent(homeEntity));
     ecs.addComponent(booker, new ActionIntentComponent());
     ecs.addComponent(booker, new LocomotionComponent());
     ecs.addComponent(booker, new Harvester());

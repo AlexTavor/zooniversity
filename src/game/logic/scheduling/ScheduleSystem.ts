@@ -18,6 +18,12 @@ export class ScheduleSystem extends System {
             const schedule = this.ecs.getComponent(entity, ScheduleComponent);
             const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
 
+            if (actionIntent.schduleOverrideStartHour !== -1 && actionIntent.schduleOverrideStartHour == currentHour) {
+              continue
+            }
+            
+            actionIntent.schduleOverrideStartHour = -1; // Reset override hour if it has passed
+
             // ScheduleEntry is now CharacterIntent. Ensure ScheduleComponent.entries uses CharacterIntent.
             const newScheduledIntent: CharacterIntent = schedule.entries[currentHour] as CharacterIntent;
 

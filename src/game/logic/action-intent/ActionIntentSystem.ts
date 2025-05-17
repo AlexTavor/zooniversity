@@ -2,6 +2,7 @@ import { System, Entity } from "../../ECS";
 import { ActionIntentComponent } from "./ActionIntentComponent";
 import { CharacterIntent, CharacterAction } from "./actionIntentData";
 import { handleHarvestIntentLogic } from "./intent-handlers/handleHarvestIntentLogic";
+import { handleRestIntentLogic } from "./intent-handlers/handleRestIntentLogic";
 import { handleSleepIntentLogic } from "./intent-handlers/handleSleepIntentLogic";
 
 export class ActionIntentSystem extends System {
@@ -30,7 +31,7 @@ export class ActionIntentSystem extends System {
                     handleSleepIntentLogic(this.ecs, entity, actionIntent);
                     break;
                 case CharacterIntent.REST:
-                    // handleRestIntentLogic(this.ecs, entity, actionIntent);
+                    handleRestIntentLogic(this.ecs, entity, actionIntent);
                     break;
                 default:
                     // Unhandled intent, ensure a sane default action state

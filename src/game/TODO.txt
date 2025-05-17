@@ -33,8 +33,5 @@
 
 
 TODO:
-    Handle Relax (stroll)
-    WD Panel
-        Handle assigned display
-        Handle sleep display
+    Sleep related buffs / debuffs
     Food
