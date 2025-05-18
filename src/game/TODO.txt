@@ -33,22 +33,6 @@
 
 
 TODO:
-    Improve wait 
-        while waiting, monitor exit condition - clear out the current mess with schedule and wait, use intent.none for forcing schedule refresh
-    Improve panel display
-        Add some means of displaying the current internal state of char
-            "Talking a stroll, waiting for work"
-            "Having a relaxing stroll"
-            "Working at the Wood Dojo"
-            "Sleeping at home"
-        Make action more descriptive
-            "strolling" and "enjoying nature" for walking/waiting while strolling
-            "walking to tree" and "chopping at tree" while working
-            "going to bed" and "sleeping" while sleeping
-        Make schedule more descriptive
-            "Working at the WD"
-            "Personal Time"
-            "Bed Time"
     Add sleep buff
         Logic
     Buffs display
