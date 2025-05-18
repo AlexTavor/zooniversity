@@ -1,8 +1,8 @@
 import { System, Entity, ECS } from "../../ECS";
 import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
 import { CharacterAction, isChoppingData } from "../action-intent/actionIntentData";
-import { Harvestable } from "../work/Harvestable";
-import { Harvester } from "../work/Harvester"; // For harvest speed/ability
+import { HarvestableComponent } from "../work/HarvestableComponent";
+import { HarvesterComponent } from "../work/HarvesterComponent"; // For harvest speed/ability
 import { TimeComponent } from "../time/TimeComponent";
 import { ResourceComponent } from "../resources/ResourceComponent";
 import { ResourceType } from "../resources/ResourceType";
@@ -12,7 +12,7 @@ import { Tree } from "../trees/Tree";
 export class TreeHarvestingSystem extends System {
     public componentsRequired = new Set<Function>([
         ActionIntentComponent,
-        Harvester
+        HarvesterComponent
     ]);
 
     public update(entities: Set<Entity>, delta: number): void {
@@ -41,8 +41,8 @@ export class TreeHarvestingSystem extends System {
             }
 
             const tree = this.ecs.getComponent(targetTreeId, Tree);
-            const harvestable = this.ecs.getComponent(targetTreeId, Harvestable);
-            const harvester = this.ecs.getComponent(characterEntity, Harvester);
+            const harvestable = this.ecs.getComponent(targetTreeId, HarvestableComponent);
+            const harvester = this.ecs.getComponent(characterEntity, HarvesterComponent);
 
             if (!tree || !harvestable || !harvester) {
                 this.abortHarvest(actionIntent, characterEntity, targetTreeId, tree);
@@ -68,7 +68,7 @@ export class TreeHarvestingSystem extends System {
         }
     }
 
-    private finalizeHarvest(ecs: ECS, harvestable: Harvestable, tree: Tree): void {
+    private finalizeHarvest(ecs: ECS, harvestable: HarvestableComponent, tree: Tree): void {
         harvestable.amount = 0;
         harvestable.harvested = true;
         harvestable.harvestable = false;

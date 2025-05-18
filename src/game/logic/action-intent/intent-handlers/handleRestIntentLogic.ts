@@ -6,7 +6,7 @@ import { TimeComponent } from "../../time/TimeComponent";
 import { Tree } from "../../trees/Tree";
 import { ActionIntentComponent } from "../ActionIntentComponent";
 import { StrollComponent } from "../StrollComponent";
-import { CharacterAction, ActionDataType, WalkingData, StrollingAtPointData, isWalkingData } from "../actionIntentData";
+import { CharacterAction, ActionDataType, WalkingData, StrollingAtPointData, isWalkingData, CharacterIntent } from "../actionIntentData";
 
 const STROLL_BEHIND_TREE_OFFSET = 30;
 const MAX_CANDIDATE_TREES_FOR_RANDOM_STROLL = 5;
@@ -14,6 +14,7 @@ const MIN_PAUSE_DURATION_GAME_MINUTES = 2; // e.g., 2 game minutes
 const MAX_PAUSE_DURATION_GAME_MINUTES = 5; // e.g., 5 game minutes
 
 function setIdle(aic: ActionIntentComponent): void {
+    aic.intentType = CharacterIntent.NONE;
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
@@ -59,7 +60,7 @@ function selectNextStrollTarget(
     const availableTrees = findValidStrollTrees(ecs, lastTargetTreeId);
     if (availableTrees.length === 0) return null;
 
-    let candidates = availableTrees.map(t => ({
+    const candidates = availableTrees.map(t => ({
         id: t.id,
         transform: t.transform,
         distSq: MathUtils.distance(currentPosOrReferenceTransform, t.transform) ** 2
@@ -119,7 +120,6 @@ export function handleRestIntentLogic(
         const referenceTransform = ecs.getComponent(strollComp.referencePointEntityId, Transform);
         if (!referenceTransform) {
             ecs.removeComponent(entity, StrollComponent);
-            locomotion.speed = locomotion.baseSpeed;
             return setRelaxing(actionIntent);
         }
         
@@ -133,7 +133,6 @@ export function handleRestIntentLogic(
             actionIntent.actionData = null;
         } else {
             ecs.removeComponent(entity, StrollComponent);
-            locomotion.speed = locomotion.baseSpeed;
             return setRelaxing(actionIntent);
         }
     }

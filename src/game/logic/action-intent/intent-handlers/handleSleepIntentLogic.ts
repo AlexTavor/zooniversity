@@ -1,5 +1,3 @@
-// src/game/logic/action-intent/intent-helpers/handleSleepIntentLogic.ts
-
 import { ECS, Entity } from "../../../ECS";
 import { ActionIntentComponent } from "../ActionIntentComponent";
 import {
@@ -7,22 +5,27 @@ import {
     ActionDataType,
     WalkingData,
     SleepingData,
-    isSleepingData,
-    isWalkingData
+    CharacterIntent,
+    BlockedIntentReason
 } from "../actionIntentData";
-import { LocomotionComponent } from "../../locomotion/LocomotionComponent";
 import { Transform } from "../../../components/Transform";
 import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
 import { DormitoryComponent } from "../../buildings/dormitory/DormitoryComponent";
 import { Pos } from "../../../../utils/Math";
+import { LocomotionComponent } from "../../locomotion/LocomotionComponent"; 
+import { BlockedIntentComponent } from "../BlockedIntentComponent";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
-function setWaiting(aic: ActionIntentComponent): void {
-    aic.currentPerformedAction = CharacterAction.WAITING;
+function setBlocked(ecs: ECS, entity: Entity, aic: ActionIntentComponent, reason: BlockedIntentReason, originalIntent: CharacterIntent, specificTargetId?: Entity): void {
+    if (!ecs.hasComponent(entity, BlockedIntentComponent)) {
+        ecs.addComponent(entity, new BlockedIntentComponent(originalIntent, reason, specificTargetId));
+    }
+    aic.intentType = CharacterIntent.REST;
+    aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
@@ -58,7 +61,7 @@ function releaseAnySleepSlotHeldByCharacter(ecs: ECS, characterEntity: Entity): 
 }
 
 function findAndReserveNewSleepTarget(ecs: ECS, characterEntity: Entity): { bedEntityId: Entity, slotOffset: Pos, bedBuildingTransform: Transform } | null {
-    releaseAnySleepSlotHeldByCharacter(ecs, characterEntity); // Ensure no old slots are held by this char
+    releaseAnySleepSlotHeldByCharacter(ecs, characterEntity);
     const allDormitories = ecs.getEntitiesWithComponents([DormitoryComponent, InteractionSlots, Transform]);
     
     for (const dormitoryId of allDormitories) {
@@ -71,24 +74,19 @@ function findAndReserveNewSleepTarget(ecs: ECS, characterEntity: Entity): { bedE
     return null;
 }
 
-function getValidatedCurrentSleepTargetInfo(ecs: ECS, characterEntity: Entity, aic: ActionIntentComponent): { bedEntityId: Entity, slotOffset: Pos, bedBuildingTransform: Transform } | null {
-    let currentTargetBedEntityId: Entity | null = null;
-
-    if (isWalkingData(aic.actionData) && aic.actionData.ultimateTargetEntityId) {
-        currentTargetBedEntityId = aic.actionData.ultimateTargetEntityId;
-    } else if (isSleepingData(aic.actionData)) {
-        currentTargetBedEntityId = aic.actionData.bedEntityId;
-    }
-
-    if (currentTargetBedEntityId !== null && isDormitoryFunctionallyValid(ecs, currentTargetBedEntityId)) {
-        const slots = ecs.getComponent(currentTargetBedEntityId, InteractionSlots);
-        const heldSlot = slots?.getSlotsArray(SlotType.SLEEP).find(slot => slot.occupiedBy === characterEntity);
-
-        if (heldSlot) {
-            return { bedEntityId: currentTargetBedEntityId, slotOffset: { x: heldSlot.x, y: heldSlot.y }, bedBuildingTransform: ecs.getComponent(currentTargetBedEntityId, Transform) };
+// This "canResume" function is for BlockedIntentSystem and performs read-only checks.
+export function canResumeSleepIntent(ecs: ECS, entity: Entity, bic: BlockedIntentComponent): boolean {
+    const allDormitories = ecs.getEntitiesWithComponents([DormitoryComponent, InteractionSlots]);
+    for (const dormitoryId of allDormitories) {
+        if (bic.specificBlockedTargetId && dormitoryId !== bic.specificBlockedTargetId) continue;
+        if (isDormitoryFunctionallyValid(ecs, dormitoryId)) {
+            const slots = ecs.getComponent(dormitoryId, InteractionSlots);
+            if (slots.getSlotsArray(SlotType.SLEEP).some(slot => slot.occupiedBy === null || slot.occupiedBy === entity)) {
+                return true;
+            }
         }
     }
-    return null;
+    return false;
 }
 
 export function handleSleepIntentLogic(
@@ -96,46 +94,35 @@ export function handleSleepIntentLogic(
     entity: Entity,
     actionIntent: ActionIntentComponent
 ): void {
-    const locomotion = ecs.getComponent(entity, LocomotionComponent);
-    if (!locomotion) return setIdle(actionIntent); 
+    const characterTransform = ecs.getComponent(entity, Transform);
+    if (!characterTransform) return setIdle(actionIntent);
 
-    let validatedTargetInfo = getValidatedCurrentSleepTargetInfo(ecs, entity, actionIntent);
-    let newTargetJustAcquired = false;
+    const targetInfo = findAndReserveNewSleepTarget(ecs, entity);
 
-    if (!validatedTargetInfo) {
-        const newTarget = findAndReserveNewSleepTarget(ecs, entity);
-        if (newTarget) {
-            validatedTargetInfo = newTarget;
-            locomotion.arrived = false; 
-            actionIntent.actionData = null;
-            newTargetJustAcquired = true;
-        } else {
-            return setWaiting(actionIntent);
-        }
+    if (!targetInfo) {
+        setBlocked(ecs, entity, actionIntent, BlockedIntentReason.SLOT_UNAVAILABLE, CharacterIntent.SLEEP);
+        return;
     }
     
-    const { bedEntityId, slotOffset, bedBuildingTransform } = validatedTargetInfo;
+    const { bedEntityId, slotOffset, bedBuildingTransform } = targetInfo;
     const exactSleepPosition = { 
-        x: bedBuildingTransform.x + slotOffset.x, 
-        y: bedBuildingTransform.y + slotOffset.y 
+        x: Math.round(bedBuildingTransform.x + slotOffset.x), 
+        y: Math.round(bedBuildingTransform.y + slotOffset.y) 
     };
+    
+    const roundedCharX = Math.round(characterTransform.x);
+    const roundedCharY = Math.round(characterTransform.y);
 
-    if (!locomotion.arrived || newTargetJustAcquired) {
-        // If a new target was just acquired, character needs to walk even if loco.arrived was true for a *previous different* target.
-        // Also, ensure we set WalkingData if current actionData is not already for walking to this exact spot.
-        const currentWalkData = actionIntent.actionData as WalkingData | null;
-        if (newTargetJustAcquired || // Always walk if new target
-            actionIntent.currentPerformedAction !== CharacterAction.WALKING || 
-            !isWalkingData(currentWalkData) || 
-            currentWalkData.ultimateTargetEntityId !== bedEntityId ||
-            currentWalkData.targetPosition.x !== exactSleepPosition.x ||
-            currentWalkData.targetPosition.y !== exactSleepPosition.y) {
-                
-            setWalkingToSlot(actionIntent, exactSleepPosition, bedEntityId);
+    // Check if character is at the exact rounded target position.
+    if (roundedCharX !== exactSleepPosition.x || roundedCharY !== exactSleepPosition.y) {
+        setWalkingToSlot(actionIntent, exactSleepPosition, bedEntityId);
+        // If we just set a new walking target, ensure LocomotionComponent.arrived is false for this new walk.
+        const locomotion = ecs.getComponent(entity, LocomotionComponent);
+        if (locomotion) {
+            locomotion.arrived = false;
         }
-        // If already WALKING to this exact spot, let LocomotionSystem continue.
     } else { 
-        // locomotion.arrived is true for the current target (the sleep slot)
+        // Character is already at the exact (rounded) slot position.
         setSleeping(actionIntent, bedEntityId, slotOffset);
     }
 }

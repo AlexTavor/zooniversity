@@ -6,7 +6,7 @@ export type ResourceDrop = {
     amount:number
 }
 
-export class Harvestable extends Component {
+export class HarvestableComponent extends Component {
     public maxAmount: number = 0;
     public harvestable: boolean = true;
     public harvested: boolean = false;

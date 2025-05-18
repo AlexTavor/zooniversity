@@ -1,11 +1,13 @@
 import { System, Entity } from "../../ECS";
 import { LocationState, Transform } from "../../components/Transform";
 import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
-import { CharacterAction, WalkingData, isWalkingData } from "../action-intent/actionIntentData";
+import { CharacterAction, WalkingData} from "../action-intent/actionIntentData";
 import { TimeComponent } from "../time/TimeComponent";
 import { LocomotionComponent } from "./LocomotionComponent";
 import { Pos } from "../../../utils/Math";
 import { InsideLocationComponent } from "./InsideLocationComponent";
+import { StatCalculator } from "../buffs/StatCalculator";
+import { AffectedStat } from "../buffs/buffsData";
 
 export class LocomotionSystem extends System {
     public componentsRequired = new Set<Function>([
@@ -45,7 +47,8 @@ export class LocomotionSystem extends System {
                 continue; 
             }
             
-            this.performMovementStep(transform, targetPosition, locomotion.speed * scaledDelta);
+            const speed = StatCalculator.getEffectiveStat(this.ecs, entity, AffectedStat.LOCOMOTION_SPEED);
+            this.performMovementStep(transform, targetPosition, speed * scaledDelta);
             this.updateSpriteDirection(transform, targetPosition.x - transform.x);
         }
     }

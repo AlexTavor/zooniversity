@@ -82,13 +82,16 @@
 }
 
 .text-bg {
-    background-color: rgba(0, 0, 0, 0.6);
+    background-color: rgba(0, 0, 0, 0.5);
     padding: 0.2em 0.4em;
     border-radius: 4px;
 }
 
 .info-line {
     display: flex;
+    margin-block-start: unset;
+    margin-block-end: unset;
+    margin-bottom: 4px;
 }
 
 .selection-panel-controls {

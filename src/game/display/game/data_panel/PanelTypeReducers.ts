@@ -2,7 +2,7 @@ import { Entity, ECS } from "../../../ECS"; // Adjust path
 import { WoodDojo } from "../../../logic/buildings/wood_dojo/WoodDojo"; // Adjust path
 import { ScheduleComponent } from "../../../logic/scheduling/ScheduleComponent"; // Adjust path
 import { TimeComponent } from "../../../logic/time/TimeComponent"; // Adjust path
-import { Harvestable } from "../../../logic/work/Harvestable"; // Adjust path
+import { HarvestableComponent } from "../../../logic/work/HarvestableComponent"; // Adjust path
 import { PanelType } from "../../setup/ViewDefinition";
 
 // Import new enums and component
@@ -17,7 +17,7 @@ export enum CharacterScheduleDisplayType {
   SLEEP = "Sleep",
   STUDY = "Study",
   REST = "Rest",
-  BUILD = "Build", // Added example
+  BUILD = "Build",
   NONE = "None",
 }
 
@@ -69,7 +69,7 @@ export const PanelTypeReducers: Partial<Record<PanelType, PanelTypeReducer>> = {
   }),
 
   [PanelType.TREE]: (entity, ecs) => {
-    const harvestable = ecs.getComponent(entity, Harvestable);
+    const harvestable = ecs.getComponent(entity, HarvestableComponent);
     return {
         drops: harvestable?.drops ?? [],
         // Assuming cutProgress and maxCutProgress are still relevant from Harvestable

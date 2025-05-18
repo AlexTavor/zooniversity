@@ -39,15 +39,18 @@ import { ResourceComponent } from "../resources/ResourceComponent.ts";
 import { createStandardSchedule } from "../scheduling/ScheduleComponent.ts";
 import { TimeComponent } from "../time/TimeComponent.ts";
 import { WeatherComponent } from "../weather/WeatherComponent.ts";
-import { Harvester } from "../work/Harvester.ts";
+import { HarvesterComponent } from "../work/HarvesterComponent.ts";
 import { loadPanelRegistry } from "../../display/game/data_panel/PanelRegistry.ts";
 import { DormitorySystem } from "../buildings/dormitory/DormitorySystem.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
 import { ActionIntentComponent } from "../action-intent/ActionIntentComponent.ts";
 import { ActionIntentSystem } from "../action-intent/ActionIntentSystem.ts";
 import { HomeComponent } from "../buildings/dormitory/HomeComponent.ts";
-import { IdleBehaviorSystem } from "../action-intent/IdleBehaviorSystem.ts";
 import { RelaxBehaviorSystem } from "../action-intent/RelaxBehaviorSystem.ts";
+import { ActiveBuffsComponent } from "../buffs/ActiveBuffsComponent.ts";
+import { BuffManagementSystem } from "../buffs/BuffManagementSystem.ts";
+import { WorkerComponent } from "../work/WorkerComponent.ts";
+import { BlockedIntentSystem } from "../action-intent/BlockedIntentSystem.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -90,14 +93,15 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
     game.ecs.addSystem(new ScheduleSystem());
     game.ecs.addSystem(new WeatherSystem());
-    game.ecs.addSystem(new IdleBehaviorSystem());
-    game.ecs.addSystem(new RelaxBehaviorSystem());
+    game.ecs.addSystem(new LocomotionSystem());
     game.ecs.addSystem(new WoodDojoSystem());
     game.ecs.addSystem(new DormitorySystem());
     game.ecs.addSystem(new ActionIntentSystem());
+    game.ecs.addSystem(new BlockedIntentSystem());
     game.ecs.addSystem(new TreeHarvestingSystem())
-    game.ecs.addSystem(new LocomotionSystem());
+    game.ecs.addSystem(new RelaxBehaviorSystem());
     game.ecs.addSystem(new ResourceSystem());
+    game.ecs.addSystem(new BuffManagementSystem());
     initInput(game);
     initStory(game);
     initLut(game);
@@ -180,7 +184,9 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, d
     ecs.addComponent(booker, new HomeComponent(homeEntity));
     ecs.addComponent(booker, new ActionIntentComponent());
     ecs.addComponent(booker, new LocomotionComponent());
-    ecs.addComponent(booker, new Harvester());
+    ecs.addComponent(booker, new HarvesterComponent());
+    ecs.addComponent(booker, new ActiveBuffsComponent());
+    ecs.addComponent(booker, new WorkerComponent());
     ecs.addComponent(booker, createStandardSchedule());
 
     woodDojo.assignedAgents.push(booker);

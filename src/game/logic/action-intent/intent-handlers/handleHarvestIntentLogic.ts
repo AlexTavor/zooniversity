@@ -5,24 +5,30 @@ import {
     ActionDataType,
     WalkingData,
     ChoppingData,
-    isChoppingData,
-    isWalkingData
+    CharacterIntent, // Added for setting REST intent
+    BlockedIntentReason // Added for BlockedIntentComponent
 } from "../actionIntentData";
-import { LocomotionComponent } from "../../locomotion/LocomotionComponent";
 import { Transform } from "../../../components/Transform";
-import { Harvester } from "../../work/Harvester";
+import { HarvesterComponent } from "../../work/HarvesterComponent";
 import { Tree } from "../../trees/Tree";
-import { Harvestable } from "../../work/Harvestable";
+import { HarvestableComponent } from "../../work/HarvestableComponent";
 import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
 import { Pos } from "../../../../utils/Math";
+import { BlockedIntentComponent } from "../BlockedIntentComponent";
 
+// Helper functions to set ActionIntentComponent state (from your provided code)
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
-function setWaiting(aic: ActionIntentComponent): void {
-    aic.currentPerformedAction = CharacterAction.WAITING;
+function setWaitingOrBlocked(ecs: ECS, entity: Entity, aic: ActionIntentComponent, reason: BlockedIntentReason, originalIntent: CharacterIntent): void {
+    // Instead of WAITING action, we now add BlockedIntentComponent and switch intent to REST
+    if (!ecs.hasComponent(entity, BlockedIntentComponent)) { // Add only if not already blocked for something else
+        ecs.addComponent(entity, new BlockedIntentComponent(originalIntent, reason));
+    }
+    aic.intentType = CharacterIntent.REST;
+    aic.currentPerformedAction = CharacterAction.IDLE; // Let RelaxBehaviorSystem & handleRestIntentLogic take over
     aic.actionData = null;
 }
 
@@ -30,7 +36,7 @@ function setWalkingToSlot(aic: ActionIntentComponent, targetPosition: Pos, ultim
     aic.currentPerformedAction = CharacterAction.WALKING;
     aic.actionData = {
         type: ActionDataType.WalkingData,
-        targetPosition, // Locomotion aims for this exact spot
+        targetPosition,
         ultimateTargetEntityId: ultimateTargetId
     } as WalkingData;
 }
@@ -43,10 +49,11 @@ function setChopping(aic: ActionIntentComponent, treeId: Entity): void {
     } as ChoppingData;
 }
 
+// Validation and targeting functions (from your provided code, slightly adapted)
 function isTreeValidForHarvest(ecs: ECS, treeId: Entity): boolean {
     if (!ecs.hasEntity(treeId)) return false;
     const tree = ecs.getComponent(treeId, Tree);
-    const harvestable = ecs.getComponent(treeId, Harvestable);
+    const harvestable = ecs.getComponent(treeId, HarvestableComponent);
     return !!(tree && tree.selectedForCutting && harvestable && harvestable.harvestable && !harvestable.harvested);
 }
 
@@ -59,7 +66,8 @@ function releaseAnyWorkSlotHeldByCharacter(ecs: ECS, characterEntity: Entity): v
 
 function findAndReserveNewHarvestTarget(ecs: ECS, characterEntity: Entity): { treeId: Entity, slotOffset: Pos, treeTransform: Transform } | null {
     releaseAnyWorkSlotHeldByCharacter(ecs, characterEntity);
-    const allTrees = ecs.getEntitiesWithComponents([Tree, Harvestable, InteractionSlots, Transform]);
+    const allTrees = ecs.getEntitiesWithComponents([Tree, HarvestableComponent, InteractionSlots, Transform]);
+    // TODO: Implement smarter tree selection (e.g., proximity, using CaveTreeLUTComponent with HomeComponent).
     for (const treeId of allTrees) {
         if (isTreeValidForHarvest(ecs, treeId)) {
             const slots = ecs.getComponent(treeId, InteractionSlots);
@@ -72,54 +80,58 @@ function findAndReserveNewHarvestTarget(ecs: ECS, characterEntity: Entity): { tr
     return null;
 }
 
-function getValidatedCurrentTargetInfo(ecs: ECS, entity: Entity, aic: ActionIntentComponent): { treeId: Entity, slotOffset: Pos, treeTransform: Transform } | null {
-    let currentTargetTreeId: Entity | null = null;
-    if (isWalkingData(aic.actionData) && aic.actionData.ultimateTargetEntityId) {
-        currentTargetTreeId = aic.actionData.ultimateTargetEntityId;
-    } else if (isChoppingData(aic.actionData)) {
-        currentTargetTreeId = aic.actionData.targetTreeEntityId;
-    }
-
-    if (currentTargetTreeId !== null && isTreeValidForHarvest(ecs, currentTargetTreeId)) {
-        const slots = ecs.getComponent(currentTargetTreeId, InteractionSlots);
-        const workSlots = slots?.getSlotsArray(SlotType.WORK) || []; 
-        const heldSlot = workSlots.find(slot => slot.occupiedBy === entity);
-        if (heldSlot) {
-            return { treeId: currentTargetTreeId, slotOffset: { x: heldSlot.x, y: heldSlot.y }, treeTransform: ecs.getComponent(currentTargetTreeId, Transform) };
+// This function will be used by BlockedIntentSystem later. It's a read-only check.
+export function canResumeHarvestIntent(ecs: ECS, entity: Entity, bic: BlockedIntentComponent): boolean {
+    const allTrees = ecs.getEntitiesWithComponents([Tree, HarvestableComponent, InteractionSlots]);
+    for (const treeId of allTrees) {
+        if (bic.specificBlockedTargetId && treeId !== bic.specificBlockedTargetId) continue; // If was blocked on a specific tree
+        if (isTreeValidForHarvest(ecs, treeId)) {
+            const slots = ecs.getComponent(treeId, InteractionSlots);
+            // Check if ANY work slot is available, without reserving it.
+            if (slots.getSlotsArray(SlotType.WORK).some(slot => slot.occupiedBy === null || slot.occupiedBy === entity)) {
+                return true;
+            }
         }
     }
-    return null;
+    return false;
 }
+
 
 export function handleHarvestIntentLogic(
     ecs: ECS,
     entity: Entity,
     actionIntent: ActionIntentComponent
 ): void {
-    const locomotion = ecs.getComponent(entity, LocomotionComponent);
-    const harvester = ecs.getComponent(entity, Harvester);
+    const characterTransform = ecs.getComponent(entity, Transform);
+    const harvester = ecs.getComponent(entity, HarvesterComponent);
 
-    if (!locomotion || !harvester) return setIdle(actionIntent);
+    if (!characterTransform || !harvester) return setIdle(actionIntent);
 
-    let validatedTargetInfo = getValidatedCurrentTargetInfo(ecs, entity, actionIntent);
+    // Attempt to find/validate a target tree and reserve a slot.
+    // This combines finding a new target if necessary, or re-validating/re-reserving for an existing one.
+    // The findAndReserveNewHarvestTarget already handles releasing previous WORK slots.
+    const targetInfo = findAndReserveNewHarvestTarget(ecs, entity);
 
-    if (!validatedTargetInfo) {
-        const newTarget = findAndReserveNewHarvestTarget(ecs, entity);
-        if (newTarget) {
-            validatedTargetInfo = newTarget;
-            locomotion.arrived = false;
-            actionIntent.actionData = null; 
-        } else {
-            return setWaiting(actionIntent);
-        }
+    if (!targetInfo) {
+        // No tree available or slot couldn't be reserved.
+        // Add BlockedIntentComponent and switch intent to REST.
+        setWaitingOrBlocked(ecs, entity, actionIntent, BlockedIntentReason.TARGET_UNAVAILABLE, CharacterIntent.HARVEST);
+        return;
     }
     
-    const { treeId, slotOffset, treeTransform } = validatedTargetInfo;
-    const exactApproachPosition = { x: treeTransform.x + slotOffset.x, y: treeTransform.y + slotOffset.y };
+    const { treeId, slotOffset, treeTransform } = targetInfo;
+    const exactApproachPosition = { 
+        x: Math.round(treeTransform.x + slotOffset.x), 
+        y: Math.round(treeTransform.y + slotOffset.y) 
+    };
+    
+    const roundedCharX = Math.round(characterTransform.x);
+    const roundedCharY = Math.round(characterTransform.y);
 
-    if (!locomotion.arrived) {
+    if (roundedCharX !== exactApproachPosition.x || roundedCharY !== exactApproachPosition.y) {
         setWalkingToSlot(actionIntent, exactApproachPosition, treeId);
     } else {
+        // Arrived at the designated WORK slot for the target tree.
         setChopping(actionIntent, treeId);
     }
 }

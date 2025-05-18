@@ -3,7 +3,7 @@ import { ECS, Entity } from "../../../ECS";
 import { Config } from "../../../config/Config";
 import { Transform } from "../../../components/Transform";
 import { Tree } from "../../../logic/trees/Tree";
-import { Harvestable } from "../../../logic/work/Harvestable";
+import { HarvestableComponent } from "../../../logic/work/HarvestableComponent";
 import { View } from "../../setup/View";
 import { ViewDefinition, ViewType } from "../../setup/ViewDefinition";
 import { ViewDisplayModule, registerViewDisplayModule } from "../../setup/ViewDisplayModule";
@@ -55,7 +55,7 @@ export class TreeViewModule extends ViewDisplayModule {
   }
 
   getComponentClasses(): Function[] {
-    return [Transform, Tree, Harvestable];
+    return [Transform, Tree, HarvestableComponent];
   }
 
   getLayerContainer(): Phaser.GameObjects.Container {
@@ -80,7 +80,7 @@ export class TreeViewModule extends ViewDisplayModule {
   updateView(ecs: ECS, entity: Entity, view: View): boolean {
     const transform = ecs.getComponent(entity, Transform);
     const tree = ecs.getComponent(entity, Tree);
-    const harvestable = ecs.getComponent(entity, Harvestable);
+    const harvestable = ecs.getComponent(entity, HarvestableComponent);
 
     const posX = Math.round(transform.x);
     const posY = Math.round(transform.y + Config.AnimImports.FrameHeight / 2);
@@ -106,7 +106,7 @@ export class TreeViewModule extends ViewDisplayModule {
     return false;
   }
 
-  private updateHarvestProgress(entity: number, harvestable: Harvestable, view: View): void {
+  private updateHarvestProgress(entity: number, harvestable: HarvestableComponent, view: View): void {
     if (!harvestable.harvested && harvestable.amount !== harvestable.maxAmount) {
       const valueRef = this.harvestRefs.get(entity) || { current: harvestable.amount, max: harvestable.maxAmount };
       valueRef.current = harvestable.amount;
@@ -125,7 +125,7 @@ export class TreeViewModule extends ViewDisplayModule {
     }
   }
 
-  private updateShudderEffect(tree: Tree, harvestable: Harvestable, view: View): void {
+  private updateShudderEffect(tree: Tree, harvestable: HarvestableComponent, view: View): void {
     if (tree.isBeingCut && harvestable.amount > 0) {
       const fps = view.getSprite()?.scene.game.loop.actualFps || 60;
       view.applyEffect(EffectType.Shudder, {

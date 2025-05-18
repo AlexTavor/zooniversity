@@ -8,7 +8,7 @@ import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvent.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
-import { Harvestable } from "../work/Harvestable.ts";
+import { HarvestableComponent } from "../work/HarvestableComponent.ts";
 import { ResourceType } from "../resources/ResourceType.ts";
 import { InteractionSlots, SlotLayout, SlotType } from "../work/InteractionSlots.ts";
 import { initWorld, createProfessorBooker } from "./init.ts";
@@ -36,7 +36,7 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
             case "tree":
                 if (def.spriteName) {
                     ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
-                    ecs.addComponent(entity, new Harvestable(1000, [{type:ResourceType.WOOD, amount:10}]));
+                    ecs.addComponent(entity, new HarvestableComponent(1000, [{type:ResourceType.WOOD, amount:10}]));
                     ecs.addComponent(entity, new InteractionSlots({
                         [SlotType.WORK]: { layout: SlotLayout.RADIAL, radius: 120, count: 2 }
                       }));

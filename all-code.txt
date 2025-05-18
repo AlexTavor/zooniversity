@@ -1311,7 +1311,7 @@ import { Entity, ECS } from "../../../ECS"; // Adjust path
 import { WoodDojo } from "../../../logic/buildings/wood_dojo/WoodDojo"; // Adjust path
 import { ScheduleComponent } from "../../../logic/scheduling/ScheduleComponent"; // Adjust path
 import { TimeComponent } from "../../../logic/time/TimeComponent"; // Adjust path
-import { Harvestable } from "../../../logic/work/Harvestable"; // Adjust path
+import { HarvestableComponent } from "../../../logic/work/HarvestableComponent"; // Adjust path
 import { PanelType } from "../../setup/ViewDefinition";
 
 // Import new enums and component
@@ -1326,7 +1326,7 @@ export enum CharacterScheduleDisplayType {
   SLEEP = "Sleep",
   STUDY = "Study",
   REST = "Rest",
-  BUILD = "Build", // Added example
+  BUILD = "Build",
   NONE = "None",
 }
 
@@ -1378,7 +1378,7 @@ export const PanelTypeReducers: Partial<Record<PanelType, PanelTypeReducer>> = {
   }),
 
   [PanelType.TREE]: (entity, ecs) => {
-    const harvestable = ecs.getComponent(entity, Harvestable);
+    const harvestable = ecs.getComponent(entity, HarvestableComponent);
     return {
         drops: harvestable?.drops ?? [],
         // Assuming cutProgress and maxCutProgress are still relevant from Harvestable
@@ -2811,7 +2811,7 @@ import { ECS, Entity } from "../../../ECS";
 import { Config } from "../../../config/Config";
 import { Transform } from "../../../components/Transform";
 import { Tree } from "../../../logic/trees/Tree";
-import { Harvestable } from "../../../logic/work/Harvestable";
+import { HarvestableComponent } from "../../../logic/work/HarvestableComponent";
 import { View } from "../../setup/View";
 import { ViewDefinition, ViewType } from "../../setup/ViewDefinition";
 import { ViewDisplayModule, registerViewDisplayModule } from "../../setup/ViewDisplayModule";
@@ -2863,7 +2863,7 @@ export class TreeViewModule extends ViewDisplayModule {
   }
 
   getComponentClasses(): Function[] {
-    return [Transform, Tree, Harvestable];
+    return [Transform, Tree, HarvestableComponent];
   }
 
   getLayerContainer(): Phaser.GameObjects.Container {
@@ -2888,7 +2888,7 @@ export class TreeViewModule extends ViewDisplayModule {
   updateView(ecs: ECS, entity: Entity, view: View): boolean {
     const transform = ecs.getComponent(entity, Transform);
     const tree = ecs.getComponent(entity, Tree);
-    const harvestable = ecs.getComponent(entity, Harvestable);
+    const harvestable = ecs.getComponent(entity, HarvestableComponent);
 
     const posX = Math.round(transform.x);
     const posY = Math.round(transform.y + Config.AnimImports.FrameHeight / 2);
@@ -2914,7 +2914,7 @@ export class TreeViewModule extends ViewDisplayModule {
     return false;
   }
 
-  private updateHarvestProgress(entity: number, harvestable: Harvestable, view: View): void {
+  private updateHarvestProgress(entity: number, harvestable: HarvestableComponent, view: View): void {
     if (!harvestable.harvested && harvestable.amount !== harvestable.maxAmount) {
       const valueRef = this.harvestRefs.get(entity) || { current: harvestable.amount, max: harvestable.maxAmount };
       valueRef.current = harvestable.amount;
@@ -2933,7 +2933,7 @@ export class TreeViewModule extends ViewDisplayModule {
     }
   }
 
-  private updateShudderEffect(tree: Tree, harvestable: Harvestable, view: View): void {
+  private updateShudderEffect(tree: Tree, harvestable: HarvestableComponent, view: View): void {
     if (tree.isBeingCut && harvestable.amount > 0) {
       const fps = view.getSprite()?.scene.game.loop.actualFps || 60;
       view.applyEffect(EffectType.Shudder, {
@@ -3790,6 +3790,8 @@ export class ActionIntentComponent extends Component {
     /** The specific, observable action the character is currently performing. */
     public currentPerformedAction: CharacterAction = CharacterAction.IDLE;
     
+    public schduleOverrideStartHour: number = -1; // -1 means no override
+    
     /** * Holds data specific to the `currentPerformedAction`. 
      * Its structure is determined by the action (e.g., WalkingData, ChoppingData).
      * Managed by IntentActionSystem (and its helpers). Should be null if no data needed.
@@ -3808,6 +3810,7 @@ import { System, Entity } from "../../ECS";
 import { ActionIntentComponent } from "./ActionIntentComponent";
 import { CharacterIntent, CharacterAction } from "./actionIntentData";
 import { handleHarvestIntentLogic } from "./intent-handlers/handleHarvestIntentLogic";
+import { handleRestIntentLogic } from "./intent-handlers/handleRestIntentLogic";
 import { handleSleepIntentLogic } from "./intent-handlers/handleSleepIntentLogic";
 
 export class ActionIntentSystem extends System {
@@ -3836,7 +3839,7 @@ export class ActionIntentSystem extends System {
                     handleSleepIntentLogic(this.ecs, entity, actionIntent);
                     break;
                 case CharacterIntent.REST:
-                    // handleRestIntentLogic(this.ecs, entity, actionIntent);
+                    handleRestIntentLogic(this.ecs, entity, actionIntent);
                     break;
                 default:
                     // Unhandled intent, ensure a sane default action state
@@ -3858,6 +3861,180 @@ export class ActionIntentSystem extends System {
                 this.lastIntentTypeCache.delete(entityId);
             }
         }
+    }
+}
+
+// ---
+
+import { System, Entity } from "../../ECS";
+import { TimeComponent } from "../time/TimeComponent";
+import { ActionIntentComponent } from "./ActionIntentComponent";
+import { WaitingStateComponent } from "./WaitingStateComponent";
+import { CharacterAction, CharacterIntent } from "./actionIntentData";
+
+const MAX_WAIT_DURATION_MINUTES = 15; // Example: If waiting longer than 15 game minutes, switch to REST.
+
+export class IdleBehaviorSystem extends System {
+    public componentsRequired = new Set<Function>([ActionIntentComponent]);
+
+    public update(entities: Set<Entity>, delta: number): void {
+        const timeEntity = this.ecs.getEntitiesWithComponent(TimeComponent)[0];
+        if (!timeEntity) return; // Requires TimeComponent to function
+        const time = this.ecs.getComponent(timeEntity, TimeComponent);
+        const currentTimeInMinutes = time.minutesElapsed;
+
+        for (const entity of entities) {
+            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
+            const waitingState = this.ecs.getComponent(entity, WaitingStateComponent);
+
+            if (actionIntent.currentPerformedAction === CharacterAction.WAITING) {
+                if (!waitingState) {
+                    // Character just started waiting for their current primary intent.
+                    // Only add WaitingStateComponent if the intent is a primary task, not already REST or NONE.
+                    if (actionIntent.intentType !== CharacterIntent.REST && 
+                        actionIntent.intentType !== CharacterIntent.NONE) {
+                        this.ecs.addComponent(entity, new WaitingStateComponent(
+                            currentTimeInMinutes,
+                            actionIntent.intentType 
+                        ));
+
+                        actionIntent.schduleOverrideStartHour = time.hour;
+                    }
+                } else {
+                    // Character is already in a waiting state. Check duration.
+                    if (currentTimeInMinutes - waitingState.waitStartTime >= MAX_WAIT_DURATION_MINUTES) {
+                        // Waited too long, switch to REST.
+                        actionIntent.intentType = CharacterIntent.REST;
+                        actionIntent.currentPerformedAction = CharacterAction.IDLE; // Let IntentActionSystem derive new action
+                        actionIntent.actionData = null;
+                        this.ecs.removeComponent(entity, WaitingStateComponent);
+                    }
+                }
+            } else {
+                // Character is NOT currently WAITING. If they have a WaitingStateComponent, remove it.
+                if (waitingState) {
+                    this.ecs.removeComponent(entity, WaitingStateComponent);
+                }
+            }
+        }
+    }
+}
+
+// ---
+
+import { Entity, System } from "../../ECS";
+import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent";
+import { HomeComponent } from "../buildings/dormitory/HomeComponent";
+import { WoodDojo } from "../buildings/wood_dojo/WoodDojo";
+import { ActionIntentComponent } from "./ActionIntentComponent";
+import { StrollComponent } from "./StrollComponent";
+import { CharacterIntent } from "./actionIntentData";
+
+
+export class RelaxBehaviorSystem extends System {
+    public componentsRequired = new Set<Function>([
+        ActionIntentComponent
+    ]);
+
+    public update(entities: Set<Entity>, delta: number): void {
+        for (const entity of entities) {
+            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
+            const hasStrollComponent = this.ecs.hasComponent(entity, StrollComponent);
+
+            if (actionIntent.intentType === CharacterIntent.REST) {
+                if (!hasStrollComponent) {
+                    // Intent is REST, but not yet strolling. Initiate stroll.
+                    let referencePointEntityId: Entity | null = null;
+                    const home = this.ecs.getComponent(entity, HomeComponent);
+                    if (home && home.homeEntityId !== null && this.ecs.hasEntity(home.homeEntityId)) {
+                        referencePointEntityId = home.homeEntityId;
+                    } else {
+                        const dorms = this.ecs.getEntitiesWithComponent(DormitoryComponent);
+                        if (dorms.length > 0) referencePointEntityId = dorms[0];
+                        else {
+                            const dojos = this.ecs.getEntitiesWithComponent(WoodDojo);
+                            if (dojos.length > 0) referencePointEntityId = dojos[0];
+                        }
+                    }
+
+                    if (referencePointEntityId !== null) {
+                        this.ecs.addComponent(entity, new StrollComponent(referencePointEntityId));
+                    }
+                }
+                // If already has StrollComponent and intent is REST, StrollSystem/handleRestIntentLogic manages it.
+            } else {
+                // Intent is NOT REST. If character was strolling, clean up.
+                if (hasStrollComponent) {
+                    this.ecs.removeComponent(entity, StrollComponent);
+                }
+            }
+        }
+    }
+}
+
+// ---
+
+import { Pos } from "../../../utils/Math";
+import { Component, Entity } from "../../ECS";
+
+export class StrollComponent extends Component {
+    public referencePointEntityId: Entity;
+    public currentPathTargetPos?: Pos;
+    public currentTargetTreeId?: Entity;
+    public lastTargetTreeId?: Entity;
+    public isPausedAtTarget: boolean = false;
+    public pauseUntilTime: number = 0; 
+
+    constructor(
+        referencePointEntityId: Entity,
+        initialTargetTreeId?: Entity,
+        initialPathTargetPos?: Pos
+    ) {
+        super();
+        this.referencePointEntityId = referencePointEntityId;
+        this.currentTargetTreeId = initialTargetTreeId;
+        this.currentPathTargetPos = initialPathTargetPos;
+    }
+}
+
+// ---
+
+import { Component } from "../../ECS";
+import { CharacterIntent } from "./actionIntentData";
+
+/**
+ * Added to a character when their currentPerformedAction is WAITING
+ * because their primary intent is blocked.
+ * Used by IdleBehaviorSystem to determine if they've been waiting too long.
+ */
+export class WaitingStateComponent extends Component {
+    /**
+     * Game time (e.g., from TimeComponent.minutesElapsed or a similar global timer)
+     * when the character started waiting for this particular blocked intent.
+     */
+    public waitStartTime: number;
+
+    /**
+     * The original CharacterIntent that was blocked, causing the character to wait.
+     * This helps IdleBehaviorSystem decide if the waiting is for a primary task.
+     */
+    public originalBlockedIntent: CharacterIntent;
+
+    /**
+     * Optional: A brief reason or context for why the character is waiting.
+     * (e.g., "no_available_tree", "no_sleep_slot", "path_blocked")
+     */
+    public reason?: string;
+
+    constructor(
+        waitStartTime: number,
+        originalBlockedIntent: CharacterIntent,
+        reason?: string
+    ) {
+        super();
+        this.waitStartTime = waitStartTime;
+        this.originalBlockedIntent = originalBlockedIntent;
+        this.reason = reason;
     }
 }
 
@@ -3957,9 +4134,9 @@ import {
 } from "../actionIntentData";
 import { LocomotionComponent } from "../../locomotion/LocomotionComponent";
 import { Transform } from "../../../components/Transform";
-import { Harvester } from "../../work/Harvester";
+import { HarvesterComponent } from "../../work/HarvesterComponent";
 import { Tree } from "../../trees/Tree";
-import { Harvestable } from "../../work/Harvestable";
+import { HarvestableComponent } from "../../work/HarvestableComponent";
 import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
 import { Pos } from "../../../../utils/Math";
 
@@ -3993,7 +4170,7 @@ function setChopping(aic: ActionIntentComponent, treeId: Entity): void {
 function isTreeValidForHarvest(ecs: ECS, treeId: Entity): boolean {
     if (!ecs.hasEntity(treeId)) return false;
     const tree = ecs.getComponent(treeId, Tree);
-    const harvestable = ecs.getComponent(treeId, Harvestable);
+    const harvestable = ecs.getComponent(treeId, HarvestableComponent);
     return !!(tree && tree.selectedForCutting && harvestable && harvestable.harvestable && !harvestable.harvested);
 }
 
@@ -4006,7 +4183,7 @@ function releaseAnyWorkSlotHeldByCharacter(ecs: ECS, characterEntity: Entity): v
 
 function findAndReserveNewHarvestTarget(ecs: ECS, characterEntity: Entity): { treeId: Entity, slotOffset: Pos, treeTransform: Transform } | null {
     releaseAnyWorkSlotHeldByCharacter(ecs, characterEntity);
-    const allTrees = ecs.getEntitiesWithComponents([Tree, Harvestable, InteractionSlots, Transform]);
+    const allTrees = ecs.getEntitiesWithComponents([Tree, HarvestableComponent, InteractionSlots, Transform]);
     for (const treeId of allTrees) {
         if (isTreeValidForHarvest(ecs, treeId)) {
             const slots = ecs.getComponent(treeId, InteractionSlots);
@@ -4044,7 +4221,7 @@ export function handleHarvestIntentLogic(
     actionIntent: ActionIntentComponent
 ): void {
     const locomotion = ecs.getComponent(entity, LocomotionComponent);
-    const harvester = ecs.getComponent(entity, Harvester);
+    const harvester = ecs.getComponent(entity, HarvesterComponent);
 
     if (!locomotion || !harvester) return setIdle(actionIntent);
 
@@ -4068,6 +4245,165 @@ export function handleHarvestIntentLogic(
         setWalkingToSlot(actionIntent, exactApproachPosition, treeId);
     } else {
         setChopping(actionIntent, treeId);
+    }
+}
+
+// ---
+
+import { Pos, MathUtils } from "../../../../utils/Math";
+import { Entity, ECS } from "../../../ECS";
+import { Transform } from "../../../components/Transform";
+import { LocomotionComponent } from "../../locomotion/LocomotionComponent";
+import { TimeComponent } from "../../time/TimeComponent";
+import { Tree } from "../../trees/Tree";
+import { ActionIntentComponent } from "../ActionIntentComponent";
+import { StrollComponent } from "../StrollComponent";
+import { CharacterAction, ActionDataType, WalkingData, StrollingAtPointData, isWalkingData } from "../actionIntentData";
+
+const STROLL_BEHIND_TREE_OFFSET = 30;
+const MAX_CANDIDATE_TREES_FOR_RANDOM_STROLL = 5;
+const MIN_PAUSE_DURATION_GAME_MINUTES = 2; // e.g., 2 game minutes
+const MAX_PAUSE_DURATION_GAME_MINUTES = 5; // e.g., 5 game minutes
+
+function setIdle(aic: ActionIntentComponent): void {
+    aic.currentPerformedAction = CharacterAction.IDLE;
+    aic.actionData = null;
+}
+
+function setRelaxing(aic: ActionIntentComponent): void {
+    aic.currentPerformedAction = CharacterAction.RELAXING;
+    aic.actionData = null;
+}
+
+function setWalkingToStrollPoint(aic: ActionIntentComponent, targetPosition: Pos, treeId?: Entity): void {
+    aic.currentPerformedAction = CharacterAction.WALKING;
+    aic.actionData = {
+        type: ActionDataType.WalkingData,
+        targetPosition,
+        ultimateTargetEntityId: treeId
+    } as WalkingData;
+}
+
+function setStrollingAtPoint(aic: ActionIntentComponent, treeId: Entity): void {
+    aic.currentPerformedAction = CharacterAction.STROLLING;
+    aic.actionData = {
+        type: ActionDataType.StrollingAtPointData,
+        atTreeEntityId: treeId
+    } as StrollingAtPointData;
+}
+
+function findValidStrollTrees(ecs: ECS, excludeTreeId?: Entity): { id: Entity, transform: Transform }[] {
+    const treeEntities = ecs.getEntitiesWithComponents([Tree, Transform]);
+    const validTrees: { id: Entity, transform: Transform }[] = [];
+    for (const treeId of treeEntities) {
+        if (treeId === excludeTreeId) continue;
+        validTrees.push({ id: treeId, transform: ecs.getComponent(treeId, Transform) });
+    }
+    return validTrees;
+}
+
+function selectNextStrollTarget(
+    ecs: ECS,
+    currentPosOrReferenceTransform: Transform,
+    referenceTransformForOrientation: Transform,
+    lastTargetTreeId?: Entity
+): { treeId: Entity, strollTargetPos: Pos } | null {
+    const availableTrees = findValidStrollTrees(ecs, lastTargetTreeId);
+    if (availableTrees.length === 0) return null;
+
+    let candidates = availableTrees.map(t => ({
+        id: t.id,
+        transform: t.transform,
+        distSq: MathUtils.distance(currentPosOrReferenceTransform, t.transform) ** 2
+    })).sort((a, b) => a.distSq - b.distSq);
+
+    if (candidates.length === 0) return null;
+    const selectionPool = candidates.slice(0, MAX_CANDIDATE_TREES_FOR_RANDOM_STROLL);
+    const chosenTreeInfo = selectionPool[Math.floor(Math.random() * selectionPool.length)];
+    
+    const strollTargetPos = calculateBehindTreePosition(chosenTreeInfo.transform, referenceTransformForOrientation);
+    return { treeId: chosenTreeInfo.id, strollTargetPos };
+}
+
+function calculateBehindTreePosition(treePos: Pos, referencePos: Pos): Pos {
+    const dirVector = MathUtils.normalize(MathUtils.subtract(treePos, referencePos));
+    if (dirVector.x === 0 && dirVector.y === 0) {
+        return { x: treePos.x + STROLL_BEHIND_TREE_OFFSET, y: treePos.y };
+    }
+    return MathUtils.add(treePos, MathUtils.multiply(dirVector, STROLL_BEHIND_TREE_OFFSET));
+}
+
+export function handleRestIntentLogic(
+    ecs: ECS,
+    entity: Entity,
+    actionIntent: ActionIntentComponent
+    // deltaTimeMs is removed
+): void {
+    const locomotion = ecs.getComponent(entity, LocomotionComponent);
+    const strollComp = ecs.getComponent(entity, StrollComponent);
+    const characterTransform = ecs.getComponent(entity, Transform);
+
+    if (!locomotion || !characterTransform) return setIdle(actionIntent);
+    if (!strollComp) return setRelaxing(actionIntent);
+
+    const worldTimeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+    if (!worldTimeEntity) return setRelaxing(actionIntent); // Cannot manage pause without time
+    const currentGameTime = ecs.getComponent(worldTimeEntity, TimeComponent).minutesElapsed;
+
+    if (strollComp.isPausedAtTarget) {
+        if (currentGameTime >= strollComp.pauseUntilTime) {
+            strollComp.isPausedAtTarget = false;
+            strollComp.lastTargetTreeId = strollComp.currentTargetTreeId;
+            strollComp.currentTargetTreeId = undefined;
+            strollComp.currentPathTargetPos = undefined;
+            locomotion.arrived = false; 
+        } else {
+            if (strollComp.currentTargetTreeId) {
+                setStrollingAtPoint(actionIntent, strollComp.currentTargetTreeId);
+            } else { 
+                setRelaxing(actionIntent);
+            }
+            return;
+        }
+    }
+
+    if (!strollComp.currentPathTargetPos || !strollComp.currentTargetTreeId) {
+        const referenceTransform = ecs.getComponent(strollComp.referencePointEntityId, Transform);
+        if (!referenceTransform) {
+            ecs.removeComponent(entity, StrollComponent);
+            return setRelaxing(actionIntent);
+        }
+        
+        const lastTreePosSource = strollComp.lastTargetTreeId ? ecs.getComponent(strollComp.lastTargetTreeId, Transform) : referenceTransform;
+        const nextTargetInfo = selectNextStrollTarget(ecs, lastTreePosSource, referenceTransform, strollComp.lastTargetTreeId);
+
+        if (nextTargetInfo) {
+            strollComp.currentTargetTreeId = nextTargetInfo.treeId;
+            strollComp.currentPathTargetPos = nextTargetInfo.strollTargetPos;
+            locomotion.arrived = false; 
+            actionIntent.actionData = null;
+        } else {
+            ecs.removeComponent(entity, StrollComponent);
+            return setRelaxing(actionIntent);
+        }
+    }
+    
+    // Use locomotion.arrived (set by LocomotionSystem based on exact rounded position match)
+    if (!locomotion.arrived) {
+        const currentWalkData = actionIntent.actionData as WalkingData | null;
+        if (actionIntent.currentPerformedAction !== CharacterAction.WALKING ||
+            !isWalkingData(currentWalkData) ||
+            currentWalkData.targetPosition.x !== strollComp.currentPathTargetPos!.x ||
+            currentWalkData.targetPosition.y !== strollComp.currentPathTargetPos!.y ||
+            currentWalkData.ultimateTargetEntityId !== strollComp.currentTargetTreeId) {
+            
+            setWalkingToStrollPoint(actionIntent, strollComp.currentPathTargetPos!, strollComp.currentTargetTreeId);
+        }
+    } else { // Arrived at strollComp.currentPathTargetPos
+        setStrollingAtPoint(actionIntent, strollComp.currentTargetTreeId!);
+        strollComp.isPausedAtTarget = true;
+        const pauseDuration = Math.random() * (MAX_PAUSE_DURATION_GAME_MINUTES - MIN_PAUSE_DURATION_GAME_MINUTES) + MIN_PAUSE_DURATION_GAME_MINUTES;
+        strollComp.pauseUntilTime = currentGameTime + pauseDuration;
     }
 }
 
@@ -4217,6 +4553,269 @@ export function handleSleepIntentLogic(
 
 // ---
 
+import { Component } from "../../ECS";
+import { ActiveBuff, BuffType, BUFF_DEFINITIONS, BuffStackingBehavior } from "./buffsData";
+
+export class ActiveBuffsComponent extends Component {
+    public buffs: ActiveBuff[] = [];
+
+    public addBuff(buffTypeToAdd: BuffType, currentTimeMinutes: number): void {
+        const definition = BUFF_DEFINITIONS[buffTypeToAdd];
+        if (!definition) {
+            console.warn(`Attempted to add undefined buff type: ${buffTypeToAdd}`);
+            return;
+        }
+
+        const newExpirationTimeMinutes = currentTimeMinutes + definition.defaultDurationMinutes;
+        const existingBuffIndex = this.buffs.findIndex(b => b.type === buffTypeToAdd);
+
+        if (existingBuffIndex !== -1) {
+            const existingBuff = this.buffs[existingBuffIndex];
+            switch (definition.stackingBehavior) {
+                case BuffStackingBehavior.REFRESH_DURATION:
+                    existingBuff.expirationTimeMinutes = Math.max(existingBuff.expirationTimeMinutes, newExpirationTimeMinutes);
+                    // Optionally, if effects could change or be stronger, update them:
+                    // existingBuff.effects = [...definition.effects]; 
+                    break;
+                case BuffStackingBehavior.NO_STACK:
+                    // Buff already exists, do nothing
+                    break;
+                case BuffStackingBehavior.INDEPENDENT_STACKING:
+                    // Add a new instance regardless
+                    this.buffs.push({
+                        type: definition.type,
+                        expirationTimeMinutes: newExpirationTimeMinutes,
+                        effects: [...definition.effects], // Create a new copy of effects
+                        stackingBehavior: definition.stackingBehavior,
+                        source: definition.displayName 
+                    });
+                    break;
+                case BuffStackingBehavior.HIGHEST_EFFECT_WINS:
+                    // This would require comparing effect values, more complex.
+                    // For now, let's treat it like REFRESH_DURATION or log a warning.
+                    existingBuff.expirationTimeMinutes = Math.max(existingBuff.expirationTimeMinutes, newExpirationTimeMinutes);
+                    // Potentially update effects if new ones are "stronger"
+                    break;
+                default:
+                    // Default to refresh if behavior is unknown
+                    existingBuff.expirationTimeMinutes = Math.max(existingBuff.expirationTimeMinutes, newExpirationTimeMinutes);
+                    break;
+            }
+        } else {
+            // Buff does not exist, add new one
+            this.buffs.push({
+                type: definition.type,
+                expirationTimeMinutes: newExpirationTimeMinutes,
+                effects: [...definition.effects],
+                stackingBehavior: definition.stackingBehavior,
+                source: definition.displayName
+            });
+        }
+    }
+
+    public removeBuff(buffTypeToRemove: BuffType): void {
+        this.buffs = this.buffs.filter(b => b.type !== buffTypeToRemove);
+    }
+
+    public hasBuff(buffType: BuffType): boolean {
+        return this.buffs.some(b => b.type === buffType);
+    }
+
+    public getBuff(buffType: BuffType): ActiveBuff | undefined {
+        return this.buffs.find(b => b.type === buffType);
+    }
+}
+
+// ---
+
+import { System, Entity } from "../../ECS";
+import { TimeComponent } from "../time/TimeComponent";
+import { ActiveBuffsComponent } from "./ActiveBuffsComponent";
+
+export class BuffManagementSystem extends System {
+    public componentsRequired = new Set<Function>([ActiveBuffsComponent]);
+    private worldTimeEntity: Entity | null = null;
+
+    private getCurrentTimeMinutes(): number | null {
+        if (this.worldTimeEntity === null || !this.ecs.hasEntity(this.worldTimeEntity)) {
+            const timeEntities = this.ecs.getEntitiesWithComponent(TimeComponent);
+            if (timeEntities.length > 0) {
+                this.worldTimeEntity = timeEntities[0];
+            } else {
+                return null; 
+            }
+        }
+        return this.ecs.getComponent(this.worldTimeEntity, TimeComponent).minutesElapsed;
+    }
+
+    public update(entities: Set<Entity>, delta: number): void {
+        const currentTimeMinutes = this.getCurrentTimeMinutes();
+        if (currentTimeMinutes === null) {
+            return; 
+        }
+
+        for (const entity of entities) {
+            const activeBuffs = this.ecs.getComponent(entity, ActiveBuffsComponent);
+            
+            activeBuffs.buffs = activeBuffs.buffs.filter(
+                buff => buff.expirationTimeMinutes > currentTimeMinutes
+            );
+        }
+    }
+}
+
+// ---
+
+import { ECS, Entity } from "../../ECS"; // Adjust path
+import { AffectedStat, BuffEffect, BuffEffectApplicationType } from "./buffsData";
+import { LocomotionComponent } from "../locomotion/LocomotionComponent"; // Adjust path
+import { HarvesterComponent as HarvesterComponent } from "../work/HarvesterComponent"; // Adjust path, aliased to avoid name clash
+import { ActiveBuffsComponent } from "./ActiveBuffsComponent";
+import { WorkerComponent } from "../work/WorkerComponent";
+
+export class StatCalculator {
+
+    private static getBaseValue(ecs: ECS, entity: Entity, statType: AffectedStat): number {
+        switch (statType) {
+            case AffectedStat.LOCOMOTION_SPEED:{
+                const loco = ecs.getComponent(entity, LocomotionComponent);
+                return loco?.speed ?? 0; // Default to 0 if component or baseSpeed is missing
+            }
+            case AffectedStat.WORK_SPEED:{
+                const worker = ecs.getComponent(entity, WorkerComponent);
+                return worker?.workSpeed ?? 0; 
+            }
+            case AffectedStat.HARVEST_SPEED:{
+                const effectiveWorkSpeed = StatCalculator.getEffectiveStat(ecs, entity, AffectedStat.WORK_SPEED);
+                const harvesterForHS = ecs.getComponent(entity, HarvesterComponent);
+                const baseHarvestSpeedAdditive = harvesterForHS?.harvestPerMinute ?? 0;
+                return effectiveWorkSpeed + baseHarvestSpeedAdditive;
+            }       
+            default:
+                console.warn(`StatCalculator: Base value for stat type ${statType} not defined.`);
+                return 0;
+        }
+    }
+
+    public static getEffectiveStat(
+        ecs: ECS, 
+        entity: Entity, 
+        statType: AffectedStat
+    ): number {
+        let currentValue = StatCalculator.getBaseValue(ecs, entity, statType);
+        
+        const activeBuffsComp = ecs.getComponent(entity, ActiveBuffsComponent);
+        if (!activeBuffsComp || activeBuffsComp.buffs.length === 0) {
+            return currentValue;
+        }
+
+        const relevantEffects: BuffEffect[] = [];
+        for (const buff of activeBuffsComp.buffs) {
+            for (const effect of buff.effects) {
+                if (effect.stat === statType) {
+                    relevantEffects.push(effect);
+                }
+            }
+        }
+
+        if (relevantEffects.length === 0) {
+            return currentValue;
+        }
+
+        // Sort effects: FLAT_ADDITIVE first, then PERCENT_MULTIPLICATIVE.
+        // Further sort by 'order' if provided.
+        relevantEffects.sort((a, b) => {
+            const typeOrderA = a.type === BuffEffectApplicationType.FLAT_ADDITIVE ? 1 : 2;
+            const typeOrderB = b.type === BuffEffectApplicationType.FLAT_ADDITIVE ? 1 : 2;
+            if (typeOrderA !== typeOrderB) {
+                return typeOrderA - typeOrderB;
+            }
+            return (a.order ?? 0) - (b.order ?? 0);
+        });
+
+        // Apply flat additive bonuses
+        for (const effect of relevantEffects) {
+            if (effect.type === BuffEffectApplicationType.FLAT_ADDITIVE) {
+                currentValue += effect.value;
+            }
+        }
+
+        // Apply percent multiplicative bonuses
+        for (const effect of relevantEffects) {
+            if (effect.type === BuffEffectApplicationType.PERCENT_MULTIPLICATIVE) {
+                currentValue *= effect.value; // Assumes value is like 1.1 for +10%
+            }
+        }
+        
+        // Min value for stats like speed/rate is typically 0, or a small positive epsilon.
+        // This can be handled by the consuming system or configured per stat if needed.
+        return currentValue;
+    }
+}
+
+// ---
+
+export enum BuffType {
+    RESTED = "RESTED",
+}
+
+export enum AffectedStat {
+    LOCOMOTION_SPEED = "locomotionSpeed",
+    WORK_SPEED = "workSpeed",
+    HARVEST_SPEED = "harvestSpeed",
+}
+
+export enum BuffEffectApplicationType {
+    FLAT_ADDITIVE = "FLAT_ADDITIVE",
+    PERCENT_MULTIPLICATIVE = "PERCENT_MULTIPLICATIVE",
+}
+
+export enum BuffStackingBehavior {
+    REFRESH_DURATION = "REFRESH_DURATION", // New instance refreshes duration, effects might update if stronger
+    INDEPENDENT_STACKING = "INDEPENDENT_STACKING", // Multiple instances co-exist, StatCalculator sums effects
+    NO_STACK = "NO_STACK", // Only one instance allowed; subsequent applications ignored or fail
+    HIGHEST_EFFECT_WINS = "HIGHEST_EFFECT_WINS" // Only the instance with the highest effect value for a given stat applies
+}
+
+export interface BuffEffect {
+    stat: AffectedStat;
+    type: BuffEffectApplicationType;
+    value: number;
+    order?: number; 
+}
+
+export interface ActiveBuff {
+    type: BuffType;
+    expirationTimeMinutes: number;
+    effects: BuffEffect[];
+    stackingBehavior: BuffStackingBehavior; // Could be copied from BuffDefinition or set per instance
+    source?: string;
+}
+
+export interface BuffDefinition {
+    readonly type: BuffType;
+    readonly defaultDurationMinutes: number;
+    readonly effects: ReadonlyArray<BuffEffect>;
+    readonly stackingBehavior: BuffStackingBehavior;
+    readonly displayName?: string; // Optional display name for UI
+}
+
+export const MIN_SLEEP_DURATION_FOR_RESTED_BUFF_MINUTES = 90;
+
+export const BUFF_DEFINITIONS: Readonly<Record<BuffType, BuffDefinition>> = {
+    [BuffType.RESTED]: {
+        type: BuffType.RESTED,
+        defaultDurationMinutes: 60,
+        effects: [
+            { stat: AffectedStat.LOCOMOTION_SPEED, type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: 1.10, order: 100 },
+            { stat: AffectedStat.WORK_SPEED,       type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: 1.10, order: 100 },
+        ],
+        stackingBehavior: BuffStackingBehavior.REFRESH_DURATION,
+    }
+};
+
+// ---
+
 import {Component} from "../../ECS.ts";
 
 export class Cave extends Component {
@@ -4258,6 +4857,24 @@ export class DormitorySystem extends System {
                 }
             }
         }
+    }
+}
+
+// ---
+
+import { Component, Entity } from "../../../ECS";
+
+/**
+ * Stores the entity ID of a character's assigned "home" base.
+ * This could be a dormitory, a work building like a WoodDojo, or another central point
+ * used as a reference for behaviors like strolling or context-based task targeting.
+ */
+export class HomeComponent extends Component {
+    /**
+     * @param homeEntityId The entity ID of the character's assigned home structure.å
+     */
+    constructor(public homeEntityId: Entity) {
+        super();
     }
 }
 
@@ -4777,6 +5394,12 @@ export class ScheduleSystem extends System {
             const schedule = this.ecs.getComponent(entity, ScheduleComponent);
             const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
 
+            if (actionIntent.schduleOverrideStartHour !== -1 && actionIntent.schduleOverrideStartHour == currentHour) {
+              continue
+            }
+            
+            actionIntent.schduleOverrideStartHour = -1; // Reset override hour if it has passed
+
             // ScheduleEntry is now CharacterIntent. Ensure ScheduleComponent.entries uses CharacterIntent.
             const newScheduledIntent: CharacterIntent = schedule.entries[currentHour] as CharacterIntent;
 
@@ -4870,7 +5493,7 @@ import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvent.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
-import { Harvestable } from "../work/Harvestable.ts";
+import { HarvestableComponent } from "../work/HarvestableComponent.ts";
 import { ResourceType } from "../resources/ResourceType.ts";
 import { InteractionSlots, SlotLayout, SlotType } from "../work/InteractionSlots.ts";
 import { initWorld, createProfessorBooker } from "./init.ts";
@@ -4898,7 +5521,7 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
             case "tree":
                 if (def.spriteName) {
                     ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
-                    ecs.addComponent(entity, new Harvestable(1000, [{type:ResourceType.WOOD, amount:10}]));
+                    ecs.addComponent(entity, new HarvestableComponent(1000, [{type:ResourceType.WOOD, amount:10}]));
                     ecs.addComponent(entity, new InteractionSlots({
                         [SlotType.WORK]: { layout: SlotLayout.RADIAL, radius: 120, count: 2 }
                       }));
@@ -5021,7 +5644,7 @@ import { TreeCutIconViewModule } from "../../display/game/trees/TreeCutIconViewM
 import { CharacterViewModule } from "../../display/game/characters/CharacterViewModule.ts";
 import { ResourceSystem } from "../resources/ResourceSystem.ts";
 import { ScheduleSystem } from "../scheduling/ScheduleSystem.ts";
-import { ECS } from "../../ECS.ts";
+import { ECS, Entity } from "../../ECS.ts";
 import { Character, CharacterType } from "../characters/Character.ts";
 import { Transform } from "../../components/Transform.ts";
 import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
@@ -5031,12 +5654,16 @@ import { ResourceComponent } from "../resources/ResourceComponent.ts";
 import { createStandardSchedule } from "../scheduling/ScheduleComponent.ts";
 import { TimeComponent } from "../time/TimeComponent.ts";
 import { WeatherComponent } from "../weather/WeatherComponent.ts";
-import { Harvester } from "../work/Harvester.ts";
+import { HarvesterComponent } from "../work/HarvesterComponent.ts";
 import { loadPanelRegistry } from "../../display/game/data_panel/PanelRegistry.ts";
 import { DormitorySystem } from "../buildings/dormitory/DormitorySystem.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
 import { ActionIntentComponent } from "../action-intent/ActionIntentComponent.ts";
 import { ActionIntentSystem } from "../action-intent/ActionIntentSystem.ts";
+import { HomeComponent } from "../buildings/dormitory/HomeComponent.ts";
+import { IdleBehaviorSystem } from "../action-intent/IdleBehaviorSystem.ts";
+import { RelaxBehaviorSystem } from "../action-intent/RelaxBehaviorSystem.ts";
+import { ActiveBuffsComponent } from "../buffs/ActiveBuffsComponent.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -5079,6 +5706,8 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
     game.ecs.addSystem(new ScheduleSystem());
     game.ecs.addSystem(new WeatherSystem());
+    game.ecs.addSystem(new IdleBehaviorSystem());
+    game.ecs.addSystem(new RelaxBehaviorSystem());
     game.ecs.addSystem(new WoodDojoSystem());
     game.ecs.addSystem(new DormitorySystem());
     game.ecs.addSystem(new ActionIntentSystem());
@@ -5150,12 +5779,12 @@ export function createProfessorBooker(ecs: ECS): number {
     const dorm = ecs.getComponent(dormEntity, DormitoryComponent);
 
     // and add booker entity to the ECS
-    const booker = addBooker(ecs, woodDojoTransform, woodDojo, dorm);
+    const booker = addBooker(ecs, woodDojoTransform, woodDojo, dorm, dormEntity);
     
     return booker;
 }
 
-function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, dorm:DormitoryComponent) {
+function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, dorm:DormitoryComponent, homeEntity:Entity) {
     const booker = ecs.addEntity();
     
     ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y));
@@ -5164,9 +5793,11 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, d
         description: "The professor of the academy. He is a master of the wood element.",
         type: CharacterType.PROFESSOR,
     }));
+    ecs.addComponent(booker, new HomeComponent(homeEntity));
     ecs.addComponent(booker, new ActionIntentComponent());
     ecs.addComponent(booker, new LocomotionComponent());
-    ecs.addComponent(booker, new Harvester());
+    ecs.addComponent(booker, new HarvesterComponent());
+    ecs.addComponent(booker, new ActiveBuffsComponent());
     ecs.addComponent(booker, createStandardSchedule());
 
     woodDojo.assignedAgents.push(booker);
@@ -5453,8 +6084,8 @@ export class Tree extends Component {
 import { System, Entity, ECS } from "../../ECS";
 import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
 import { CharacterAction, isChoppingData } from "../action-intent/actionIntentData";
-import { Harvestable } from "../work/Harvestable";
-import { Harvester } from "../work/Harvester"; // For harvest speed/ability
+import { HarvestableComponent } from "../work/HarvestableComponent";
+import { HarvesterComponent } from "../work/HarvesterComponent"; // For harvest speed/ability
 import { TimeComponent } from "../time/TimeComponent";
 import { ResourceComponent } from "../resources/ResourceComponent";
 import { ResourceType } from "../resources/ResourceType";
@@ -5464,7 +6095,7 @@ import { Tree } from "../trees/Tree";
 export class TreeHarvestingSystem extends System {
     public componentsRequired = new Set<Function>([
         ActionIntentComponent,
-        Harvester
+        HarvesterComponent
     ]);
 
     public update(entities: Set<Entity>, delta: number): void {
@@ -5493,8 +6124,8 @@ export class TreeHarvestingSystem extends System {
             }
 
             const tree = this.ecs.getComponent(targetTreeId, Tree);
-            const harvestable = this.ecs.getComponent(targetTreeId, Harvestable);
-            const harvester = this.ecs.getComponent(characterEntity, Harvester);
+            const harvestable = this.ecs.getComponent(targetTreeId, HarvestableComponent);
+            const harvester = this.ecs.getComponent(characterEntity, HarvesterComponent);
 
             if (!tree || !harvestable || !harvester) {
                 this.abortHarvest(actionIntent, characterEntity, targetTreeId, tree);
@@ -5520,7 +6151,7 @@ export class TreeHarvestingSystem extends System {
         }
     }
 
-    private finalizeHarvest(ecs: ECS, harvestable: Harvestable, tree: Tree): void {
+    private finalizeHarvest(ecs: ECS, harvestable: HarvestableComponent, tree: Tree): void {
         harvestable.amount = 0;
         harvestable.harvested = true;
         harvestable.harvestable = false;
@@ -5650,7 +6281,7 @@ export type ResourceDrop = {
     amount:number
 }
 
-export class Harvestable extends Component {
+export class HarvestableComponent extends Component {
     public maxAmount: number = 0;
     public harvestable: boolean = true;
     public harvested: boolean = false;
@@ -5666,7 +6297,7 @@ export class Harvestable extends Component {
 
 import { Component } from "../../ECS";
 
-export class Harvester extends Component {
+export class HarvesterComponent extends Component {
     public harvestPerMinute: number = 5;
 
     constructor() {
@@ -5799,6 +6430,18 @@ function createSlots(definition: SlotDefinition): Slot[] {
     }
   }
   return slots;
+}
+
+// ---
+
+import { Component } from "../../ECS";
+
+export class WorkerComponent extends Component {
+    public workSpeed: number = 1; 
+
+    constructor() {
+        super();
+    }
 }
 
 // ---

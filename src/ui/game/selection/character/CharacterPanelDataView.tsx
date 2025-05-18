@@ -23,7 +23,6 @@ const scheduleDisplayIcons: Record<CharacterScheduleDisplayType, string> = {
 const performedActionIcons: Record<CharacterAction, string> = {
   [CharacterAction.IDLE]: "assets/icons/idle_icon.png",
   [CharacterAction.WALKING]: "assets/icons/walk_icon.png",
-  [CharacterAction.WAITING]: "assets/icons/wait_icon.png",
   [CharacterAction.CHOPPING]: "assets/icons/axe_icon.png",
   [CharacterAction.BUILDING]: "assets/icons/build_icon.png",
   [CharacterAction.STUDYING]: "assets/icons/book_icon.png",
