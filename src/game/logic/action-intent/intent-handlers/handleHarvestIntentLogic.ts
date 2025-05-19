@@ -9,9 +9,9 @@ import {
     BlockedIntentReason // Added for BlockedIntentComponent
 } from "../actionIntentData";
 import { Transform } from "../../../components/Transform";
-import { HarvesterComponent } from "../../work/HarvesterComponent";
+import { HarvesterComponent } from "../../trees/HarvesterComponent";
 import { Tree } from "../../trees/Tree";
-import { HarvestableComponent } from "../../work/HarvestableComponent";
+import { HarvestableComponent } from "../../trees/HarvestableComponent";
 import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
 import { Pos } from "../../../../utils/Math";
 import { BlockedIntentComponent } from "../BlockedIntentComponent";

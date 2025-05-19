@@ -4,7 +4,7 @@ import { EventBus } from "../../../EventBus.ts";
 import { UIEvent } from "../../../consts/UIEvent.ts";
 import { GameEvent } from "../../../consts/GameEvent.ts";
 import { PanelDefinition } from "../../setup/ViewDefinition.ts";
-import { PanelTypeReducer, PanelTypeReducers } from "./PanelTypeReducers.ts";
+import { PanelTypeReducer, PanelTypeReducers } from "./PanelReducersRegistry.ts";
 import { PanelActionImplementation, SelectionPanelReducer, SelectionPanelReducers, createPanelActions } from "./PanelAction.ts";
 
 export type PanelData = {

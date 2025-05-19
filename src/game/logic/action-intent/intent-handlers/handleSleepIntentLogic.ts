@@ -104,25 +104,22 @@ export function handleSleepIntentLogic(
         return;
     }
     
-    const { bedEntityId, slotOffset, bedBuildingTransform } = targetInfo;
-    const exactSleepPosition = { 
-        x: Math.round(bedBuildingTransform.x + slotOffset.x), 
-        y: Math.round(bedBuildingTransform.y + slotOffset.y) 
-    };
-    
-    const roundedCharX = Math.round(characterTransform.x);
-    const roundedCharY = Math.round(characterTransform.y);
+    const locomotion = ecs.getComponent(entity, LocomotionComponent);
 
-    // Check if character is at the exact rounded target position.
-    if (roundedCharX !== exactSleepPosition.x || roundedCharY !== exactSleepPosition.y) {
+    const { bedEntityId, slotOffset, bedBuildingTransform } = targetInfo;
+
+    if (!locomotion.arrived) {
+        if (actionIntent.currentPerformedAction == CharacterAction.WALKING) return;
+
+        const exactSleepPosition = { 
+            x: Math.round(bedBuildingTransform.x + slotOffset.x), 
+            y: Math.round(bedBuildingTransform.y + slotOffset.y) 
+        };
+
         setWalkingToSlot(actionIntent, exactSleepPosition, bedEntityId);
-        // If we just set a new walking target, ensure LocomotionComponent.arrived is false for this new walk.
-        const locomotion = ecs.getComponent(entity, LocomotionComponent);
-        if (locomotion) {
-            locomotion.arrived = false;
-        }
     } else { 
-        // Character is already at the exact (rounded) slot position.
+        if (actionIntent.currentPerformedAction == CharacterAction.SLEEPING) return;
+
         setSleeping(actionIntent, bedEntityId, slotOffset);
     }
 }

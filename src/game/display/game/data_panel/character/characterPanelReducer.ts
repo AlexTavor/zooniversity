@@ -1,32 +1,51 @@
-import { ECS, Entity } from "../../../ECS";
-import { ActionIntentComponent } from "../../../logic/action-intent/ActionIntentComponent";
-import { BlockedIntentComponent } from "../../../logic/action-intent/BlockedIntentComponent";
-import { StrollComponent } from "../../../logic/action-intent/StrollComponent";
-import { CharacterIntent, CharacterAction, isWalkingData, isStrollingAtPointData, isChoppingData, isSleepingData, BlockedIntentReason } from "../../../logic/action-intent/actionIntentData";
-import { DormitoryComponent } from "../../../logic/buildings/dormitory/DormitoryComponent";
-import { HomeComponent } from "../../../logic/buildings/dormitory/HomeComponent";
-import { WoodDojo } from "../../../logic/buildings/wood_dojo/WoodDojo";
-import { ScheduleComponent } from "../../../logic/scheduling/ScheduleComponent";
-import { TimeComponent } from "../../../logic/time/TimeComponent";
-import { Tree } from "../../../logic/trees/Tree";
-import { HarvestableComponent } from "../../../logic/work/HarvestableComponent";
-import { PanelType } from "../../setup/ViewDefinition";
+import { ECS, Entity } from "../../../../ECS";
+import { ActionIntentComponent } from "../../../../logic/action-intent/ActionIntentComponent";
+import { BlockedIntentComponent } from "../../../../logic/action-intent/BlockedIntentComponent";
+import { StrollComponent } from "../../../../logic/action-intent/StrollComponent";
+import { CharacterIntent, CharacterAction, BlockedIntentReason, isChoppingData, isSleepingData, isStrollingAtPointData, isWalkingData } from "../../../../logic/action-intent/actionIntentData";
+import { DormitoryComponent } from "../../../../logic/buildings/dormitory/DormitoryComponent";
+import { HomeComponent } from "../../../../logic/buildings/dormitory/HomeComponent";
+import { WoodDojo } from "../../../../logic/buildings/wood_dojo/WoodDojo";
+import { ScheduleComponent } from "../../../../logic/scheduling/ScheduleComponent";
+import { TimeComponent } from "../../../../logic/time/TimeComponent";
+import { Tree } from "../../../../logic/trees/Tree";
+import { deriveBuffs } from "./deriveBuffs";
 
-export type PanelTypeReducer = (entity: Entity, ecs: ECS) => unknown;
+
+export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
+    const actionIntent = ecs.getComponent(entity, ActionIntentComponent);
+    const schedule = ecs.getComponent(entity, ScheduleComponent);
+    const timeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+    const time = ecs.getComponent(timeEntity, TimeComponent);
+    const hour = time.hour;
+
+    if (!actionIntent || !schedule) {
+        return {
+            currentStatusText: "Awaiting assignment",
+            currentPerformedAction: CharacterAction.IDLE,
+            currentScheduleIndex: hour,
+            currentScheduleText: "No schedule",
+            scheduleIconTypes: []
+        };
+    }
+
+    const currentScheduledIntent = schedule.entries[hour] ?? CharacterIntent.NONE;
+
+    return {
+        currentStatusText: deriveCurrentStatusText(ecs, entity, actionIntent),
+        currentPerformedAction: actionIntent.currentPerformedAction,
+        currentScheduleIndex: hour,
+        currentScheduleText: convertScheduleIntentToDisplayText(currentScheduledIntent, ecs, entity),
+        scheduleIconTypes: schedule.entries.map(entry => convertScheduleIntentToIconType(entry as CharacterIntent)),
+        activeBuffs: deriveBuffs(ecs, entity, time.minutesElapsed)
+    };
+}
+
 
 export enum CharacterScheduleIconType {
-  HARVEST = "Harvest", SLEEP = "Sleep", STUDY = "Study", REST = "Rest", BUILD = "Build", NONE = "None",
-}
-
-// --- Helper functions for Character Panel ---
-function getEntityName(ecs: ECS, entityId: Entity | null | undefined): string {
-    if (entityId === null || entityId === undefined || !ecs.hasEntity(entityId)) return "an unknown place";
-    if (ecs.hasComponent(entityId, Tree)) return "a tree";
-    if (ecs.hasComponent(entityId, WoodDojo)) return "the Wood Dojo";
-    if (ecs.hasComponent(entityId, DormitoryComponent)) return "the Dormitory";
-    return `location #${entityId}`;
-}
-
+    HARVEST = "Harvest", SLEEP = "Sleep", STUDY = "Study", REST = "Rest", BUILD = "Build", NONE = "None",
+  }
+  
 function convertScheduleIntentToDisplayText(intent: CharacterIntent, ecs: ECS, entity: Entity): string {
     const home = ecs.getComponent(entity, HomeComponent);
     const homeName = home?.homeEntityId ? getEntityName(ecs, home.homeEntityId) : "their work area";
@@ -93,14 +112,13 @@ function deriveCurrentStatusText(ecs: ECS, entity: Entity, actionIntent: ActionI
         const reason = BlockedIntentReason[blockedIntentComp.reason] || "unknown reason";
         const originalIntentName = CharacterIntent[blockedIntentComp.originalIntentType] || "a task";
         const currentIntentName = CharacterIntent[actionIntent.intentType] || "relaxing";
-        return `Planning ${originalIntentName.toLowerCase()}, but blocked (${reason.toLowerCase().replace(/_/g, ' ')}). Currently ${currentIntentName.toLowerCase()}.`;
+        return `Planning ${originalIntentName.toLowerCase()}, but blocked (${reason.toLowerCase().replace(/_/g, ' ')}). Currently ${currentIntentName.toLowerCase()}ing.`;
     }
 
     switch (actionIntent.intentType) {
         case CharacterIntent.REST:    return getStatusTextForRest(ecs, entity, actionIntent);
         case CharacterIntent.HARVEST: return getStatusTextForHarvest(ecs, entity, actionIntent);
         case CharacterIntent.SLEEP:   return getStatusTextForSleep(ecs, entity, actionIntent);
-        // Add other getStatusTextFor... calls here
         case CharacterIntent.NONE:    return "Contemplating.";
         default:{
             const actionString = (Object.keys(CharacterAction) as Array<keyof typeof CharacterAction>)
@@ -110,58 +128,10 @@ function deriveCurrentStatusText(ecs: ECS, entity: Entity, actionIntent: ActionI
     }
 }
 
-// --- Named Panel Reducer Functions ---
-
-function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
-    const actionIntent = ecs.getComponent(entity, ActionIntentComponent);
-    const schedule = ecs.getComponent(entity, ScheduleComponent);
-    const timeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
-    const hour = timeEntity ? ecs.getComponent(timeEntity, TimeComponent).hour : 0;
-    
-    if (!actionIntent || !schedule) {
-        return {
-            currentStatusText: "Awaiting assignment",
-            currentPerformedAction: CharacterAction.IDLE,
-            currentScheduleIndex: hour,
-            currentScheduleText: "No schedule",
-            scheduleIconTypes: []
-        };
-    }
-    
-    const currentScheduledIntent = schedule.entries[hour] ?? CharacterIntent.NONE;
-
-    return {
-      currentStatusText: deriveCurrentStatusText(ecs, entity, actionIntent),
-      currentPerformedAction: actionIntent.currentPerformedAction,
-      currentScheduleIndex: hour,
-      currentScheduleText: convertScheduleIntentToDisplayText(currentScheduledIntent, ecs, entity),
-      scheduleIconTypes: schedule.entries.map(entry => convertScheduleIntentToIconType(entry as CharacterIntent))
-    };
+function getEntityName(ecs: ECS, entityId: Entity | null | undefined): string {
+    if (entityId === null || entityId === undefined || !ecs.hasEntity(entityId)) return "an unknown place";
+    if (ecs.hasComponent(entityId, Tree)) return "a tree";
+    if (ecs.hasComponent(entityId, WoodDojo)) return "the Wood Dojo";
+    if (ecs.hasComponent(entityId, DormitoryComponent)) return "the Dormitory";
+    return `location #${entityId}`;
 }
-
-function woodDojoPanelReducer(entity: Entity, ecs: ECS): unknown {
-    const dojo = ecs.getComponent(entity, WoodDojo);
-    return { assignedAgents: dojo?.assignedAgents ?? [] };
-}
-
-function cavePanelReducer(entity: Entity, ecs: ECS): unknown {
-    return {}; // Placeholder for cave-specific data
-}
-
-function treePanelReducer(entity: Entity, ecs: ECS): unknown {
-    const harvestable = ecs.getComponent(entity, HarvestableComponent);
-    return {
-        drops: harvestable?.drops ?? [],
-        cutProgress: harvestable ? Math.max(0, Math.floor(harvestable.amount)) : 0,
-        maxCutProgress: harvestable?.maxAmount ?? 0,
-    };
-}
-
-// --- Main Export ---
-
-export const PanelTypeReducers: Partial<Record<PanelType, PanelTypeReducer>> = {
-  [PanelType.CHARACTER]: characterPanelReducer,
-  [PanelType.WOOD_DOJO]: woodDojoPanelReducer,
-  [PanelType.CAVE]: cavePanelReducer,
-  [PanelType.TREE]: treePanelReducer
-};

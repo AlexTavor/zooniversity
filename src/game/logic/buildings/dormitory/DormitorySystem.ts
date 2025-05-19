@@ -8,10 +8,10 @@ export class DormitorySystem extends System {
         for (const dormitoryEntity of dormitoryEntities) {
             const dorm = this.ecs.getComponent(dormitoryEntity, DormitoryComponent);
 
-            for (let i = dorm.assignedAgents.length - 1; i >= 0; i--) {
-                const agentId = dorm.assignedAgents[i];
-                if (!this.ecs.hasEntity(agentId)) {
-                    dorm.assignedAgents.splice(i, 1);
+            for (let i = dorm.assignedCharacters.length - 1; i >= 0; i--) {
+                const characterId = dorm.assignedCharacters[i];
+                if (!this.ecs.hasEntity(characterId)) {
+                    dorm.assignedCharacters.splice(i, 1);
                 }
             }
         }

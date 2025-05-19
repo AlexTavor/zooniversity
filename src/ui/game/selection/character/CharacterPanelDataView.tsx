@@ -1,20 +1,16 @@
-// src/ui/selection/character/CharacterPanelDataView.tsx
-
-import React from "react";
-import "./CharacterPanelDataView.css"; 
-// Assuming CharacterAction is in actionIntentData and CharacterScheduleIconType is from PanelTypeReducers
-import { CharacterAction } from "../../../../game/logic/action-intent/actionIntentData"; 
-import { CharacterScheduleIconType } from "../../../../game/display/game/data_panel/PanelTypeReducers"; 
+import { CharacterScheduleIconType } from "../../../../game/display/game/data_panel/character/characterPanelReducer";
+import { CharacterAction } from "../../../../game/logic/action-intent/actionIntentData";
+import { DisplayableBuffData, BuffView } from "../../buffs/BuffView";
 
 interface CharacterPanelUIData {
-  currentStatusText: string;          // The new rich "internal state" text
-  currentPerformedAction: CharacterAction; // For the action icon
+  currentStatusText: string;
+  currentPerformedAction: CharacterAction;
   currentScheduleIndex: number;
-  currentScheduleText: string;        // The new descriptive schedule text
-  scheduleIconTypes: CharacterScheduleIconType[]; // For the schedule bar icons
+  currentScheduleText: string; 
+  scheduleIconTypes: CharacterScheduleIconType[];
+  activeBuffs?: DisplayableBuffData[]; // Optional, in case reducer doesn't provide it yet
 }
 
-// Icons for the schedule bar, using CharacterScheduleIconType
 const scheduleBarIcons: Record<CharacterScheduleIconType, string> = {
   [CharacterScheduleIconType.HARVEST]: "assets/icons/axe_icon.png",
   [CharacterScheduleIconType.SLEEP]: "assets/icons/sleep_icon.png",
@@ -24,7 +20,6 @@ const scheduleBarIcons: Record<CharacterScheduleIconType, string> = {
   [CharacterScheduleIconType.NONE]: "assets/icons/idle_icon.png", 
 };
 
-// Icons for the current performed action
 const performedActionIcons: Record<CharacterAction, string> = {
   [CharacterAction.IDLE]: "assets/icons/idle_icon.png",
   [CharacterAction.WALKING]: "assets/icons/walk_icon.png",
@@ -32,9 +27,9 @@ const performedActionIcons: Record<CharacterAction, string> = {
   [CharacterAction.BUILDING]: "assets/icons/build_icon.png",
   [CharacterAction.STUDYING]: "assets/icons/book_icon.png",
   [CharacterAction.SLEEPING]: "assets/icons/sleep_icon.png",
-  [CharacterAction.STROLLING]: "assets/icons/walk_icon.png", // Using walk icon for strolling action
+  [CharacterAction.STROLLING]: "assets/icons/walk_icon.png", 
   [CharacterAction.RELAXING]: "assets/icons/relax_icon.png",
-  [CharacterAction.NONE]: "assets/icons/wait_icon.png",
+  [CharacterAction.NONE]: "assets/icons/idle_icon.png",
 };
 
 export const CharacterPanelDataView: React.FC<{
@@ -45,20 +40,21 @@ export const CharacterPanelDataView: React.FC<{
     return null;
   }
   
-  // Get icon for the current performed action
   const currentActionIcon = performedActionIcons[data.currentPerformedAction] || "assets/icons/idle_icon.png";
-  // The current schedule text is now directly data.currentScheduleText
-  // The icon for the current schedule item in the detailed view can be derived from scheduleIconTypes
   const currentHourScheduleIconType = data.scheduleIconTypes[data.currentScheduleIndex] || CharacterScheduleIconType.NONE;
   const currentScheduleDisplayIcon = scheduleBarIcons[currentHourScheduleIconType];
-
 
   if (collapsed) {
     return (
       <div className="character-panel-collapsed">
-        {/* For collapsed view, show current schedule icon and current action icon */}
         <img className="icon" src={currentScheduleDisplayIcon} alt={data.currentScheduleText} title={`Scheduled: ${data.currentScheduleText}`} />
-        <img className="icon" src={currentActionIcon} alt={data.currentPerformedAction} title={`Action: ${data.currentPerformedAction}`} />
+        <img className="icon" src={currentActionIcon} alt={data.currentPerformedAction.toString()} title={`Action: ${data.currentPerformedAction}`} />
+        {data.activeBuffs && data.activeBuffs.length > 0 && (
+          <div className="icon buff-summary-collapsed" title={`${data.activeBuffs.length} active effect(s)`}>
+            <img src={data.activeBuffs[0].iconAssetKey || "assets/icons/default_buff_icon.png"} alt="Buffs" />
+            {data.activeBuffs.length > 1 ? <span>+{data.activeBuffs.length -1}</span> : null}
+          </div>
+        )}
       </div>
     );
   }
@@ -66,24 +62,33 @@ export const CharacterPanelDataView: React.FC<{
   return (
     <div className="character-panel-expanded">
       <div className="info-block">
-        {/* Main status text */}
         <p className="text-bg info-line" title={data.currentPerformedAction.toString()}>
           Status: {data.currentStatusText} 
-          {/* Optionally, still show the action icon here if statusText doesn't always include it */}
-           <img className="inline-icon" src={currentActionIcon} alt={data.currentPerformedAction} />
+           <img className="inline-icon" src={currentActionIcon} alt={data.currentPerformedAction.toString()} />
         </p>
-        {/* Descriptive current schedule */}
         <p className="text-bg info-line">
           Schedule: {data.currentScheduleText}
           <img className="inline-icon" src={currentScheduleDisplayIcon} alt={data.currentScheduleText} />
         </p>
       </div>
+
+      {data.activeBuffs && data.activeBuffs.length > 0 && (
+        <div className="buffs-display-section">
+          {/* You might want a label like "Active Effects:" here */}
+          <div className="buffs-display-bar">
+            {data.activeBuffs.map((buffData) => (
+              <BuffView key={buffData.key} data={buffData} />
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="schedule-bar-wrapper">
         <div className="schedule-bar">
           {data.scheduleIconTypes.map((iconType, index) => {
             const scheduleIcon = scheduleBarIcons[iconType] || "assets/icons/idle_icon.png";
-            // To get the text for the title attribute, we might need another map or derive it if not too complex
-            const scheduleEntryText = Object.keys(CharacterScheduleIconType).find(key => CharacterScheduleIconType[key as keyof typeof CharacterScheduleIconType] === iconType) || "Task";
+            const scheduleEntryText = (Object.keys(CharacterScheduleIconType) as Array<keyof typeof CharacterScheduleIconType>)
+                .find(key => CharacterScheduleIconType[key] === iconType) || "Task";
             return (
               <div
                 key={index}

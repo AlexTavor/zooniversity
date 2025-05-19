@@ -1,7 +1,7 @@
 import { ECS, Entity } from "../../ECS"; // Adjust path
 import { AffectedStat, BuffEffect, BuffEffectApplicationType } from "./buffsData";
 import { LocomotionComponent } from "../locomotion/LocomotionComponent"; // Adjust path
-import { HarvesterComponent as HarvesterComponent } from "../work/HarvesterComponent"; // Adjust path, aliased to avoid name clash
+import { HarvesterComponent as HarvesterComponent } from "../trees/HarvesterComponent"; // Adjust path, aliased to avoid name clash
 import { ActiveBuffsComponent } from "./ActiveBuffsComponent";
 import { WorkerComponent } from "../work/WorkerComponent";
 

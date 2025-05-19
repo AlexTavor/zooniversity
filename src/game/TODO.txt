@@ -16,7 +16,7 @@
             Prof gets to work
     The caves are not explorable for now (not clickable)
     Wood Dojo
-        Shows icon of using agent
+        Shows icon of using chars
             Icon is moving back and forth between dojo and nearest selected tree
             Waits a bit at each location
             When near tree, tree gets the chop shake anim
@@ -33,10 +33,5 @@
 
 
 TODO:
-    Add sleep buff
-        Logic
-    Buffs display
-        Logic
-        Panel
-        Portrait
+    Improve buff display in panel
     Food

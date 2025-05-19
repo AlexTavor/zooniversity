@@ -30,6 +30,7 @@ export class LocomotionSystem extends System {
             const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
 
             if (!this.isEntityActivelyWalking(actionIntent)) {
+                locomotion.arrived = false; // Reset arrived state if not walking
                 continue;
             }
 
@@ -39,13 +40,14 @@ export class LocomotionSystem extends System {
                 y: Math.round(walkData.targetPosition.y) 
             };
 
-            const justArrivedOrIsAtTarget = this.processArrival(locomotion, transform, targetPosition);
+            const isArrived = this.processArrival(locomotion, transform, targetPosition);
             
-            this.updateLocationState(transform, walkData.ultimateTargetEntityId, locomotion.arrived);
-
-            if (justArrivedOrIsAtTarget) {
+            if (isArrived) {
+                this.updateLocationState(transform, walkData.ultimateTargetEntityId, isArrived);
                 continue; 
             }
+
+            transform.locationState = LocationState.OUTSIDE;
             
             const speed = StatCalculator.getEffectiveStat(this.ecs, entity, AffectedStat.LOCOMOTION_SPEED);
             this.performMovementStep(transform, targetPosition, speed * scaledDelta);
@@ -54,7 +56,7 @@ export class LocomotionSystem extends System {
     }
 
     private isEntityActivelyWalking(actionIntent: ActionIntentComponent): boolean {
-        return actionIntent.currentPerformedAction == CharacterAction.WALKING && actionIntent.actionData.targetPosition;
+        return actionIntent.currentPerformedAction == CharacterAction.WALKING && !!actionIntent?.actionData?.targetPosition;
     }
 
     private processArrival(locomotion: LocomotionComponent, transform: Transform, targetPos: Pos): boolean {
@@ -68,20 +70,16 @@ export class LocomotionSystem extends System {
                 locomotion.arrived = true;
             }
             return true; // Is at target
+        } else if (locomotion.arrived) {
+            locomotion.arrived = false; // Reset arrived state if not at target
         }
-        
-        // If not at target, ensure arrived is false
-        if (locomotion.arrived) {
-            locomotion.arrived = false; 
-        }
+
         return false; // Not at target
     }
     
     private updateLocationState(transform: Transform, ultimateTargetEntityId: Entity | undefined, isArrivedAtTarget: boolean): void {
         if (ultimateTargetEntityId && this.ecs.hasEntity(ultimateTargetEntityId) && this.ecs.hasComponent(ultimateTargetEntityId, InsideLocationComponent)) {
             transform.locationState = isArrivedAtTarget ? LocationState.INSIDE : LocationState.OUTSIDE;
-        } else {
-            transform.locationState = LocationState.OUTSIDE;
         }
     }
 

@@ -8,7 +8,7 @@ import {EventBus} from "../../EventBus.ts";
 import {GameEvent} from "../../consts/GameEvent.ts";
 import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
-import { HarvestableComponent } from "../work/HarvestableComponent.ts";
+import { HarvestableComponent } from "../trees/HarvestableComponent.ts";
 import { ResourceType } from "../resources/ResourceType.ts";
 import { InteractionSlots, SlotLayout, SlotType } from "../work/InteractionSlots.ts";
 import { initWorld, createProfessorBooker } from "./init.ts";

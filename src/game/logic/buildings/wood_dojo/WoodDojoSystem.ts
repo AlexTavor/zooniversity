@@ -8,12 +8,12 @@ export class WoodDojoSystem extends System {
         for (const dojoEntity of dojoEntities) {
             const dojo = this.ecs.getComponent(dojoEntity, WoodDojo);
 
-            // Clean up non-existent characters from the assignedAgents list
+            // Clean up non-existent characters from the assignedCharacters list
             // Iterate backwards when removing elements from an array during iteration
-            for (let i = dojo.assignedAgents.length - 1; i >= 0; i--) {
-                const agentId = dojo.assignedAgents[i];
-                if (!this.ecs.hasEntity(agentId)) {
-                    dojo.assignedAgents.splice(i, 1);
+            for (let i = dojo.assignedCharacters.length - 1; i >= 0; i--) {
+                const characterId = dojo.assignedCharacters[i];
+                if (!this.ecs.hasEntity(characterId)) {
+                    dojo.assignedCharacters.splice(i, 1);
                 }
             }
         }

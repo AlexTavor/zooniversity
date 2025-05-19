@@ -105,7 +105,6 @@ export function handleRestIntentLogic(
             strollComp.lastTargetTreeId = strollComp.currentTargetTreeId;
             strollComp.currentTargetTreeId = undefined;
             strollComp.currentPathTargetPos = undefined;
-            locomotion.arrived = false; 
         } else {
             if (strollComp.currentTargetTreeId) {
                 setStrollingAtPoint(actionIntent, strollComp.currentTargetTreeId);
@@ -129,7 +128,6 @@ export function handleRestIntentLogic(
         if (nextTargetInfo) {
             strollComp.currentTargetTreeId = nextTargetInfo.treeId;
             strollComp.currentPathTargetPos = nextTargetInfo.strollTargetPos;
-            locomotion.arrived = false; 
             actionIntent.actionData = null;
         } else {
             ecs.removeComponent(entity, StrollComponent);

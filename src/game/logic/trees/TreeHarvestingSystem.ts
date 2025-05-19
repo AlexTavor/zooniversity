@@ -1,8 +1,8 @@
 import { System, Entity, ECS } from "../../ECS";
 import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
 import { CharacterAction, isChoppingData } from "../action-intent/actionIntentData";
-import { HarvestableComponent } from "../work/HarvestableComponent";
-import { HarvesterComponent } from "../work/HarvesterComponent"; // For harvest speed/ability
+import { HarvestableComponent } from "./HarvestableComponent";
+import { HarvesterComponent } from "./HarvesterComponent"; // For harvest speed/ability
 import { TimeComponent } from "../time/TimeComponent";
 import { ResourceComponent } from "../resources/ResourceComponent";
 import { ResourceType } from "../resources/ResourceType";

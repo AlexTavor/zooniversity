@@ -3,7 +3,7 @@ import { ECS, Entity } from "../../../ECS";
 import { Config } from "../../../config/Config";
 import { Transform } from "../../../components/Transform";
 import { Tree } from "../../../logic/trees/Tree";
-import { HarvestableComponent } from "../../../logic/work/HarvestableComponent";
+import { HarvestableComponent } from "../../../logic/trees/HarvestableComponent";
 import { View } from "../../setup/View";
 import { ViewDefinition, ViewType } from "../../setup/ViewDefinition";
 import { ViewDisplayModule, registerViewDisplayModule } from "../../setup/ViewDisplayModule";
