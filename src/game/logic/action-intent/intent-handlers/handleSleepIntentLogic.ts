@@ -108,18 +108,19 @@ export function handleSleepIntentLogic(
 
     const { bedEntityId, slotOffset, bedBuildingTransform } = targetInfo;
 
-    if (!locomotion.arrived) {
-        if (actionIntent.currentPerformedAction == CharacterAction.WALKING) return;
+    if (locomotion.arrived){
+        if (actionIntent.currentPerformedAction == CharacterAction.SLEEPING) return;
 
+        setSleeping(actionIntent, bedEntityId, slotOffset);
+        return;
+    }
+
+    if (actionIntent.currentPerformedAction != CharacterAction.WALKING) {
         const exactSleepPosition = { 
             x: Math.round(bedBuildingTransform.x + slotOffset.x), 
             y: Math.round(bedBuildingTransform.y + slotOffset.y) 
         };
-
+    
         setWalkingToSlot(actionIntent, exactSleepPosition, bedEntityId);
-    } else { 
-        if (actionIntent.currentPerformedAction == CharacterAction.SLEEPING) return;
-
-        setSleeping(actionIntent, bedEntityId, slotOffset);
     }
 }

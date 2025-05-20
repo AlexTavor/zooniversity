@@ -1,7 +1,7 @@
 import { ECS, Entity, System } from "../../ECS";
 import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
 import { BlockedIntentComponent } from "../action-intent/BlockedIntentComponent";
-import { CharacterIntent } from "../action-intent/actionIntentData";
+import { CharacterAction, CharacterIntent } from "../action-intent/actionIntentData";
 import { TimeComponent } from "../time/TimeComponent";
 import { ScheduleComponent } from "./ScheduleComponent";
 
@@ -39,6 +39,9 @@ export class ScheduleSystem extends System {
 
             if (actionIntent.intentType !== newScheduledIntent) {
                 actionIntent.intentType = newScheduledIntent;
+                actionIntent.currentPerformedAction = CharacterAction.IDLE;
+                actionIntent.actionData = undefined;
+                
                 schedule.lastScheduleStartHour = currentHour;
 
                 // If schedule dictates a new intent, any previous "blocked" state is now void.

@@ -30,7 +30,6 @@ export class LocomotionSystem extends System {
             const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
 
             if (!this.isEntityActivelyWalking(actionIntent)) {
-                locomotion.arrived = false; // Reset arrived state if not walking
                 continue;
             }
 
@@ -56,7 +55,7 @@ export class LocomotionSystem extends System {
     }
 
     private isEntityActivelyWalking(actionIntent: ActionIntentComponent): boolean {
-        return actionIntent.currentPerformedAction == CharacterAction.WALKING && !!actionIntent?.actionData?.targetPosition;
+        return actionIntent.currentPerformedAction == CharacterAction.WALKING && !!(actionIntent?.actionData?.targetPosition);
     }
 
     private processArrival(locomotion: LocomotionComponent, transform: Transform, targetPos: Pos): boolean {

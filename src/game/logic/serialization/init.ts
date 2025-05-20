@@ -95,15 +95,15 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new ScheduleSystem());
     game.ecs.addSystem(new WeatherSystem());
     game.ecs.addSystem(new LocomotionSystem());
-    game.ecs.addSystem(new WoodDojoSystem());
-    game.ecs.addSystem(new DormitorySystem());
     game.ecs.addSystem(new ActionIntentSystem());
+    game.ecs.addSystem(new SleepEffectsSystem());
     game.ecs.addSystem(new BlockedIntentSystem());
     game.ecs.addSystem(new TreeHarvestingSystem())
     game.ecs.addSystem(new RelaxBehaviorSystem());
-    game.ecs.addSystem(new SleepEffectsSystem());
     game.ecs.addSystem(new BuffManagementSystem());
     game.ecs.addSystem(new ResourceSystem());
+    game.ecs.addSystem(new WoodDojoSystem());
+    game.ecs.addSystem(new DormitorySystem());
 
     initInput(game);
     initStory(game);

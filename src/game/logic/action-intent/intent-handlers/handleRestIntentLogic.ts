@@ -97,7 +97,8 @@ export function handleRestIntentLogic(
 
     const worldTimeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
     if (!worldTimeEntity) return setRelaxing(actionIntent); // Cannot manage pause without time
-    const currentGameTime = ecs.getComponent(worldTimeEntity, TimeComponent).minutesElapsed;
+    const time = ecs.getComponent(worldTimeEntity, TimeComponent);
+    const currentGameTime = time.minutesElapsed;
 
     if (strollComp.isPausedAtTarget) {
         if (currentGameTime >= strollComp.pauseUntilTime) {
@@ -135,21 +136,28 @@ export function handleRestIntentLogic(
         }
     }
     
-    // Use locomotion.arrived (set by LocomotionSystem based on exact rounded position match)
+    // We're still walking
     if (!locomotion.arrived) {
         const currentWalkData = actionIntent.actionData as WalkingData | null;
         if (actionIntent.currentPerformedAction !== CharacterAction.WALKING ||
             !isWalkingData(currentWalkData) ||
-            currentWalkData.targetPosition.x !== strollComp.currentPathTargetPos!.x ||
-            currentWalkData.targetPosition.y !== strollComp.currentPathTargetPos!.y ||
             currentWalkData.ultimateTargetEntityId !== strollComp.currentTargetTreeId) {
             
             setWalkingToStrollPoint(actionIntent, strollComp.currentPathTargetPos!, strollComp.currentTargetTreeId);
         }
-    } else { // Arrived at strollComp.currentPathTargetPos
+
+        return;
+    } 
+    
+    // We've arrived, waiting around
+    if (actionIntent.currentPerformedAction != CharacterAction.STROLLING) {
         setStrollingAtPoint(actionIntent, strollComp.currentTargetTreeId!);
         strollComp.isPausedAtTarget = true;
         const pauseDuration = Math.random() * (MAX_PAUSE_DURATION_GAME_MINUTES - MIN_PAUSE_DURATION_GAME_MINUTES) + MIN_PAUSE_DURATION_GAME_MINUTES;
         strollComp.pauseUntilTime = currentGameTime + pauseDuration;
+    }
+
+    if (strollComp.pauseUntilTime >= currentGameTime){
+        setWalkingToStrollPoint(actionIntent, {x:0,y:0});
     }
 }

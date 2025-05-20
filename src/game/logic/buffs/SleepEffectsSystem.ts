@@ -30,6 +30,7 @@ export class SleepEffectsSystem extends System {
             if (actionIntent.currentPerformedAction === CharacterAction.SLEEPING) {
                 if (!sleepState) {
                     this.ecs.addComponent(entity, new CharacterSleepStateComponent(currentTimeMinutes));
+                    return;
                 }
             } else { // Not currently SLEEPING
                 if (sleepState) {
