@@ -38,7 +38,7 @@ export const StatusOrBuffView: React.FC<StatusOrBuffViewProps> = ({
     <div className="status-buff-view-wrapper">
         {activeBuffs && activeBuffs.length > 0 && (
           <>{activeBuffs.map((buffData) => (
-            <StatusInfoLine label={buffData.description}>
+            <StatusInfoLine key={buffData.key} label={buffData.description}>
               <BuffView key={buffData.key} data={buffData} />
             </StatusInfoLine>
           ))}</>

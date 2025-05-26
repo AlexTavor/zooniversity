@@ -1,1 +1,1 @@
-Cozy Event Driven Colony Sim
+Cozy Story Driven Colony Sim

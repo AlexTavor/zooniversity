@@ -7,6 +7,7 @@ import {WeatherPanel} from "./weather/WeatherPanel.tsx";
 import {SelectionPanel} from "./selection/SelectionPanel.tsx";
 import { ResourceDisplay } from "./resources/ResourceDisplay.tsx";
 import { CharacterPortraitsLayer } from "./character_portaits/CharacterPortraitsLayer.tsx";
+import { TopCharacterBar } from "../v2/elements/containers/TopCharactersBar.tsx";
 
 export const GameContainer: React.FC = () => {
     const [gameLoaded, setGameLoaded] = useState(false);
@@ -26,5 +27,6 @@ export const GameContainer: React.FC = () => {
         <SelectionPanel/>
         <ResourceDisplay/>
         <CharacterPortraitsLayer/>
+        <TopCharacterBar/>
     </>
 };

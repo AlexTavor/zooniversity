@@ -1,4 +1,4 @@
-import { Component } from "../../ECS";
+import { Component, ECS } from "../../ECS";
 import { TimeConfig } from "../../config/TimeConfig";
 
 export class TimeComponent extends Component {
@@ -12,4 +12,25 @@ export class TimeComponent extends Component {
     ) {
         super();
     }
+}
+
+let worldEntity:number;
+let hasWorlEntity:boolean;
+
+export function getCurrentHour(ecs: ECS): number {
+    if (!hasWorlEntity){
+        worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+        hasWorlEntity = true;
+    }
+    const time = ecs.getComponent(worldEntity, TimeComponent);
+    return time?.hour || 0;
+}
+
+export function getTime(ecs: ECS): TimeComponent {
+    if (!hasWorlEntity){
+        worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+        hasWorlEntity = true;
+    }
+    const time = ecs.getComponent(worldEntity, TimeComponent);
+    return time!;
 }

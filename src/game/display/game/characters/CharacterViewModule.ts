@@ -12,6 +12,8 @@ import { EffectType } from "../../setup/ViewEffectController";
 import { createView } from "../../setup/ViewStore";
 import { ViewTracker } from "../../setup/ViewTracker";
 import { GameDisplayContext } from "../../GameDisplay";
+import { ActionIntentComponent } from "../../../logic/action-intent/ActionIntentComponent";
+import { CharacterAction } from "../../../logic/action-intent/actionIntentData";
 
 export class CharacterViewModule extends ViewDisplayModule {
     init(context: GameDisplayContext): void {
@@ -66,13 +68,16 @@ export class CharacterViewModule extends ViewDisplayModule {
         view.viewContainer.y = ry;
         view.viewContainer.scaleX = view.viewDefinition.size.x * transform.direction;
 
+        const action = ecs.getComponent(entity, ActionIntentComponent)?.currentPerformedAction ?? CharacterAction.NONE;
+
         const updateData = {
             id: entity,
             pos: ViewTracker.getReactCoordsFromPhaser(view.viewContainer, this.context.scene.cameras.main),
             character: {
                 icon: "assets/characters/booker/booker_icon.png",
                 type: CharacterType.PROFESSOR
-            }
+            },
+            currentAction: action
         };
 
         EventBus.emit(GameEvent.CharacterUpdate, updateData);

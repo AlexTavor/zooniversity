@@ -3,3 +3,5 @@ export enum UIEvent {
     PortraitClicked = "portrait-clicked",
     FindViewRequested = "find-view-requested",
 }
+
+export const GameUIEvent = UIEvent;

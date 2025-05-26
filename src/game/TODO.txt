@@ -33,5 +33,31 @@
 
 
 TODO:
-    Improve buff display in panel
-    Food
+    Display
+        UI
+            Containers
+                Collapsible container w/tabs
+                Schedule display (row of schedule icons)
+                Needs display ( column of fillbars)
+            Info tab
+                schedule, action, needs, statuses
+            Thoughts tab
+                Status
+                Thoughts log
+            Logic
+                Status generator
+                Thoughts generator
+        Game
+            Highlight
+                Whatever's under pointer is highlighted
+                highlight is visible on top of world (another layer, view's double but invisible other than outline)
+            Char icon
+                In world, topmost layer
+                Indicate buffs/debuffs as green/red dots
+            Char action
+                Each action generates particles
+                Each action has its own particles behavior - sleep floats away, wood chop arches away spinning like wood chips, etc
+    Sleep
+        Remove Sleep schdule, replace with rest, decide on sleep dynamically
+        Give sleep inertia
+        Make sleep buff only happen if slept more than X time and reached sleep 100

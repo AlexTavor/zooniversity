@@ -6,7 +6,7 @@ import { HarvesterComponent } from "./HarvesterComponent"; // For harvest speed/
 import { TimeComponent } from "../time/TimeComponent";
 import { ResourceComponent } from "../resources/ResourceComponent";
 import { ResourceType } from "../resources/ResourceType";
-import { InteractionSlots } from "../work/InteractionSlots";
+import { InteractionSlots } from "../../components/InteractionSlots";
 import { Tree } from "../trees/Tree";
 
 export class TreeHarvestingSystem extends System {

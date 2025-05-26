@@ -9,11 +9,14 @@ import {Config} from "./config/Config.ts";
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
-    mode: Phaser.Scale.FIT,
     width: Config.Display.Width,
     height: Config.Display.Height,
     parent: 'game-container',
     backgroundColor: '#028af8',
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
     scene: [
         Boot,
         Preloader,

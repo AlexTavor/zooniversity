@@ -23,18 +23,7 @@ export class RelaxBehaviorSystem extends System {
             if (actionIntent.intentType === CharacterIntent.REST) {
                 if (!hasStrollComponent) {
                     // Intent is REST, but not yet strolling. Initiate stroll.
-                    let referencePointEntityId: Entity | null = null;
-                    const home = this.ecs.getComponent(entity, HomeComponent);
-                    if (home && home.homeEntityId !== null && this.ecs.hasEntity(home.homeEntityId)) {
-                        referencePointEntityId = home.homeEntityId;
-                    } else {
-                        const dorms = this.ecs.getEntitiesWithComponent(DormitoryComponent);
-                        if (dorms.length > 0) referencePointEntityId = dorms[0];
-                        else {
-                            const dojos = this.ecs.getEntitiesWithComponent(WoodDojo);
-                            if (dojos.length > 0) referencePointEntityId = dojos[0];
-                        }
-                    }
+                    const referencePointEntityId: Entity | null = this.getStrollRefPointEntityId(entity);
 
                     if (referencePointEntityId !== null) {
                         this.ecs.addComponent(entity, new StrollComponent(referencePointEntityId));
@@ -54,5 +43,20 @@ export class RelaxBehaviorSystem extends System {
                 }
             }
         }
+    }
+
+    private getStrollRefPointEntityId(entity: number) {
+        const home = this.ecs.getComponent(entity, HomeComponent);
+        if (home && home.homeEntityId !== null && this.ecs.hasEntity(home.homeEntityId)) {
+            return home.homeEntityId;
+        } else {
+            const dorms = this.ecs.getEntitiesWithComponent(DormitoryComponent);
+            if (dorms.length > 0) return dorms[0];
+            else {
+                const dojos = this.ecs.getEntitiesWithComponent(WoodDojo);
+                if (dojos.length > 0) return dojos[0];
+            }
+        }
+        return null;
     }
 }

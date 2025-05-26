@@ -5,30 +5,23 @@ import {
     ActionDataType,
     WalkingData,
     ChoppingData,
-    CharacterIntent, // Added for setting REST intent
-    BlockedIntentReason // Added for BlockedIntentComponent
+    CharacterIntent
 } from "../actionIntentData";
 import { Transform } from "../../../components/Transform";
 import { HarvesterComponent } from "../../trees/HarvesterComponent";
 import { Tree } from "../../trees/Tree";
 import { HarvestableComponent } from "../../trees/HarvestableComponent";
-import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
+import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
 import { Pos } from "../../../../utils/Math";
-import { BlockedIntentComponent } from "../BlockedIntentComponent";
 
-// Helper functions to set ActionIntentComponent state (from your provided code)
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
-function setWaitingOrBlocked(ecs: ECS, entity: Entity, aic: ActionIntentComponent, reason: BlockedIntentReason, originalIntent: CharacterIntent): void {
-    // Instead of WAITING action, we now add BlockedIntentComponent and switch intent to REST
-    if (!ecs.hasComponent(entity, BlockedIntentComponent)) { // Add only if not already blocked for something else
-        ecs.addComponent(entity, new BlockedIntentComponent(originalIntent, reason));
-    }
+function setWaitingOrBlocked(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.REST;
-    aic.currentPerformedAction = CharacterAction.IDLE; // Let RelaxBehaviorSystem & handleRestIntentLogic take over
+    aic.currentPerformedAction = CharacterAction.IDLE; 
     aic.actionData = null;
 }
 
@@ -49,7 +42,6 @@ function setChopping(aic: ActionIntentComponent, treeId: Entity): void {
     } as ChoppingData;
 }
 
-// Validation and targeting functions (from your provided code, slightly adapted)
 function isTreeValidForHarvest(ecs: ECS, treeId: Entity): boolean {
     if (!ecs.hasEntity(treeId)) return false;
     const tree = ecs.getComponent(treeId, Tree);
@@ -67,7 +59,7 @@ function releaseAnyWorkSlotHeldByCharacter(ecs: ECS, characterEntity: Entity): v
 function findAndReserveNewHarvestTarget(ecs: ECS, characterEntity: Entity): { treeId: Entity, slotOffset: Pos, treeTransform: Transform } | null {
     releaseAnyWorkSlotHeldByCharacter(ecs, characterEntity);
     const allTrees = ecs.getEntitiesWithComponents([Tree, HarvestableComponent, InteractionSlots, Transform]);
-    // TODO: Implement smarter tree selection (e.g., proximity, using CaveTreeLUTComponent with HomeComponent).
+
     for (const treeId of allTrees) {
         if (isTreeValidForHarvest(ecs, treeId)) {
             const slots = ecs.getComponent(treeId, InteractionSlots);
@@ -80,11 +72,9 @@ function findAndReserveNewHarvestTarget(ecs: ECS, characterEntity: Entity): { tr
     return null;
 }
 
-// This function will be used by BlockedIntentSystem later. It's a read-only check.
-export function canResumeHarvestIntent(ecs: ECS, entity: Entity, bic: BlockedIntentComponent): boolean {
+export function canHarvest(ecs: ECS, entity: Entity): boolean {
     const allTrees = ecs.getEntitiesWithComponents([Tree, HarvestableComponent, InteractionSlots]);
     for (const treeId of allTrees) {
-        if (bic.specificBlockedTargetId && treeId !== bic.specificBlockedTargetId) continue; // If was blocked on a specific tree
         if (isTreeValidForHarvest(ecs, treeId)) {
             const slots = ecs.getComponent(treeId, InteractionSlots);
             // Check if ANY work slot is available, without reserving it.
@@ -107,15 +97,10 @@ export function handleHarvestIntentLogic(
 
     if (!characterTransform || !harvester) return setIdle(actionIntent);
 
-    // Attempt to find/validate a target tree and reserve a slot.
-    // This combines finding a new target if necessary, or re-validating/re-reserving for an existing one.
-    // The findAndReserveNewHarvestTarget already handles releasing previous WORK slots.
     const targetInfo = findAndReserveNewHarvestTarget(ecs, entity);
 
     if (!targetInfo) {
-        // No tree available or slot couldn't be reserved.
-        // Add BlockedIntentComponent and switch intent to REST.
-        setWaitingOrBlocked(ecs, entity, actionIntent, BlockedIntentReason.TARGET_UNAVAILABLE, CharacterIntent.HARVEST);
+        setWaitingOrBlocked(actionIntent,);
         return;
     }
     

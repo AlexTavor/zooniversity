@@ -10,7 +10,7 @@ import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
 import { HarvestableComponent } from "../trees/HarvestableComponent.ts";
 import { ResourceType } from "../resources/ResourceType.ts";
-import { InteractionSlots, SlotLayout, SlotType } from "../work/InteractionSlots.ts";
+import { InteractionSlots, SlotLayout, SlotType } from "../../components/InteractionSlots.ts";
 import { initWorld, createProfessorBooker } from "./init.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
 import { InsideLocationComponent } from "../locomotion/InsideLocationComponent.ts";

@@ -30,28 +30,6 @@ export enum ActionDataType {
     ChoppingData,
     SleepingData,
     StrollingAtPointData,
-    // Add other types as new action data payloads are created
-}
-
-// To be added to: src/game/logic/action-intent/actionIntentData.ts
-
-/**
- * Specifies why a character's original intent could not proceed,
- * leading to the addition of a BlockedIntentComponent.
- */
-export enum BlockedIntentReason {
-    /** No specific reason, or not applicable. */
-    NONE,
-    /** The required target (e.g., tree, bed, construction site) was not found or is not available. */
-    TARGET_UNAVAILABLE,
-    /** Necessary resources (e.g., wood, tools) for the intent are not available. */
-    RESOURCE_UNAVAILABLE,
-    /** Pathfinding to the target failed or is obstructed (for future use). */
-    PATH_BLOCKED,
-    /** A general prerequisite for the intent is not met (e.g., required skill, time of day, specific world state). */
-    CONDITION_NOT_MET,
-    /** The specific slot needed for interaction at the target was unavailable. */
-    SLOT_UNAVAILABLE, 
 }
 
 // --- Payload Interfaces for ActionIntentComponent.actionData ---

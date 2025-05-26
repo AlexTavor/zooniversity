@@ -1,12 +1,11 @@
 import { ECS, Entity } from "../../../../ECS";
 import { ActionIntentComponent } from "../../../../logic/action-intent/ActionIntentComponent";
-import { BlockedIntentComponent } from "../../../../logic/action-intent/BlockedIntentComponent";
 import { StrollComponent } from "../../../../logic/action-intent/StrollComponent";
-import { CharacterIntent, CharacterAction, BlockedIntentReason, isChoppingData, isSleepingData, isStrollingAtPointData, isWalkingData } from "../../../../logic/action-intent/actionIntentData";
+import { CharacterIntent, CharacterAction, isChoppingData, isSleepingData, isStrollingAtPointData, isWalkingData } from "../../../../logic/action-intent/actionIntentData";
 import { DormitoryComponent } from "../../../../logic/buildings/dormitory/DormitoryComponent";
 import { HomeComponent } from "../../../../logic/buildings/dormitory/HomeComponent";
 import { WoodDojo } from "../../../../logic/buildings/wood_dojo/WoodDojo";
-import { ScheduleComponent } from "../../../../logic/scheduling/ScheduleComponent";
+import { ScheduleComponent } from "../../../../logic/characters/ScheduleComponent";
 import { TimeComponent } from "../../../../logic/time/TimeComponent";
 import { Tree } from "../../../../logic/trees/Tree";
 import { deriveBuffs } from "./deriveBuffs";
@@ -107,14 +106,6 @@ function getStatusTextForSleep(ecs: ECS, entity: Entity, aic: ActionIntentCompon
 }
 
 function deriveCurrentStatusText(ecs: ECS, entity: Entity, actionIntent: ActionIntentComponent): string {
-    const blockedIntentComp = ecs.getComponent(entity, BlockedIntentComponent);
-    if (blockedIntentComp) {
-        const reason = BlockedIntentReason[blockedIntentComp.reason] || "unknown reason";
-        const originalIntentName = CharacterIntent[blockedIntentComp.originalIntentType] || "a task";
-        const currentIntentName = CharacterIntent[actionIntent.intentType] || "relaxing";
-        return `Planning ${originalIntentName.toLowerCase()}, but blocked (${reason.toLowerCase().replace(/_/g, ' ')}). Currently ${currentIntentName.toLowerCase()}ing.`;
-    }
-
     switch (actionIntent.intentType) {
         case CharacterIntent.REST:    return getStatusTextForRest(ecs, entity, actionIntent);
         case CharacterIntent.HARVEST: return getStatusTextForHarvest(ecs, entity, actionIntent);

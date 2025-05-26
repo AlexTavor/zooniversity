@@ -386,6 +386,133 @@ export const PhaserGame = forwardRef<IRefPhaserGame, IProps>(function PhaserGame
 
 // ---
 
+import { Entity } from "../ECS";
+
+export enum SlotType {
+    WORK = "work",
+    SLEEP = "sleep"
+}
+
+export enum SlotLayout {
+  RADIAL = "radial",
+  GRID = "grid"
+}
+
+export interface Slot {
+  x: number;
+  y: number;
+  occupiedBy: Entity | null;
+}
+
+interface BaseSlotDefinition {
+  layout: SlotLayout;
+  count: number;
+}
+
+interface RadialSlotDefinition extends BaseSlotDefinition {
+  layout: SlotLayout.RADIAL;
+  radius: number; // Distance from center for RADIAL layout
+}
+
+interface GridSlotDefinition extends BaseSlotDefinition {
+  layout: SlotLayout.GRID;
+  spacing: number; // Distance between slot centers for GRID layout
+}
+
+export type SlotDefinition = RadialSlotDefinition | GridSlotDefinition;
+
+export class InteractionSlots {
+  private slots: Map<SlotType, Slot[]> = new Map();
+
+  constructor(definitions: Partial<Record<SlotType, SlotDefinition>>) {
+    for (const [type, def] of Object.entries(definitions) as [SlotType, SlotDefinition][]) {
+      if (def) { // Ensure def is not undefined if Record value can be optional
+        this.slots.set(type, createSlots(def));
+      }
+    }
+  }
+
+  public reserve(entity: Entity, slotType: SlotType = SlotType.WORK): { x: number; y: number } | null {
+    const group = this.slots.get(slotType);
+    if (!group) return null;
+
+    for (const slot of group) {
+      if (slot.occupiedBy === null) {
+        slot.occupiedBy = entity;
+        return { x: slot.x, y: slot.y };
+      }
+    }
+    return null;
+  }
+
+  public releaseAll(entity: Entity): void {
+    for (const group of this.slots.values()) {
+      for (const slot of group) {
+        if (slot.occupiedBy === entity) {
+          slot.occupiedBy = null;
+        }
+      }
+    }
+  }
+
+  public release(entity: Entity, slotType: SlotType): void {
+    const group = this.slots.get(slotType);
+    if (!group) return;
+
+    for (const slot of group) {
+      if (slot.occupiedBy === entity) {
+        slot.occupiedBy = null;
+      }
+    }
+  }
+
+  public getSlotsArray(type: SlotType): ReadonlyArray<Slot> {
+    return this.slots.get(type) || [];
+  }
+}
+
+function createSlots(definition: SlotDefinition): Slot[] {
+  const slots: Slot[] = [];
+  const { count } = definition;
+
+  if (definition.layout === SlotLayout.RADIAL) {
+    // radius is guaranteed to exist due to the RadialSlotDefinition type
+    const { radius } = definition;
+    if (count <= 0) return slots; // No slots to create
+
+    for (let i = 0; i < count; i++) {
+      const angle = (i / count) * Math.PI * 2;
+      slots.push({
+        x: Math.round(Math.cos(angle) * radius),
+        y: Math.round(Math.sin(angle) * radius),
+        occupiedBy: null
+      });
+    }
+  } else if (definition.layout === SlotLayout.GRID) {
+    // spacing is guaranteed to exist due to the GridSlotDefinition type
+    const { spacing } = definition;
+    if (count <= 0) return slots; // No slots to create
+
+    const gridSize = Math.ceil(Math.sqrt(count));
+    // This offset centers the grid around the local (0,0) point
+    const offsetAmount = (gridSize - 1) / 2;
+
+    for (let i = 0; i < count; i++) {
+      const row = Math.floor(i / gridSize);
+      const col = i % gridSize;
+
+      slots.push({
+        x: Math.round((col - offsetAmount) * spacing),
+        y: Math.round((row - offsetAmount) * spacing),
+        occupiedBy: null
+      });
+    }
+  }
+  return slots;
+}
+
+// ---
+
 import {Component} from "../ECS.ts";
 
 export class Transform extends Component {
@@ -1146,6 +1273,7 @@ export class CharacterViewModule extends ViewDisplayModule {
 import { BuffType } from "../../../logic/buffs/buffsData";
 
 export interface BuffDisplayInfo {
+    isBuff: boolean;
     displayName: string;
     iconAssetKey: string;
     description: string;
@@ -1155,7 +1283,8 @@ export const BuffDisplayRegistry: Partial<Record<BuffType, BuffDisplayInfo>> = {
     [BuffType.RESTED]: {
         displayName: "Rested",
         iconAssetKey: "assets/icons/sleep_icon.png", // Ensure this asset exists
-        description: "Feeling refreshed! +10% to walking and work speed."
+        description: "Feeling refreshed! +10% to walking and work speed.",
+        isBuff: true,
     }
     // Add display information for other BuffTypes as they are created and need UI representation.
 };
@@ -1366,21 +1495,23 @@ export function woodDojoPanelReducer(entity: Entity, ecs: ECS): unknown {
 
 import { ECS, Entity } from "../../../../ECS";
 import { ActionIntentComponent } from "../../../../logic/action-intent/ActionIntentComponent";
-import { BlockedIntentComponent } from "../../../../logic/action-intent/BlockedIntentComponent";
 import { StrollComponent } from "../../../../logic/action-intent/StrollComponent";
-import { CharacterIntent, CharacterAction, BlockedIntentReason, isChoppingData, isSleepingData, isStrollingAtPointData, isWalkingData } from "../../../../logic/action-intent/actionIntentData";
+import { CharacterIntent, CharacterAction, isChoppingData, isSleepingData, isStrollingAtPointData, isWalkingData } from "../../../../logic/action-intent/actionIntentData";
 import { DormitoryComponent } from "../../../../logic/buildings/dormitory/DormitoryComponent";
 import { HomeComponent } from "../../../../logic/buildings/dormitory/HomeComponent";
 import { WoodDojo } from "../../../../logic/buildings/wood_dojo/WoodDojo";
-import { ScheduleComponent } from "../../../../logic/scheduling/ScheduleComponent";
+import { ScheduleComponent } from "../../../../logic/characters/ScheduleComponent";
 import { TimeComponent } from "../../../../logic/time/TimeComponent";
 import { Tree } from "../../../../logic/trees/Tree";
+import { deriveBuffs } from "./deriveBuffs";
+
 
 export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
     const actionIntent = ecs.getComponent(entity, ActionIntentComponent);
     const schedule = ecs.getComponent(entity, ScheduleComponent);
     const timeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
-    const hour = timeEntity ? ecs.getComponent(timeEntity, TimeComponent).hour : 0;
+    const time = ecs.getComponent(timeEntity, TimeComponent);
+    const hour = time.hour;
 
     if (!actionIntent || !schedule) {
         return {
@@ -1399,7 +1530,8 @@ export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
         currentPerformedAction: actionIntent.currentPerformedAction,
         currentScheduleIndex: hour,
         currentScheduleText: convertScheduleIntentToDisplayText(currentScheduledIntent, ecs, entity),
-        scheduleIconTypes: schedule.entries.map(entry => convertScheduleIntentToIconType(entry as CharacterIntent))
+        scheduleIconTypes: schedule.entries.map(entry => convertScheduleIntentToIconType(entry as CharacterIntent)),
+        activeBuffs: deriveBuffs(ecs, entity, time.minutesElapsed)
     };
 }
 
@@ -1469,14 +1601,6 @@ function getStatusTextForSleep(ecs: ECS, entity: Entity, aic: ActionIntentCompon
 }
 
 function deriveCurrentStatusText(ecs: ECS, entity: Entity, actionIntent: ActionIntentComponent): string {
-    const blockedIntentComp = ecs.getComponent(entity, BlockedIntentComponent);
-    if (blockedIntentComp) {
-        const reason = BlockedIntentReason[blockedIntentComp.reason] || "unknown reason";
-        const originalIntentName = CharacterIntent[blockedIntentComp.originalIntentType] || "a task";
-        const currentIntentName = CharacterIntent[actionIntent.intentType] || "relaxing";
-        return `Planning ${originalIntentName.toLowerCase()}, but blocked (${reason.toLowerCase().replace(/_/g, ' ')}). Currently ${currentIntentName.toLowerCase()}ing.`;
-    }
-
     switch (actionIntent.intentType) {
         case CharacterIntent.REST:    return getStatusTextForRest(ecs, entity, actionIntent);
         case CharacterIntent.HARVEST: return getStatusTextForHarvest(ecs, entity, actionIntent);
@@ -1499,6 +1623,95 @@ function getEntityName(ecs: ECS, entityId: Entity | null | undefined): string {
 }
 
 
+// ---
+
+import { ECS, Entity } from "../../../../ECS";
+import { ActiveBuffsComponent } from "../../../../logic/buffs/ActiveBuffsComponent";
+import { AffectedStat, BuffEffectApplicationType, BuffEffect, BUFF_DEFINITIONS } from "../../../../logic/buffs/buffsData";
+import { BuffDisplayRegistry } from "../BuffDisplayRegistry";
+
+export interface DisplayableBuffEffect {
+    stat: AffectedStat;
+    value: number;
+    applicationType: BuffEffectApplicationType;
+    effectText: string; // Textual description of the specific effect
+}
+
+export interface DisplayableBuffData {
+    key: string; 
+    displayName: string;
+    iconAssetKey: string;
+    description: string; // General description of the buff
+    effects: DisplayableBuffEffect[];
+    totalDurationMinutes: number;
+    remainingDurationMinutes: number; 
+    isBuff: boolean; 
+}
+
+function formatEffectValue(value: number, type: BuffEffectApplicationType): string {
+    if (type === BuffEffectApplicationType.FLAT_ADDITIVE) {
+        return `${value >= 0 ? '+' : ''}${value}`;
+    }
+    if (type === BuffEffectApplicationType.PERCENT_MULTIPLICATIVE) {
+        const percentage = Math.round((value - 1) * 100);
+        return `${percentage >= 0 ? '+' : ''}${percentage}%`;
+    }
+    return `${value}`; // Fallback
+}
+
+function affectedStatToText(stat: AffectedStat): string {
+    switch (stat) {
+        case AffectedStat.LOCOMOTION_SPEED: return "Speed";
+        case AffectedStat.WORK_SPEED: return "Work Rate";
+        case AffectedStat.HARVEST_SPEED: return "Harvest Rate";
+        default: {
+            return "";
+        }
+    }
+}
+
+function effectToText(effect: BuffEffect): string {
+    const valueText = formatEffectValue(effect.value, effect.type);
+    const statText = affectedStatToText(effect.stat);
+    return `${statText}: ${valueText}`;
+}
+
+export function deriveBuffs(ecs: ECS, entity: Entity, currentTimeMinutes: number): DisplayableBuffData[] {
+    const displayedBuffs: DisplayableBuffData[] = [];
+    const activeBuffsComp = ecs.getComponent(entity, ActiveBuffsComponent);
+
+    if (!activeBuffsComp || activeBuffsComp.buffs.length === 0) {
+        return displayedBuffs;
+    }
+
+    for (const activeBuff of activeBuffsComp.buffs) {
+        const definition = BUFF_DEFINITIONS[activeBuff.type];
+        const displayInfo = BuffDisplayRegistry[activeBuff.type];
+
+        if (definition && displayInfo) {
+            const remainingDuration = Math.max(0, Math.floor(activeBuff.expirationTimeMinutes - currentTimeMinutes));
+            
+            const processedEffects: DisplayableBuffEffect[] = activeBuff.effects.map(eff => ({
+                stat: eff.stat,
+                value: eff.value,
+                applicationType: eff.type,
+                effectText: effectToText(eff)
+            }));
+
+            displayedBuffs.push({
+                key: activeBuff.type.toString(),
+                displayName: displayInfo.displayName,
+                iconAssetKey: displayInfo.iconAssetKey,
+                description: displayInfo.description,
+                effects: processedEffects,
+                totalDurationMinutes: definition.defaultDurationMinutes,
+                remainingDurationMinutes: remainingDuration,
+                isBuff: displayInfo.isBuff 
+            });
+        }
+    }
+    return displayedBuffs;
+}
 
 // ---
 
@@ -3941,20 +4154,10 @@ import { handleSleepIntentLogic } from "./intent-handlers/handleSleepIntentLogic
 export class ActionIntentSystem extends System {
     public componentsRequired = new Set<Function>([ActionIntentComponent]);
 
-    // To track if an intent has changed, requiring actionData cleanup by the new helper.
-    private lastIntentTypeCache: Map<Entity, CharacterIntent> = new Map();
-
     public update(entities: Set<Entity>, delta: number): void {
         for (const entity of entities) {
             const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
             const currentIntent = actionIntent.intentType;
-            const previousIntent = this.lastIntentTypeCache.get(entity);
-
-            if (currentIntent !== previousIntent && previousIntent !== undefined) {
-                // Intent has changed, the new helper is responsible for setting appropriate actionData.
-                // Explicitly nullifying here ensures no stale data if a helper doesn't set it.
-                actionIntent.actionData = null; 
-            }
 
             switch (currentIntent) {
                 case CharacterIntent.HARVEST:
@@ -3967,126 +4170,10 @@ export class ActionIntentSystem extends System {
                     handleRestIntentLogic(this.ecs, entity, actionIntent);
                     break;
                 default:
-                    // Unhandled intent, ensure a sane default action state
-                    if (actionIntent.currentPerformedAction !== CharacterAction.IDLE) {
-                        actionIntent.currentPerformedAction = CharacterAction.IDLE;
-                    }
-                    if (actionIntent.actionData !== null) {
-                        actionIntent.actionData = null;
-                    }
+                    actionIntent.currentPerformedAction = CharacterAction.IDLE;
+                    actionIntent.actionData = null;
                     break;
             }
-            this.lastIntentTypeCache.set(entity, currentIntent);
-        }
-
-        // Cleanup cache for destroyed entities
-        const currentEntities = new Set(entities);
-        for (const entityId of this.lastIntentTypeCache.keys()) {
-            if (!currentEntities.has(entityId)) {
-                this.lastIntentTypeCache.delete(entityId);
-            }
-        }
-    }
-}
-
-// ---
-
-import { Component, Entity } from "../../ECS";
-import { BlockedIntentReason, CharacterIntent } from "./actionIntentData";
-
-/**
- * Added to a character when their primary intent is blocked.
- * Used by BlockedIntentSystem to periodically re-check if the original intent can be resumed.
- * Also used by ScheduleSystem to clear this state if a new scheduled intent takes precedence.
- */
-export class BlockedIntentComponent extends Component {
-    /** The CharacterIntent that was blocked. */
-    public originalIntentType: CharacterIntent;
-
-    /** The reason why the originalIntentType was blocked. */
-    public reason: BlockedIntentReason;
-
-    /** Optional: The specific entity that was the target of the blocked intent, if applicable. */
-    public specificBlockedTargetId?: Entity;
-
-    /**
-     * Optional: Cooldown timer (e.g., in milliseconds or game time units)
-     * to prevent BlockedIntentSystem from re-checking conditions too frequently.
-     * BlockedIntentSystem would decrement this and only re-check when it reaches zero.
-     */
-    public reCheckCooldown?: number; 
-
-    constructor(
-        originalIntentType: CharacterIntent,
-        reason: BlockedIntentReason,
-        specificBlockedTargetId?: Entity,
-        initialReCheckCooldown?: number // e.g., time in ms or game minutes before first re-check
-    ) {
-        super();
-        this.originalIntentType = originalIntentType;
-        this.reason = reason;
-        this.specificBlockedTargetId = specificBlockedTargetId;
-        this.reCheckCooldown = initialReCheckCooldown;
-    }
-}
-
-// ---
-
-import { ECS, Entity, System } from "../../ECS";
-import { ActionIntentComponent } from "./ActionIntentComponent";
-import { BlockedIntentComponent } from "./BlockedIntentComponent";
-import { CharacterIntent, CharacterAction } from "./actionIntentData";
-import { canResumeHarvestIntent } from "./intent-handlers/handleHarvestIntentLogic";
-import { canResumeSleepIntent } from "./intent-handlers/handleSleepIntentLogic";
-
-// Placeholder type for these check functions
-type CanResumeIntentLogic = (ecs: ECS, entity: Entity, blockedIntentComp: BlockedIntentComponent) => boolean;
-
-export class BlockedIntentSystem extends System {
-    public componentsRequired = new Set<Function>([ActionIntentComponent, BlockedIntentComponent]);
-
-    private intentRecheckLogicMap: Map<CharacterIntent, CanResumeIntentLogic>;
-
-    constructor() {
-        super();
-        // This map links an original blocked intent to its specific "can resume" check function.
-        this.intentRecheckLogicMap = new Map([
-            [CharacterIntent.HARVEST, canResumeHarvestIntent],
-            [CharacterIntent.SLEEP, canResumeSleepIntent],
-            // Add other mappings for intents that can be blocked and have re-check logic.
-            // e.g., [CharacterIntent.BUILD, canResumeBuildIntent],
-        ]);
-    }
-
-    public update(entities: Set<Entity>, delta: number): void {
-        for (const entity of entities) {
-            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
-            const blockedIntent = this.ecs.getComponent(entity, BlockedIntentComponent); // Exists due to componentsRequired
-
-            // Optional: Implement cooldown logic using blockedIntent.reCheckCooldown if needed,
-            // to avoid checking every frame. For simplicity, checking every frame here.
-            // if (blockedIntent.reCheckCooldown && blockedIntent.reCheckCooldown > 0) {
-            //     blockedIntent.reCheckCooldown -= delta; // Assuming delta is in ms
-            //     continue;
-            // }
-
-            const canResumeLogic = this.intentRecheckLogicMap.get(blockedIntent.originalIntentType);
-
-            if (canResumeLogic && canResumeLogic(this.ecs, entity, blockedIntent)) {
-                // The original blocked intent can now be resumed.
-                actionIntent.intentType = blockedIntent.originalIntentType;
-                actionIntent.currentPerformedAction = CharacterAction.IDLE; // Reset action
-                actionIntent.actionData = null;                             // Clear previous action data
-
-                this.ecs.removeComponent(entity, BlockedIntentComponent);
-                
-                // If the character was in a REST state (e.g., strolling) due to the block,
-                // RelaxBehaviorSystem will detect the intentType change away from REST
-                // and clean up StrollComponent, reset speed, etc., on its next update.
-            }
-            // If canResumeLogic returns false, the character remains in their current state
-            // (likely REST, being handled by RelaxBehaviorSystem and handleRestIntentLogic).
-            // The BlockedIntentComponent also remains.
         }
     }
 }
@@ -4118,18 +4205,7 @@ export class RelaxBehaviorSystem extends System {
             if (actionIntent.intentType === CharacterIntent.REST) {
                 if (!hasStrollComponent) {
                     // Intent is REST, but not yet strolling. Initiate stroll.
-                    let referencePointEntityId: Entity | null = null;
-                    const home = this.ecs.getComponent(entity, HomeComponent);
-                    if (home && home.homeEntityId !== null && this.ecs.hasEntity(home.homeEntityId)) {
-                        referencePointEntityId = home.homeEntityId;
-                    } else {
-                        const dorms = this.ecs.getEntitiesWithComponent(DormitoryComponent);
-                        if (dorms.length > 0) referencePointEntityId = dorms[0];
-                        else {
-                            const dojos = this.ecs.getEntitiesWithComponent(WoodDojo);
-                            if (dojos.length > 0) referencePointEntityId = dojos[0];
-                        }
-                    }
+                    const referencePointEntityId: Entity | null = this.getStrollRefPointEntityId(entity);
 
                     if (referencePointEntityId !== null) {
                         this.ecs.addComponent(entity, new StrollComponent(referencePointEntityId));
@@ -4149,6 +4225,21 @@ export class RelaxBehaviorSystem extends System {
                 }
             }
         }
+    }
+
+    private getStrollRefPointEntityId(entity: number) {
+        const home = this.ecs.getComponent(entity, HomeComponent);
+        if (home && home.homeEntityId !== null && this.ecs.hasEntity(home.homeEntityId)) {
+            return home.homeEntityId;
+        } else {
+            const dorms = this.ecs.getEntitiesWithComponent(DormitoryComponent);
+            if (dorms.length > 0) return dorms[0];
+            else {
+                const dojos = this.ecs.getEntitiesWithComponent(WoodDojo);
+                if (dojos.length > 0) return dojos[0];
+            }
+        }
+        return null;
     }
 }
 
@@ -4211,28 +4302,6 @@ export enum ActionDataType {
     ChoppingData,
     SleepingData,
     StrollingAtPointData,
-    // Add other types as new action data payloads are created
-}
-
-// To be added to: src/game/logic/action-intent/actionIntentData.ts
-
-/**
- * Specifies why a character's original intent could not proceed,
- * leading to the addition of a BlockedIntentComponent.
- */
-export enum BlockedIntentReason {
-    /** No specific reason, or not applicable. */
-    NONE,
-    /** The required target (e.g., tree, bed, construction site) was not found or is not available. */
-    TARGET_UNAVAILABLE,
-    /** Necessary resources (e.g., wood, tools) for the intent are not available. */
-    RESOURCE_UNAVAILABLE,
-    /** Pathfinding to the target failed or is obstructed (for future use). */
-    PATH_BLOCKED,
-    /** A general prerequisite for the intent is not met (e.g., required skill, time of day, specific world state). */
-    CONDITION_NOT_MET,
-    /** The specific slot needed for interaction at the target was unavailable. */
-    SLOT_UNAVAILABLE, 
 }
 
 // --- Payload Interfaces for ActionIntentComponent.actionData ---
@@ -4288,30 +4357,23 @@ import {
     ActionDataType,
     WalkingData,
     ChoppingData,
-    CharacterIntent, // Added for setting REST intent
-    BlockedIntentReason // Added for BlockedIntentComponent
+    CharacterIntent
 } from "../actionIntentData";
 import { Transform } from "../../../components/Transform";
 import { HarvesterComponent } from "../../trees/HarvesterComponent";
 import { Tree } from "../../trees/Tree";
 import { HarvestableComponent } from "../../trees/HarvestableComponent";
-import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
+import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
 import { Pos } from "../../../../utils/Math";
-import { BlockedIntentComponent } from "../BlockedIntentComponent";
 
-// Helper functions to set ActionIntentComponent state (from your provided code)
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
-function setWaitingOrBlocked(ecs: ECS, entity: Entity, aic: ActionIntentComponent, reason: BlockedIntentReason, originalIntent: CharacterIntent): void {
-    // Instead of WAITING action, we now add BlockedIntentComponent and switch intent to REST
-    if (!ecs.hasComponent(entity, BlockedIntentComponent)) { // Add only if not already blocked for something else
-        ecs.addComponent(entity, new BlockedIntentComponent(originalIntent, reason));
-    }
+function setWaitingOrBlocked(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.REST;
-    aic.currentPerformedAction = CharacterAction.IDLE; // Let RelaxBehaviorSystem & handleRestIntentLogic take over
+    aic.currentPerformedAction = CharacterAction.IDLE; 
     aic.actionData = null;
 }
 
@@ -4332,7 +4394,6 @@ function setChopping(aic: ActionIntentComponent, treeId: Entity): void {
     } as ChoppingData;
 }
 
-// Validation and targeting functions (from your provided code, slightly adapted)
 function isTreeValidForHarvest(ecs: ECS, treeId: Entity): boolean {
     if (!ecs.hasEntity(treeId)) return false;
     const tree = ecs.getComponent(treeId, Tree);
@@ -4350,7 +4411,7 @@ function releaseAnyWorkSlotHeldByCharacter(ecs: ECS, characterEntity: Entity): v
 function findAndReserveNewHarvestTarget(ecs: ECS, characterEntity: Entity): { treeId: Entity, slotOffset: Pos, treeTransform: Transform } | null {
     releaseAnyWorkSlotHeldByCharacter(ecs, characterEntity);
     const allTrees = ecs.getEntitiesWithComponents([Tree, HarvestableComponent, InteractionSlots, Transform]);
-    // TODO: Implement smarter tree selection (e.g., proximity, using CaveTreeLUTComponent with HomeComponent).
+
     for (const treeId of allTrees) {
         if (isTreeValidForHarvest(ecs, treeId)) {
             const slots = ecs.getComponent(treeId, InteractionSlots);
@@ -4363,11 +4424,9 @@ function findAndReserveNewHarvestTarget(ecs: ECS, characterEntity: Entity): { tr
     return null;
 }
 
-// This function will be used by BlockedIntentSystem later. It's a read-only check.
-export function canResumeHarvestIntent(ecs: ECS, entity: Entity, bic: BlockedIntentComponent): boolean {
+export function canHarvest(ecs: ECS, entity: Entity): boolean {
     const allTrees = ecs.getEntitiesWithComponents([Tree, HarvestableComponent, InteractionSlots]);
     for (const treeId of allTrees) {
-        if (bic.specificBlockedTargetId && treeId !== bic.specificBlockedTargetId) continue; // If was blocked on a specific tree
         if (isTreeValidForHarvest(ecs, treeId)) {
             const slots = ecs.getComponent(treeId, InteractionSlots);
             // Check if ANY work slot is available, without reserving it.
@@ -4390,15 +4449,10 @@ export function handleHarvestIntentLogic(
 
     if (!characterTransform || !harvester) return setIdle(actionIntent);
 
-    // Attempt to find/validate a target tree and reserve a slot.
-    // This combines finding a new target if necessary, or re-validating/re-reserving for an existing one.
-    // The findAndReserveNewHarvestTarget already handles releasing previous WORK slots.
     const targetInfo = findAndReserveNewHarvestTarget(ecs, entity);
 
     if (!targetInfo) {
-        // No tree available or slot couldn't be reserved.
-        // Add BlockedIntentComponent and switch intent to REST.
-        setWaitingOrBlocked(ecs, entity, actionIntent, BlockedIntentReason.TARGET_UNAVAILABLE, CharacterIntent.HARVEST);
+        setWaitingOrBlocked(actionIntent,);
         return;
     }
     
@@ -4520,7 +4574,8 @@ export function handleRestIntentLogic(
 
     const worldTimeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
     if (!worldTimeEntity) return setRelaxing(actionIntent); // Cannot manage pause without time
-    const currentGameTime = ecs.getComponent(worldTimeEntity, TimeComponent).minutesElapsed;
+    const time = ecs.getComponent(worldTimeEntity, TimeComponent);
+    const currentGameTime = time.minutesElapsed;
 
     if (strollComp.isPausedAtTarget) {
         if (currentGameTime >= strollComp.pauseUntilTime) {
@@ -4528,7 +4583,6 @@ export function handleRestIntentLogic(
             strollComp.lastTargetTreeId = strollComp.currentTargetTreeId;
             strollComp.currentTargetTreeId = undefined;
             strollComp.currentPathTargetPos = undefined;
-            locomotion.arrived = false; 
         } else {
             if (strollComp.currentTargetTreeId) {
                 setStrollingAtPoint(actionIntent, strollComp.currentTargetTreeId);
@@ -4552,7 +4606,6 @@ export function handleRestIntentLogic(
         if (nextTargetInfo) {
             strollComp.currentTargetTreeId = nextTargetInfo.treeId;
             strollComp.currentPathTargetPos = nextTargetInfo.strollTargetPos;
-            locomotion.arrived = false; 
             actionIntent.actionData = null;
         } else {
             ecs.removeComponent(entity, StrollComponent);
@@ -4560,22 +4613,29 @@ export function handleRestIntentLogic(
         }
     }
     
-    // Use locomotion.arrived (set by LocomotionSystem based on exact rounded position match)
+    // We're still walking
     if (!locomotion.arrived) {
         const currentWalkData = actionIntent.actionData as WalkingData | null;
         if (actionIntent.currentPerformedAction !== CharacterAction.WALKING ||
             !isWalkingData(currentWalkData) ||
-            currentWalkData.targetPosition.x !== strollComp.currentPathTargetPos!.x ||
-            currentWalkData.targetPosition.y !== strollComp.currentPathTargetPos!.y ||
             currentWalkData.ultimateTargetEntityId !== strollComp.currentTargetTreeId) {
             
             setWalkingToStrollPoint(actionIntent, strollComp.currentPathTargetPos!, strollComp.currentTargetTreeId);
         }
-    } else { // Arrived at strollComp.currentPathTargetPos
+
+        return;
+    } 
+    
+    // We've arrived, waiting around
+    if (actionIntent.currentPerformedAction != CharacterAction.STROLLING) {
         setStrollingAtPoint(actionIntent, strollComp.currentTargetTreeId!);
         strollComp.isPausedAtTarget = true;
         const pauseDuration = Math.random() * (MAX_PAUSE_DURATION_GAME_MINUTES - MIN_PAUSE_DURATION_GAME_MINUTES) + MIN_PAUSE_DURATION_GAME_MINUTES;
         strollComp.pauseUntilTime = currentGameTime + pauseDuration;
+    }
+
+    if (strollComp.pauseUntilTime >= currentGameTime){
+        setWalkingToStrollPoint(actionIntent, {x:0,y:0});
     }
 }
 
@@ -4588,25 +4648,20 @@ import {
     ActionDataType,
     WalkingData,
     SleepingData,
-    CharacterIntent,
-    BlockedIntentReason
+    CharacterIntent
 } from "../actionIntentData";
 import { Transform } from "../../../components/Transform";
-import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
+import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
 import { DormitoryComponent } from "../../buildings/dormitory/DormitoryComponent";
 import { Pos } from "../../../../utils/Math";
 import { LocomotionComponent } from "../../locomotion/LocomotionComponent"; 
-import { BlockedIntentComponent } from "../BlockedIntentComponent";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
-function setBlocked(ecs: ECS, entity: Entity, aic: ActionIntentComponent, reason: BlockedIntentReason, originalIntent: CharacterIntent, specificTargetId?: Entity): void {
-    if (!ecs.hasComponent(entity, BlockedIntentComponent)) {
-        ecs.addComponent(entity, new BlockedIntentComponent(originalIntent, reason, specificTargetId));
-    }
+function setBlocked(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.REST;
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
@@ -4657,11 +4712,9 @@ function findAndReserveNewSleepTarget(ecs: ECS, characterEntity: Entity): { bedE
     return null;
 }
 
-// This "canResume" function is for BlockedIntentSystem and performs read-only checks.
-export function canResumeSleepIntent(ecs: ECS, entity: Entity, bic: BlockedIntentComponent): boolean {
+export function canSleep(ecs: ECS, entity: Entity): boolean {
     const allDormitories = ecs.getEntitiesWithComponents([DormitoryComponent, InteractionSlots]);
     for (const dormitoryId of allDormitories) {
-        if (bic.specificBlockedTargetId && dormitoryId !== bic.specificBlockedTargetId) continue;
         if (isDormitoryFunctionallyValid(ecs, dormitoryId)) {
             const slots = ecs.getComponent(dormitoryId, InteractionSlots);
             if (slots.getSlotsArray(SlotType.SLEEP).some(slot => slot.occupiedBy === null || slot.occupiedBy === entity)) {
@@ -4683,30 +4736,28 @@ export function handleSleepIntentLogic(
     const targetInfo = findAndReserveNewSleepTarget(ecs, entity);
 
     if (!targetInfo) {
-        setBlocked(ecs, entity, actionIntent, BlockedIntentReason.SLOT_UNAVAILABLE, CharacterIntent.SLEEP);
+        setBlocked(actionIntent);
         return;
     }
     
-    const { bedEntityId, slotOffset, bedBuildingTransform } = targetInfo;
-    const exactSleepPosition = { 
-        x: Math.round(bedBuildingTransform.x + slotOffset.x), 
-        y: Math.round(bedBuildingTransform.y + slotOffset.y) 
-    };
-    
-    const roundedCharX = Math.round(characterTransform.x);
-    const roundedCharY = Math.round(characterTransform.y);
+    const locomotion = ecs.getComponent(entity, LocomotionComponent);
 
-    // Check if character is at the exact rounded target position.
-    if (roundedCharX !== exactSleepPosition.x || roundedCharY !== exactSleepPosition.y) {
-        setWalkingToSlot(actionIntent, exactSleepPosition, bedEntityId);
-        // If we just set a new walking target, ensure LocomotionComponent.arrived is false for this new walk.
-        const locomotion = ecs.getComponent(entity, LocomotionComponent);
-        if (locomotion) {
-            locomotion.arrived = false;
-        }
-    } else { 
-        // Character is already at the exact (rounded) slot position.
+    const { bedEntityId, slotOffset, bedBuildingTransform } = targetInfo;
+
+    if (locomotion.arrived){
+        if (actionIntent.currentPerformedAction == CharacterAction.SLEEPING) return;
+
         setSleeping(actionIntent, bedEntityId, slotOffset);
+        return;
+    }
+
+    if (actionIntent.currentPerformedAction != CharacterAction.WALKING) {
+        const exactSleepPosition = { 
+            x: Math.round(bedBuildingTransform.x + slotOffset.x), 
+            y: Math.round(bedBuildingTransform.y + slotOffset.y) 
+        };
+    
+        setWalkingToSlot(actionIntent, exactSleepPosition, bedEntityId);
     }
 }
 
@@ -4857,6 +4908,7 @@ export class SleepEffectsSystem extends System {
             if (actionIntent.currentPerformedAction === CharacterAction.SLEEPING) {
                 if (!sleepState) {
                     this.ecs.addComponent(entity, new CharacterSleepStateComponent(currentTimeMinutes));
+                    return;
                 }
             } else { // Not currently SLEEPING
                 if (sleepState) {
@@ -4884,7 +4936,7 @@ import { AffectedStat, BuffEffect, BuffEffectApplicationType } from "./buffsData
 import { LocomotionComponent } from "../locomotion/LocomotionComponent"; // Adjust path
 import { HarvesterComponent as HarvesterComponent } from "../trees/HarvesterComponent"; // Adjust path, aliased to avoid name clash
 import { ActiveBuffsComponent } from "./ActiveBuffsComponent";
-import { WorkerComponent } from "../work/WorkerComponent";
+import { WorkerComponent } from "../characters/WorkerComponent";
 
 export class StatCalculator {
 
@@ -5180,6 +5232,46 @@ export class Character extends Component {
 // ---
 
 import { Component } from "../../ECS";
+import { CharacterIntent } from "../action-intent/actionIntentData";
+
+export type ScheduleEntry = CharacterIntent; // One entry per hour
+
+export class ScheduleComponent extends Component {
+  public lastScheduleStartHour: number = 0; // Time in minutes when the schedule started
+
+  constructor(public entries: ScheduleEntry[]) {
+    super();
+  }
+}
+
+export function createStandardSchedule(): ScheduleComponent {
+  return new ScheduleComponent([
+    CharacterIntent.SLEEP,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.REST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.SLEEP
+  ]);
+}
+
+// ---
+
+import { Component } from "../../ECS";
+
+export class WorkerComponent extends Component {
+    public workSpeed: number = 1; 
+
+    constructor() {
+        super();
+    }
+}
+
+// ---
+
+import { Component } from "../../ECS";
 
 export type TimeSpeed = 'paused' | 'normal' | 'fast' | 'veryfast';
 
@@ -5240,6 +5332,109 @@ export class InputSystem extends System {
             EventBus.off(GameEvent.SelectionChanged, boundHandleSelectionChange);
         };
     }
+}
+
+
+// ---
+
+import { Entity, System } from "../../ECS";
+import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
+import { CharacterIntent, CharacterAction } from "../action-intent/actionIntentData";
+import { ScheduleComponent } from "../characters/ScheduleComponent";
+import { getCurrentHour } from "../time/TimeComponent";
+import { NeedsComponent } from "../needs/NeedsComponent";
+import { calculateHarvestIntentWeight } from "./calculateHarvestIntentWeight";
+import { calculateSleepIntentWeight } from "./calculateSleepIntentWeight";
+import { calculateRestIntentWeight } from "./calculateRestIntentWeight";
+
+export class IntentSelectionSystem extends System {
+    public componentsRequired = new Set<Function>([
+        ActionIntentComponent,
+        ScheduleComponent,
+        NeedsComponent
+    ]);
+
+    public update(entities: Set<Entity>, delta: number): void {
+        const currentHour = getCurrentHour(this.ecs);
+        if (currentHour === null) return;
+
+        for (const entity of entities) {
+            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
+            const schedule = this.ecs.getComponent(entity, ScheduleComponent);
+            const needs = this.ecs.getComponent(entity, NeedsComponent);
+
+            const intentWeights: { intent: CharacterIntent, weight: number }[] = [];
+
+            // Calculate weights for all relevant intents
+            intentWeights.push({ intent: CharacterIntent.SLEEP, weight: calculateSleepIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
+            intentWeights.push({ intent: CharacterIntent.HARVEST, weight: calculateHarvestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
+            intentWeights.push({ intent: CharacterIntent.REST, weight: calculateRestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
+
+            // Sort by weight descending
+            intentWeights.sort((a, b) => b.weight - a.weight);
+
+            let chosenIntent = CharacterIntent.REST;
+
+            if (intentWeights.length > 0 && intentWeights[0].weight > 0) {
+                chosenIntent = intentWeights[0].intent;
+            }
+
+            if (actionIntent.intentType !== chosenIntent) {
+                actionIntent.intentType = chosenIntent;
+                actionIntent.currentPerformedAction = CharacterAction.IDLE; // Reset action
+                actionIntent.actionData = null; // Clear data for the new intent
+            }
+        }
+    }
+}
+
+// ---
+
+import { ECS, Entity } from "../../ECS";
+import { CharacterIntent } from "../action-intent/actionIntentData";
+import { canHarvest as canHarvest } from "../action-intent/intent-handlers/handleHarvestIntentLogic";
+import { ScheduleComponent } from "../characters/ScheduleComponent";
+import { NeedsComponent } from "../needs/NeedsComponent";
+
+export function calculateHarvestIntentWeight(ecs: ECS, entity: Entity, schedule: ScheduleComponent, needs: NeedsComponent, currentHour: number): number {
+    if (schedule.entries[currentHour] !== CharacterIntent.HARVEST) return 0;
+    return canHarvest(ecs, entity) ? 100 : 0;
+}
+
+
+// ---
+
+import { ECS, Entity } from "../../ECS";
+import { CharacterIntent } from "../action-intent/actionIntentData";
+import { ScheduleComponent } from "../characters/ScheduleComponent";
+import { NeedsComponent } from "../needs/NeedsComponent";
+
+export function calculateRestIntentWeight(ecs: ECS, entity: Entity, schedule: ScheduleComponent, needs: NeedsComponent, currentHour: number): number {
+    if (schedule.entries[currentHour] === CharacterIntent.REST) return 60;
+    return 10;
+}
+
+
+// ---
+
+import { ECS, Entity } from "../../ECS";
+import { CharacterIntent } from "../action-intent/actionIntentData";
+import { canSleep as canSleep } from "../action-intent/intent-handlers/handleSleepIntentLogic";
+import { ScheduleComponent } from "../characters/ScheduleComponent";
+import { NeedsComponent } from "../needs/NeedsComponent";
+
+export function calculateSleepIntentWeight(ecs: ECS, entity: Entity, schedule: ScheduleComponent, needs: NeedsComponent, currentHour: number): number {
+    let weight = 0;
+    const sleepNeed = needs.sleep.current / needs.sleep.max; // Normalized 1.0 (full) to 0.0 (empty)
+
+    if (sleepNeed < 0.3) weight += 200 * (1 - sleepNeed); // Very high weight if very tired
+    else if (sleepNeed < 0.6) weight += 50 * (1 - sleepNeed);
+
+    if (schedule.entries[currentHour] === CharacterIntent.SLEEP) {
+        weight += 80; // Boost if scheduled
+    }
+
+    return canSleep(ecs, entity) ? weight : 0;
 }
 
 
@@ -5309,13 +5504,14 @@ export class LocomotionSystem extends System {
                 y: Math.round(walkData.targetPosition.y) 
             };
 
-            const justArrivedOrIsAtTarget = this.processArrival(locomotion, transform, targetPosition);
+            const isArrived = this.processArrival(locomotion, transform, targetPosition);
             
-            this.updateLocationState(transform, walkData.ultimateTargetEntityId, locomotion.arrived);
-
-            if (justArrivedOrIsAtTarget) {
+            if (isArrived) {
+                this.updateLocationState(transform, walkData.ultimateTargetEntityId, isArrived);
                 continue; 
             }
+
+            transform.locationState = LocationState.OUTSIDE;
             
             const speed = StatCalculator.getEffectiveStat(this.ecs, entity, AffectedStat.LOCOMOTION_SPEED);
             this.performMovementStep(transform, targetPosition, speed * scaledDelta);
@@ -5324,7 +5520,7 @@ export class LocomotionSystem extends System {
     }
 
     private isEntityActivelyWalking(actionIntent: ActionIntentComponent): boolean {
-        return actionIntent.currentPerformedAction == CharacterAction.WALKING && actionIntent.actionData.targetPosition;
+        return actionIntent.currentPerformedAction == CharacterAction.WALKING && !!(actionIntent?.actionData?.targetPosition);
     }
 
     private processArrival(locomotion: LocomotionComponent, transform: Transform, targetPos: Pos): boolean {
@@ -5336,24 +5532,18 @@ export class LocomotionSystem extends System {
                 transform.x = targetPos.x; 
                 transform.y = targetPos.y;
                 locomotion.arrived = true;
-                console.log(`Arrived at the target position (${targetPos.x}, ${targetPos.y}).`);
             }
             return true; // Is at target
+        } else if (locomotion.arrived) {
+            locomotion.arrived = false; // Reset arrived state if not at target
         }
-        
-        // If not at target, ensure arrived is false
-        if (locomotion.arrived) {
-            locomotion.arrived = false; 
-        }
+
         return false; // Not at target
     }
     
     private updateLocationState(transform: Transform, ultimateTargetEntityId: Entity | undefined, isArrivedAtTarget: boolean): void {
         if (ultimateTargetEntityId && this.ecs.hasEntity(ultimateTargetEntityId) && this.ecs.hasComponent(ultimateTargetEntityId, InsideLocationComponent)) {
             transform.locationState = isArrivedAtTarget ? LocationState.INSIDE : LocationState.OUTSIDE;
-            console.log(`Entity ${ultimateTargetEntityId} is ${isArrivedAtTarget ? 'inside' : 'outside'} the location.`);
-        } else {
-            transform.locationState = LocationState.OUTSIDE;
         }
     }
 
@@ -5431,6 +5621,55 @@ function distanceSq(a: Pos, b: Pos): number {
     return dx * dx + dy * dy;
 }
 
+
+// ---
+
+import { Component } from "../../ECS";
+
+export class NeedsComponent extends Component {
+    public sleep = { current: 100, max: 100, downRatePerMinute: 0.5, upRatePerMinute: 1 };
+}
+
+// ---
+
+import { System, Entity, ECS } from "../../ECS";
+import { TimeConfig } from "../../config/TimeConfig";
+import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
+import { CharacterAction } from "../action-intent/actionIntentData";
+import { getTime } from "../time/TimeComponent";
+import { NeedsComponent } from "./NeedsComponent";
+
+export class SleepNeedSystem extends System {
+    public componentsRequired = new Set<Function>([NeedsComponent, ActionIntentComponent]);
+
+    private getDeltaInGameMinutes(ecs: ECS, deltaMs: number): number {
+        const time = getTime(ecs);
+        if (time.speedFactor === 0) return 0;
+
+        const realSecondsPassed = deltaMs / 1000;
+        // Using TimeConfig to correctly scale real seconds to game minutes
+        const gameMinutesPassed = (realSecondsPassed / TimeConfig.RealSecondsPerHour) * TimeConfig.MinutesPerHour * time.speedFactor;
+        return gameMinutesPassed;
+    }
+
+    public update(entities: Set<Entity>, delta: number): void {
+        const gameMinutesPassedThisFrame = this.getDeltaInGameMinutes(this.ecs, delta);
+        if (gameMinutesPassedThisFrame === 0) return;
+
+        for (const entity of entities) {
+            const needs = this.ecs.getComponent(entity, NeedsComponent);
+            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
+
+            if (actionIntent.currentPerformedAction === CharacterAction.SLEEPING) {
+                needs.sleep.current += needs.sleep.upRatePerMinute * gameMinutesPassedThisFrame;
+            } else {
+                needs.sleep.current -= needs.sleep.downRatePerMinute * gameMinutesPassedThisFrame;
+            }
+
+            needs.sleep.current = Math.max(0, Math.min(needs.sleep.current, needs.sleep.max));
+        }
+    }
+}
 
 // ---
 
@@ -5593,88 +5832,6 @@ export enum ResourceType {
 
 // ---
 
-import { Component } from "../../ECS";
-import { CharacterIntent } from "../action-intent/actionIntentData";
-
-export type ScheduleEntry = CharacterIntent; // One entry per hour
-
-export class ScheduleComponent extends Component {
-  public lastScheduleStartHour: number = 0; // Time in minutes when the schedule started
-
-  constructor(public entries: ScheduleEntry[]) {
-    super();
-  }
-}
-
-export function createStandardSchedule(): ScheduleComponent {
-  return new ScheduleComponent([
-    CharacterIntent.SLEEP,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.REST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.SLEEP
-  ]);
-}
-
-// ---
-
-import { ECS, Entity, System } from "../../ECS";
-import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
-import { BlockedIntentComponent } from "../action-intent/BlockedIntentComponent";
-import { CharacterIntent } from "../action-intent/actionIntentData";
-import { TimeComponent } from "../time/TimeComponent";
-import { ScheduleComponent } from "./ScheduleComponent";
-
-export class ScheduleSystem extends System {
-    public componentsRequired = new Set<Function>([ScheduleComponent, ActionIntentComponent]);
-    private worldTimeEntity: Entity | null = null;
-
-    private getCurrentHour(ecs: ECS): number | null {
-        if (this.worldTimeEntity === null || !ecs.hasEntity(this.worldTimeEntity)) {
-            const timeEntities = ecs.getEntitiesWithComponent(TimeComponent);
-            if (timeEntities.length > 0) {
-                this.worldTimeEntity = timeEntities[0];
-            } else {
-                return null; 
-            }
-        }
-        return ecs.getComponent(this.worldTimeEntity, TimeComponent).hour;
-    }
-
-    public update(entities: Set<Entity>, delta: number): void {
-        const currentHour = this.getCurrentHour(this.ecs);
-        if (currentHour === null) return;
-
-        for (const entity of entities) {
-            const schedule = this.ecs.getComponent(entity, ScheduleComponent);
-
-            if (schedule.lastScheduleStartHour == currentHour) {
-                // No need to update if the schedule hasn't changed since the last hour
-                continue;
-            }
-
-            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
-
-            const newScheduledIntent: CharacterIntent = schedule.entries[currentHour] as CharacterIntent;
-
-            if (actionIntent.intentType !== newScheduledIntent) {
-                actionIntent.intentType = newScheduledIntent;
-                schedule.lastScheduleStartHour = currentHour;
-
-                // If schedule dictates a new intent, any previous "blocked" state is now void.
-                if (this.ecs.hasComponent(entity, BlockedIntentComponent)) {
-                    this.ecs.removeComponent(entity, BlockedIntentComponent);
-                }
-            }
-        }
-    }
-}
-
-// ---
-
 
 // All components should be serializable to JSON.
 import {Entity} from "../../ECS.ts";
@@ -5758,7 +5915,7 @@ import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
 import { HarvestableComponent } from "../trees/HarvestableComponent.ts";
 import { ResourceType } from "../resources/ResourceType.ts";
-import { InteractionSlots, SlotLayout, SlotType } from "../work/InteractionSlots.ts";
+import { InteractionSlots, SlotLayout, SlotType } from "../../components/InteractionSlots.ts";
 import { initWorld, createProfessorBooker } from "./init.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
 import { InsideLocationComponent } from "../locomotion/InsideLocationComponent.ts";
@@ -5906,7 +6063,6 @@ import { TreeViewModule } from "../../display/game/trees/TreeViewModule.ts";
 import { TreeCutIconViewModule } from "../../display/game/trees/TreeCutIconViewModule.ts";
 import { CharacterViewModule } from "../../display/game/characters/CharacterViewModule.ts";
 import { ResourceSystem } from "../resources/ResourceSystem.ts";
-import { ScheduleSystem } from "../scheduling/ScheduleSystem.ts";
 import { ECS, Entity } from "../../ECS.ts";
 import { Character, CharacterType } from "../characters/Character.ts";
 import { Transform } from "../../components/Transform.ts";
@@ -5914,7 +6070,7 @@ import { WoodDojo } from "../buildings/wood_dojo/WoodDojo.ts";
 import { InputComponent } from "../input/InputComponent.ts";
 import { LocomotionComponent } from "../locomotion/LocomotionComponent.ts";
 import { ResourceComponent } from "../resources/ResourceComponent.ts";
-import { createStandardSchedule } from "../scheduling/ScheduleComponent.ts";
+import { createStandardSchedule } from "../characters/ScheduleComponent.ts";
 import { TimeComponent } from "../time/TimeComponent.ts";
 import { WeatherComponent } from "../weather/WeatherComponent.ts";
 import { HarvesterComponent } from "../trees/HarvesterComponent.ts";
@@ -5927,9 +6083,11 @@ import { HomeComponent } from "../buildings/dormitory/HomeComponent.ts";
 import { RelaxBehaviorSystem } from "../action-intent/RelaxBehaviorSystem.ts";
 import { ActiveBuffsComponent } from "../buffs/ActiveBuffsComponent.ts";
 import { BuffManagementSystem } from "../buffs/BuffManagementSystem.ts";
-import { WorkerComponent } from "../work/WorkerComponent.ts";
-import { BlockedIntentSystem } from "../action-intent/BlockedIntentSystem.ts";
+import { WorkerComponent } from "../characters/WorkerComponent.ts";
 import { SleepEffectsSystem } from "../buffs/SleepEffectsSystem.ts";
+import { SleepNeedSystem } from "../needs/SleepNeedSystem.ts";
+import { NeedsComponent } from "../needs/NeedsComponent.ts";
+import { IntentSelectionSystem } from "../intent-selection/IntentSelectionSystem.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -5970,18 +6128,18 @@ export const initInput = (game:Game) => {
 
 export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
-    game.ecs.addSystem(new ScheduleSystem());
     game.ecs.addSystem(new WeatherSystem());
     game.ecs.addSystem(new LocomotionSystem());
-    game.ecs.addSystem(new WoodDojoSystem());
-    game.ecs.addSystem(new DormitorySystem());
+    game.ecs.addSystem(new SleepNeedSystem());
+    game.ecs.addSystem(new IntentSelectionSystem());
     game.ecs.addSystem(new ActionIntentSystem());
-    game.ecs.addSystem(new BlockedIntentSystem());
+    game.ecs.addSystem(new SleepEffectsSystem());
     game.ecs.addSystem(new TreeHarvestingSystem())
     game.ecs.addSystem(new RelaxBehaviorSystem());
-    game.ecs.addSystem(new SleepEffectsSystem());
     game.ecs.addSystem(new BuffManagementSystem());
     game.ecs.addSystem(new ResourceSystem());
+    game.ecs.addSystem(new WoodDojoSystem());
+    game.ecs.addSystem(new DormitorySystem());
 
     initInput(game);
     initStory(game);
@@ -6068,11 +6226,11 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, d
     ecs.addComponent(booker, new HarvesterComponent());
     ecs.addComponent(booker, new ActiveBuffsComponent());
     ecs.addComponent(booker, new WorkerComponent());
+    ecs.addComponent(booker, new NeedsComponent());
     ecs.addComponent(booker, createStandardSchedule());
 
     woodDojo.assignedCharacters.push(booker);
     dorm.assignedCharacters.push(booker);
-
 
     return booker;
 }
@@ -6262,7 +6420,7 @@ export interface StoryEventDefinition {
 
 // ---
 
-import { Component } from "../../ECS";
+import { Component, ECS } from "../../ECS";
 import { TimeConfig } from "../../config/TimeConfig";
 
 export class TimeComponent extends Component {
@@ -6276,6 +6434,27 @@ export class TimeComponent extends Component {
     ) {
         super();
     }
+}
+
+let worldEntity:number;
+let hasWorlEntity:boolean;
+
+export function getCurrentHour(ecs: ECS): number {
+    if (!hasWorlEntity){
+        worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+        hasWorlEntity = true;
+    }
+    const time = ecs.getComponent(worldEntity, TimeComponent);
+    return time?.hour || 0;
+}
+
+export function getTime(ecs: ECS): TimeComponent {
+    if (!hasWorlEntity){
+        worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+        hasWorlEntity = true;
+    }
+    const time = ecs.getComponent(worldEntity, TimeComponent);
+    return time!;
 }
 
 
@@ -6394,7 +6573,7 @@ import { HarvesterComponent } from "./HarvesterComponent"; // For harvest speed/
 import { TimeComponent } from "../time/TimeComponent";
 import { ResourceComponent } from "../resources/ResourceComponent";
 import { ResourceType } from "../resources/ResourceType";
-import { InteractionSlots } from "../work/InteractionSlots";
+import { InteractionSlots } from "../../components/InteractionSlots";
 import { Tree } from "../trees/Tree";
 
 export class TreeHarvestingSystem extends System {
@@ -6578,145 +6757,6 @@ export class WeatherSystem extends System {
 
 // ---
 
-import { Entity } from "../../ECS";
-
-export enum SlotType {
-    WORK = "work",
-    SLEEP = "sleep"
-}
-
-export enum SlotLayout {
-  RADIAL = "radial",
-  GRID = "grid"
-}
-
-export interface Slot {
-  x: number;
-  y: number;
-  occupiedBy: Entity | null;
-}
-
-interface BaseSlotDefinition {
-  layout: SlotLayout;
-  count: number;
-}
-
-interface RadialSlotDefinition extends BaseSlotDefinition {
-  layout: SlotLayout.RADIAL;
-  radius: number; // Distance from center for RADIAL layout
-}
-
-interface GridSlotDefinition extends BaseSlotDefinition {
-  layout: SlotLayout.GRID;
-  spacing: number; // Distance between slot centers for GRID layout
-}
-
-export type SlotDefinition = RadialSlotDefinition | GridSlotDefinition;
-
-export class InteractionSlots {
-  private slots: Map<SlotType, Slot[]> = new Map();
-
-  constructor(definitions: Partial<Record<SlotType, SlotDefinition>>) {
-    for (const [type, def] of Object.entries(definitions) as [SlotType, SlotDefinition][]) {
-      if (def) { // Ensure def is not undefined if Record value can be optional
-        this.slots.set(type, createSlots(def));
-      }
-    }
-  }
-
-  public reserve(entity: Entity, slotType: SlotType = SlotType.WORK): { x: number; y: number } | null {
-    const group = this.slots.get(slotType);
-    if (!group) return null;
-
-    for (const slot of group) {
-      if (slot.occupiedBy === null) {
-        slot.occupiedBy = entity;
-        return { x: slot.x, y: slot.y };
-      }
-    }
-    return null;
-  }
-
-  public releaseAll(entity: Entity): void {
-    for (const group of this.slots.values()) {
-      for (const slot of group) {
-        if (slot.occupiedBy === entity) {
-          slot.occupiedBy = null;
-        }
-      }
-    }
-  }
-
-  public release(entity: Entity, slotType: SlotType): void {
-    const group = this.slots.get(slotType);
-    if (!group) return;
-
-    for (const slot of group) {
-      if (slot.occupiedBy === entity) {
-        slot.occupiedBy = null;
-      }
-    }
-  }
-
-  public getSlotsArray(type: SlotType): ReadonlyArray<Slot> {
-    return this.slots.get(type) || [];
-  }
-}
-
-function createSlots(definition: SlotDefinition): Slot[] {
-  const slots: Slot[] = [];
-  const { count } = definition;
-
-  if (definition.layout === SlotLayout.RADIAL) {
-    // radius is guaranteed to exist due to the RadialSlotDefinition type
-    const { radius } = definition;
-    if (count <= 0) return slots; // No slots to create
-
-    for (let i = 0; i < count; i++) {
-      const angle = (i / count) * Math.PI * 2;
-      slots.push({
-        x: Math.round(Math.cos(angle) * radius),
-        y: Math.round(Math.sin(angle) * radius),
-        occupiedBy: null
-      });
-    }
-  } else if (definition.layout === SlotLayout.GRID) {
-    // spacing is guaranteed to exist due to the GridSlotDefinition type
-    const { spacing } = definition;
-    if (count <= 0) return slots; // No slots to create
-
-    const gridSize = Math.ceil(Math.sqrt(count));
-    // This offset centers the grid around the local (0,0) point
-    const offsetAmount = (gridSize - 1) / 2;
-
-    for (let i = 0; i < count; i++) {
-      const row = Math.floor(i / gridSize);
-      const col = i % gridSize;
-
-      slots.push({
-        x: Math.round((col - offsetAmount) * spacing),
-        y: Math.round((row - offsetAmount) * spacing),
-        occupiedBy: null
-      });
-    }
-  }
-  return slots;
-}
-
-// ---
-
-import { Component } from "../../ECS";
-
-export class WorkerComponent extends Component {
-    public workSpeed: number = 1; 
-
-    constructor() {
-        super();
-    }
-}
-
-// ---
-
 import { Boot } from './scenes/Boot';
 import { Game } from './scenes/Game';
 import { AUTO, Game as PhaserGame } from 'phaser';
@@ -6728,11 +6768,14 @@ import {Config} from "./config/Config.ts";
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
 const config: Phaser.Types.Core.GameConfig = {
     type: AUTO,
-    mode: Phaser.Scale.FIT,
     width: Config.Display.Width,
     height: Config.Display.Height,
     parent: 'game-container',
     backgroundColor: '#028af8',
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
     scene: [
         Boot,
         Preloader,
@@ -7098,6 +7141,97 @@ export const GameContainer: React.FC = () => {
     </>
 };
 
+
+// ---
+
+/* src/ui/common/BuffView.css */
+
+.buff-view-container {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    border: 1px solid #444;
+    border-radius: 3px;
+    overflow: hidden;
+    background-color: #222;
+    cursor: help;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.5);
+  }
+  
+  .buff-view-background-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #3a3a3a;
+    z-index: 1;
+  }
+  
+  .buff-view-progress-fill {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #666; 
+    z-index: 2;
+    transition: height 0.2s linear;
+  }
+  
+  .buff-view-container.is-buff .buff-view-progress-fill {
+    background-color: #38761d; /* Green */
+  }
+  
+  .buff-view-container.is-debuff .buff-view-progress-fill {
+    background-color: #cc0000; /* Red */
+  }
+  
+  .buff-view-icon {
+    position: relative;
+    width: calc(100% - 8px);
+    height: calc(100% - 8px);
+    object-fit: contain;
+    z-index: 3;
+  }
+
+// ---
+
+import React from 'react';
+import './BuffView.css';
+import { DisplayableBuffData } from '../../../game/display/game/data_panel/character/deriveBuffs';
+
+interface BuffViewProps {
+  data: DisplayableBuffData;
+}
+
+export const BuffView: React.FC<BuffViewProps> = ({ data }) => {
+  const progressPercent = (data.totalDurationMinutes > 0 && data.remainingDurationMinutes >= 0)
+    ? (data.remainingDurationMinutes / data.totalDurationMinutes) * 100
+    : (data.remainingDurationMinutes > 0 ? 100 : 0); 
+
+  const buffClass = data.isBuff ? 'is-buff' : 'is-debuff';
+  
+  return (
+    <div 
+      className={`buff-view-container ${buffClass}`} 
+    >
+      <div className="buff-view-background-bar">
+        <div 
+          className="buff-view-progress-fill" 
+          style={{ height: `${progressPercent}%` }} 
+        />
+      </div>
+      <img 
+        src={data.iconAssetKey} 
+        alt={data.displayName} 
+        className="buff-view-icon" 
+      />
+    </div>
+  );
+};
 
 // ---
 
@@ -7769,24 +7903,6 @@ export const SelectionPanel: React.FC = () => {
 
 // ---
 
-.character-panel-collapsed {
-  position: absolute;
-  top: 8px;
-  right: 40px;
-  display: flex;
-  gap: 6px;
-  z-index: 2;
-}
-
-.character-panel-collapsed .icon {
-  width: 24px;
-  height: 24px;
-  object-fit: contain;
-  background-color: rgba(0, 0, 0, 0.6);
-  border-radius: 4px;
-  padding: 4px;
-}
-
 .character-panel-expanded {
   display: flex;
   flex-direction: column;
@@ -7795,88 +7911,25 @@ export const SelectionPanel: React.FC = () => {
   justify-content: flex-end;
 }
 
-.schedule-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.schedule-line {
-  display: flex;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.6);
-  border-radius: 4px;
-  padding: 4px 8px;
-  color: #fff;
-  font-size: 1rem;
-}
-
-.label {
-  flex: 1;
-}
-
-.inline-icon {
-  margin-left: auto;
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-}
-
-.schedule-bar-wrapper {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  margin-right: 20px;
-}
-
-.schedule-bar {
-  display: flex;
-  justify-content: space-evenly;
-  align-items: center;
-  width: 100%;
-}
-
-.slot {
-  width: 32px;
-  height: 32px;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.3);
-  border-radius: 4px;
-}
-
-.slot.active {
-  border-color: white;
-}
-
-.slot-icon {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-}
-
-
 // ---
 
-// src/ui/selection/character/CharacterPanelDataView.tsx
-
-import React from "react";
-import "./CharacterPanelDataView.css"; 
-// Assuming CharacterAction is in actionIntentData and CharacterScheduleIconType is from PanelTypeReducers
-import { CharacterAction } from "../../../../game/logic/action-intent/actionIntentData"; 
-import { CharacterScheduleIconType } from "../../../../game/display/game/data_panel/PanelReducersRegistry"; 
+import { CharacterScheduleIconType } from "../../../../game/display/game/data_panel/character/characterPanelReducer";
+import { DisplayableBuffData } from "../../../../game/display/game/data_panel/character/deriveBuffs";
+import { CharacterAction } from "../../../../game/logic/action-intent/actionIntentData";
+import { ScheduleBarView } from "./schedule/ScheduleBarView";
+import { CollapsedStatusAndBuffsView } from "./status_info/CollapsedStatusAndBuffsView";
+import { StatusOrBuffView } from "./status_info/StatusOrBuffView";
+import "./CharacterPanelDataView.css";
 
 interface CharacterPanelUIData {
-  currentStatusText: string;          // The new rich "internal state" text
-  currentPerformedAction: CharacterAction; // For the action icon
+  currentStatusText: string;
+  currentPerformedAction: CharacterAction;
   currentScheduleIndex: number;
-  currentScheduleText: string;        // The new descriptive schedule text
-  scheduleIconTypes: CharacterScheduleIconType[]; // For the schedule bar icons
+  currentScheduleText: string; 
+  scheduleIconTypes: CharacterScheduleIconType[];
+  activeBuffs?: DisplayableBuffData[];
 }
 
-// Icons for the schedule bar, using CharacterScheduleIconType
 const scheduleBarIcons: Record<CharacterScheduleIconType, string> = {
   [CharacterScheduleIconType.HARVEST]: "assets/icons/axe_icon.png",
   [CharacterScheduleIconType.SLEEP]: "assets/icons/sleep_icon.png",
@@ -7886,7 +7939,6 @@ const scheduleBarIcons: Record<CharacterScheduleIconType, string> = {
   [CharacterScheduleIconType.NONE]: "assets/icons/idle_icon.png", 
 };
 
-// Icons for the current performed action
 const performedActionIcons: Record<CharacterAction, string> = {
   [CharacterAction.IDLE]: "assets/icons/idle_icon.png",
   [CharacterAction.WALKING]: "assets/icons/walk_icon.png",
@@ -7894,9 +7946,9 @@ const performedActionIcons: Record<CharacterAction, string> = {
   [CharacterAction.BUILDING]: "assets/icons/build_icon.png",
   [CharacterAction.STUDYING]: "assets/icons/book_icon.png",
   [CharacterAction.SLEEPING]: "assets/icons/sleep_icon.png",
-  [CharacterAction.STROLLING]: "assets/icons/walk_icon.png", // Using walk icon for strolling action
+  [CharacterAction.STROLLING]: "assets/icons/walk_icon.png", 
   [CharacterAction.RELAXING]: "assets/icons/relax_icon.png",
-  [CharacterAction.NONE]: "assets/icons/wait_icon.png",
+  [CharacterAction.NONE]: "assets/icons/idle_icon.png",
 };
 
 export const CharacterPanelDataView: React.FC<{
@@ -7907,57 +7959,376 @@ export const CharacterPanelDataView: React.FC<{
     return null;
   }
   
-  // Get icon for the current performed action
   const currentActionIcon = performedActionIcons[data.currentPerformedAction] || "assets/icons/idle_icon.png";
-  // The current schedule text is now directly data.currentScheduleText
-  // The icon for the current schedule item in the detailed view can be derived from scheduleIconTypes
   const currentHourScheduleIconType = data.scheduleIconTypes[data.currentScheduleIndex] || CharacterScheduleIconType.NONE;
   const currentScheduleDisplayIcon = scheduleBarIcons[currentHourScheduleIconType];
 
-
   if (collapsed) {
     return (
-      <div className="character-panel-collapsed">
-        {/* For collapsed view, show current schedule icon and current action icon */}
-        <img className="icon" src={currentScheduleDisplayIcon} alt={data.currentScheduleText} title={`Scheduled: ${data.currentScheduleText}`} />
-        <img className="icon" src={currentActionIcon} alt={data.currentPerformedAction} title={`Action: ${data.currentPerformedAction}`} />
-      </div>
+      <CollapsedStatusAndBuffsView
+        scheduleText={data.currentScheduleText}
+        scheduleIconPath={currentScheduleDisplayIcon}
+        actionText={data.currentPerformedAction.toString()}
+        actionIconPath={currentActionIcon}
+        activeBuffs={data.activeBuffs}
+    /> 
     );
   }
 
   return (
     <div className="character-panel-expanded">
-      <div className="info-block">
-        {/* Main status text */}
-        <p className="text-bg info-line" title={data.currentPerformedAction.toString()}>
-          Status: {data.currentStatusText} 
-          {/* Optionally, still show the action icon here if statusText doesn't always include it */}
-           <img className="inline-icon" src={currentActionIcon} alt={data.currentPerformedAction} />
-        </p>
-        {/* Descriptive current schedule */}
-        <p className="text-bg info-line">
-          Schedule: {data.currentScheduleText}
-          <img className="inline-icon" src={currentScheduleDisplayIcon} alt={data.currentScheduleText} />
-        </p>
+      <StatusOrBuffView
+        statusText={data.currentStatusText}
+        currentPerformedAction={data.currentPerformedAction}
+        scheduleText={data.currentScheduleText}
+        scheduleIconSrc={currentScheduleDisplayIcon} 
+        activeBuffs={data.activeBuffs}
+      />
+      <ScheduleBarView 
+        scheduleIconTypes={data.scheduleIconTypes} 
+        currentScheduleIndex={data.currentScheduleIndex} 
+      />
+    </div>
+  );
+};
+
+// ---
+
+/* src/ui/selection/character/ScheduleBarView.css (example path) */
+
+.schedule-bar-wrapper {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 8px;
+    margin-bottom: 4px; /* Retained from CharacterPanelDataView.css */
+    margin-right: 20px; /* Retained from CharacterPanelDataView.css, adjust if needed */
+    background-color: rgba(0, 0, 0, 0.1); /* Optional: slight background for the wrapper */
+  }
+  
+  .schedule-bar {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .schedule-slot { /* Renamed from .slot to be more specific */
+    width: 32px;
+    height: 32px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-radius: 4px;
+  }
+  
+  .schedule-slot.active {
+    border-color: white;
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.7); /* Optional: slight glow for active slot */
+  }
+  
+  .schedule-slot-icon { /* Renamed from .slot-icon */
+    width: 100%;
+    height: 100%;
+    padding: 2px; /* Optional: if icons need a little breathing room */
+    box-sizing: border-box;
+    object-fit: contain;
+  }
+
+// ---
+
+import React from "react";
+import "./ScheduleBarView.css";
+import { CharacterScheduleIconType } from "../../../../../game/display/game/data_panel/character/characterPanelReducer";
+
+interface ScheduleBarViewProps {
+  scheduleIconTypes: CharacterScheduleIconType[];
+  currentScheduleIndex: number;
+}
+
+// Icons for the schedule bar, using CharacterScheduleIconType
+const scheduleBarIcons: Record<CharacterScheduleIconType, string> = {
+  [CharacterScheduleIconType.HARVEST]: "assets/icons/axe_icon.png",
+  [CharacterScheduleIconType.SLEEP]: "assets/icons/sleep_icon.png",
+  [CharacterScheduleIconType.STUDY]: "assets/icons/book_icon.png",
+  [CharacterScheduleIconType.REST]: "assets/icons/relax_icon.png",
+  [CharacterScheduleIconType.BUILD]: "assets/icons/build_icon.png",
+  [CharacterScheduleIconType.NONE]: "assets/icons/idle_icon.png",
+};
+
+export const ScheduleBarView: React.FC<ScheduleBarViewProps> = ({
+  scheduleIconTypes,
+  currentScheduleIndex,
+}) => {
+  if (!scheduleIconTypes || scheduleIconTypes.length === 0) {
+    return null; // Don't render if there's no schedule data
+  }
+
+  return (
+    <div className="schedule-bar-wrapper">
+      <div className="schedule-bar">
+        {scheduleIconTypes.map((iconType, index) => {
+          const scheduleIcon = scheduleBarIcons[iconType] || "assets/icons/idle_icon.png";
+          // Derive text for title attribute from the enum key name
+          const scheduleEntryText =
+            (Object.keys(CharacterScheduleIconType) as Array<
+              keyof typeof CharacterScheduleIconType
+            >).find(
+              (key) => CharacterScheduleIconType[key] === iconType
+            ) || "Task";
+
+          return (
+            <div
+              key={index}
+              className={`schedule-slot ${
+                index === currentScheduleIndex ? "active" : ""
+              }`}
+              title={scheduleEntryText}
+            >
+              <img
+                src={scheduleIcon}
+                alt={scheduleEntryText}
+                className="schedule-slot-icon"
+              />
+            </div>
+          );
+        })}
       </div>
-      <div className="schedule-bar-wrapper">
-        <div className="schedule-bar">
-          {data.scheduleIconTypes.map((iconType, index) => {
-            const scheduleIcon = scheduleBarIcons[iconType] || "assets/icons/idle_icon.png";
-            // To get the text for the title attribute, we might need another map or derive it if not too complex
-            const scheduleEntryText = Object.keys(CharacterScheduleIconType).find(key => CharacterScheduleIconType[key as keyof typeof CharacterScheduleIconType] === iconType) || "Task";
-            return (
-              <div
-                key={index}
-                className={`slot ${index === data.currentScheduleIndex ? "active" : ""}`}
-                title={scheduleEntryText}
-              >
-                <img src={scheduleIcon} alt={scheduleEntryText} className="slot-icon" />
-              </div>
-            );
-          })}
-        </div>
-      </div>
+    </div>
+  );
+};
+
+// ---
+
+/* src/ui/selection/character/CollapsedStatusAndBuffsView.css (example path) */
+
+.collapsed-status-buffs-view {
+  position: absolute;
+  top: 8px; /* Align with the top of where the close button is */
+  /* Adjust 'right' to position it to the left of your close button */
+  /* If close button is ~24-30px wide and at right: 8px, 
+     then right: 40px (8px + ~24px_button + ~8px_gap) is a good start. */
+  right: 40px; 
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  z-index: 2; /* Ensure it's above other panel content if necessary, but usually sibling order handles this */
+  padding: 2px; /* Small padding around the group of icons */
+}
+
+.collapsed-icon { /* Style for individual schedule/action icons */
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  background-color: rgba(0, 0, 0, 0.6);
+  border-radius: 4px;
+  padding: 4px;
+  box-sizing: border-box;
+  display: flex; 
+  align-items: center;
+  justify-content: center;
+}
+
+.buff-summary { /* Style for the buff summary icon block */
+  /* Inherits .collapsed-icon styles if also given that class */
+  position: relative; 
+}
+
+.buff-summary-icon-image { /* The actual image within the buff summary block */
+    width: 100%; /* Or a fixed size if preferred, e.g., 16px */
+    height: 100%;
+    object-fit: contain;
+}
+
+.buff-summary-count {
+  position: absolute;
+  bottom: -3px; /* Adjusted for better visibility */
+  right: -3px;  /* Adjusted for better visibility */
+  background-color: rgba(204, 0, 0, 0.9); /* Red, adjust as needed */
+  color: white;
+  font-size: 0.6rem; /* Smaller font for the count */
+  font-weight: bold;
+  border-radius: 50%;
+  padding: 0px 3px; /* Horizontal padding */
+  line-height: 1;   /* Tight line height */
+  min-width: 8px;  /* Ensure even single digits have some background */
+  text-align: center;
+  pointer-events: none; /* So it doesn't interfere with tooltip on parent */
+}
+
+// ---
+
+import React from "react";
+import "./CollapsedStatusAndBuffsView.css";
+import { DisplayableBuffData } from "../../../../../game/display/game/data_panel/character/deriveBuffs";
+import { BuffView } from "../../../buffs/BuffView";
+
+export interface CollapsedStatusAndBuffsViewProps {
+  scheduleText: string;
+  scheduleIconPath: string;
+  actionText: string; // This would be data.currentPerformedAction.toString()
+  actionIconPath: string;
+  activeBuffs?: DisplayableBuffData[];
+}
+
+export const CollapsedStatusAndBuffsView: React.FC<CollapsedStatusAndBuffsViewProps> = ({
+  scheduleText,
+  scheduleIconPath,
+  actionText,
+  actionIconPath,
+  activeBuffs,
+}) => {
+  return (
+    <div className="collapsed-status-buffs-view">
+      <img 
+        className="collapsed-icon" 
+        src={scheduleIconPath} 
+        alt={scheduleText} 
+        title={`Scheduled: ${scheduleText}`} 
+      />
+      <img 
+        className="collapsed-icon" 
+        src={actionIconPath} 
+        alt={actionText} 
+        title={`Action: ${actionText}`} 
+      />
+      {activeBuffs?.map(buffData => (
+        <BuffView key={buffData.key} data={buffData} />
+      ))}
+    </div>
+  );
+};
+
+// ---
+
+/* src/ui/common/StatusInfoLine.css */
+.status-info-line {
+    display: flex;
+    align-items: center;
+    margin-block-start: unset;
+    margin-block-end: unset;
+    margin-bottom: 4px;
+    padding: 0.2em 0.4em;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 1rem;
+  }
+  .status-info-line.text-bg {
+      background-color: rgba(0, 0, 0, 0.6);
+  }
+  .status-label {
+    margin-right: 0.5em;
+    font-weight: normal; /* Changed from bold for less emphasis if preferred */
+  }
+  .status-text-value {
+    flex-grow: 1;
+    text-align: left;
+  }
+  .status-inline-icon {
+    margin-left: 0.5em;
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    vertical-align: middle;
+  }
+  .status-children-container {
+    margin-left: 0.5em;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    align-items: center; /* Align buff icons nicely */
+  }
+
+// ---
+
+import React from "react";
+import "./StatusInfoLine.css"; // Corresponding CSS file
+
+export interface StatusInfoLineProps {
+  label: string;
+  text?: string | null;
+  iconSrc?: string;
+  iconAlt?: string;
+  children?: React.ReactNode; 
+}
+
+export const StatusInfoLine: React.FC<StatusInfoLineProps> = ({
+  label,
+  text,
+  iconSrc,
+  iconAlt,
+  children,
+}) => {
+  return (
+    <div className="status-info-line text-bg">
+      <div className="status-label">{label}</div>
+      {text && <span className="status-text-value">{text}</span>}
+      {iconSrc && <img className="status-inline-icon" src={iconSrc} alt={iconAlt || label} />}
+      {children && <div className="status-children-container">{children}</div>}
+    </div>
+  );
+};
+
+// ---
+
+import React from "react";
+import { DisplayableBuffData } from "../../../../../game/display/game/data_panel/character/deriveBuffs";
+import { CharacterAction } from "../../../../../game/logic/action-intent/actionIntentData";
+import { BuffView } from "../../../buffs/BuffView";
+import { StatusInfoLine } from "./StatusInfoLine";
+
+// Icon map for performed actions - kept local to this component or could be imported from a shared consts file
+const performedActionIcons: Record<CharacterAction, string> = {
+  [CharacterAction.IDLE]: "assets/icons/wait_icon.png",
+  [CharacterAction.WALKING]: "assets/icons/walk_icon.png",
+  [CharacterAction.CHOPPING]: "assets/icons/axe_icon.png",
+  [CharacterAction.BUILDING]: "assets/icons/build_icon.png",
+  [CharacterAction.STUDYING]: "assets/icons/book_icon.png",
+  [CharacterAction.SLEEPING]: "assets/icons/sleep_icon.png",
+  [CharacterAction.STROLLING]: "assets/icons/walk_icon.png", // Strolling might share walk or have its own
+  [CharacterAction.RELAXING]: "assets/icons/relax_icon.png",
+  [CharacterAction.NONE]: "assets/icons/wait_icon.png", // Or a question mark icon
+};
+
+interface StatusOrBuffViewProps {
+  statusText: string;
+  currentPerformedAction: CharacterAction;
+  scheduleText: string;
+  scheduleIconSrc: string; // Pass the direct icon source for schedule
+  activeBuffs?: DisplayableBuffData[];
+}
+
+export const StatusOrBuffView: React.FC<StatusOrBuffViewProps> = ({
+  statusText,
+  currentPerformedAction,
+  scheduleText,
+  scheduleIconSrc,
+  activeBuffs,
+}) => {
+  const currentActionIcon = performedActionIcons[currentPerformedAction] || "assets/icons/idle_icon.png";
+
+  return (
+    <div className="status-buff-view-wrapper">
+        {activeBuffs && activeBuffs.length > 0 && (
+          <>{activeBuffs.map((buffData) => (
+            <StatusInfoLine label={buffData.description}>
+              <BuffView key={buffData.key} data={buffData} />
+            </StatusInfoLine>
+          ))}</>
+      )}
+      <StatusInfoLine 
+        label="Status" 
+        text={statusText} 
+        iconSrc={currentActionIcon} 
+        iconAlt={currentPerformedAction.toString()} 
+      />
+      <StatusInfoLine 
+        label="Schedule" 
+        text={scheduleText} 
+        iconSrc={scheduleIconSrc} 
+        iconAlt={scheduleText}
+      />
     </div>
   );
 };

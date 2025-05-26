@@ -5,25 +5,20 @@ import {
     ActionDataType,
     WalkingData,
     SleepingData,
-    CharacterIntent,
-    BlockedIntentReason
+    CharacterIntent
 } from "../actionIntentData";
 import { Transform } from "../../../components/Transform";
-import { InteractionSlots, SlotType } from "../../work/InteractionSlots";
+import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
 import { DormitoryComponent } from "../../buildings/dormitory/DormitoryComponent";
 import { Pos } from "../../../../utils/Math";
 import { LocomotionComponent } from "../../locomotion/LocomotionComponent"; 
-import { BlockedIntentComponent } from "../BlockedIntentComponent";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
-function setBlocked(ecs: ECS, entity: Entity, aic: ActionIntentComponent, reason: BlockedIntentReason, originalIntent: CharacterIntent, specificTargetId?: Entity): void {
-    if (!ecs.hasComponent(entity, BlockedIntentComponent)) {
-        ecs.addComponent(entity, new BlockedIntentComponent(originalIntent, reason, specificTargetId));
-    }
+function setBlocked(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.REST;
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
@@ -74,11 +69,9 @@ function findAndReserveNewSleepTarget(ecs: ECS, characterEntity: Entity): { bedE
     return null;
 }
 
-// This "canResume" function is for BlockedIntentSystem and performs read-only checks.
-export function canResumeSleepIntent(ecs: ECS, entity: Entity, bic: BlockedIntentComponent): boolean {
+export function canSleep(ecs: ECS, entity: Entity): boolean {
     const allDormitories = ecs.getEntitiesWithComponents([DormitoryComponent, InteractionSlots]);
     for (const dormitoryId of allDormitories) {
-        if (bic.specificBlockedTargetId && dormitoryId !== bic.specificBlockedTargetId) continue;
         if (isDormitoryFunctionallyValid(ecs, dormitoryId)) {
             const slots = ecs.getComponent(dormitoryId, InteractionSlots);
             if (slots.getSlotsArray(SlotType.SLEEP).some(slot => slot.occupiedBy === null || slot.occupiedBy === entity)) {
@@ -100,7 +93,7 @@ export function handleSleepIntentLogic(
     const targetInfo = findAndReserveNewSleepTarget(ecs, entity);
 
     if (!targetInfo) {
-        setBlocked(ecs, entity, actionIntent, BlockedIntentReason.SLOT_UNAVAILABLE, CharacterIntent.SLEEP);
+        setBlocked(actionIntent);
         return;
     }
     

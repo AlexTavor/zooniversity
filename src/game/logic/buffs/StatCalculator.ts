@@ -3,7 +3,7 @@ import { AffectedStat, BuffEffect, BuffEffectApplicationType } from "./buffsData
 import { LocomotionComponent } from "../locomotion/LocomotionComponent"; // Adjust path
 import { HarvesterComponent as HarvesterComponent } from "../trees/HarvesterComponent"; // Adjust path, aliased to avoid name clash
 import { ActiveBuffsComponent } from "./ActiveBuffsComponent";
-import { WorkerComponent } from "../work/WorkerComponent";
+import { WorkerComponent } from "../characters/WorkerComponent";
 
 export class StatCalculator {
 
