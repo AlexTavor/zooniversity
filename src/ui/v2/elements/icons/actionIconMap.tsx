@@ -8,5 +8,5 @@ export const actionIconMap: Partial<Record<CharacterAction, string>> = {
     [CharacterAction.RELAXING]: 'assets/icons/relax_icon.png',
     [CharacterAction.STUDYING]: 'assets/icons/book_icon.png',
     [CharacterAction.BUILDING]: 'assets/icons/build_icon.png',
-    [CharacterAction.STROLLING]: 'assets/icons/walk_icon.png',
+    [CharacterAction.STROLLING]: 'assets/icons/relax_icon.png',
 };

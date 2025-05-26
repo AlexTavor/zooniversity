@@ -27,7 +27,7 @@ export class IntentSelectionSystem extends System {
             const intentWeights: { intent: CharacterIntent, weight: number }[] = [];
 
             // Calculate weights for all relevant intents
-            intentWeights.push({ intent: CharacterIntent.SLEEP, weight: calculateSleepIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
+            intentWeights.push({ intent: CharacterIntent.SLEEP, weight: calculateSleepIntentWeight(this.ecs, entity, actionIntent, schedule, needs, currentHour) });
             intentWeights.push({ intent: CharacterIntent.HARVEST, weight: calculateHarvestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
             intentWeights.push({ intent: CharacterIntent.REST, weight: calculateRestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
 
