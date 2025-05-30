@@ -3,7 +3,7 @@ import { TimeConfig } from "../../config/TimeConfig";
 import { StatCalculator } from "../buffs/StatCalculator";
 import { AffectedStat } from "../buffs/buffsData";
 import { getTime } from "../time/TimeComponent";
-import { NeedsComponent } from "./NeedsComponent";
+import { NeedType, NeedsComponent } from "./NeedsComponent";
 
 export class SleepNeedSystem extends System {
     public componentsRequired = new Set<Function>([NeedsComponent]);
@@ -24,9 +24,14 @@ export class SleepNeedSystem extends System {
 
         for (const entity of entities) {
             const needs = this.ecs.getComponent(entity, NeedsComponent);
+            const sleep = needs.need(NeedType.SLEEP);
+            if (!sleep){
+                console.error("SLEEP NOT FOUND!");
+                return;
+            }
             const sleepModificationRate = StatCalculator.getEffectiveStat(this.ecs, entity, AffectedStat.SLEEP_MODIFICATION_RATE);
-
-            needs.sleep.current = Math.max(0, Math.min(needs.sleep.current + sleepModificationRate * gameMinutesPassedThisFrame, needs.sleep.max));
+            const newCurrent = Math.max(0, Math.min(sleep.current + sleepModificationRate * gameMinutesPassedThisFrame, sleep.max));
+            needs.updateNeedCurrent(NeedType.SLEEP, newCurrent);
         }
     }
 }

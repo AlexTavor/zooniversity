@@ -102,7 +102,7 @@ export const NeedBar: React.FC<NeedBarProps> = ({
             {displayInfo.label}
           </NeedLabel>
           <ChangeRateText color={rateColor}>
-          {current}/{max} - {formatChangeRate(changeRatePerHour)}
+          {current}/{max} {formatChangeRate(changeRatePerHour)}
           </ChangeRateText>
         </InfoRow>
       )}

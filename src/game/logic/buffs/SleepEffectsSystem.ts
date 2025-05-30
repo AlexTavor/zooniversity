@@ -5,7 +5,7 @@ import { BuffsComponent } from "./BuffsComponent";
 import { MIN_SLEEP_DURATION_FOR_RESTED_BUFF_MINUTES, BuffType } from "./buffsData";
 import { TimeComponent } from "../time/TimeComponent"; // Adjust path
 import { CharacterSleepStateComponent } from "../buildings/dormitory/CharacterSleepStateComponent";
-import { NeedsComponent } from "../needs/NeedsComponent";
+import { NeedType, NeedsComponent } from "../needs/NeedsComponent";
 
 export class SleepEffectsSystem extends System {
     public componentsRequired = new Set<Function>([ActionIntentComponent]);
@@ -28,7 +28,10 @@ export class SleepEffectsSystem extends System {
             const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
             const sleepState = this.ecs.getComponent(entity, CharacterSleepStateComponent);
             const needs = this.ecs.getComponent(entity, NeedsComponent);
-
+            const sleep = needs?.need(NeedType.SLEEP);
+            if (!sleep){
+                return;
+            }
             if (actionIntent.currentPerformedAction === CharacterAction.SLEEPING) {
                 if (!sleepState) {
                     this.ecs.addComponent(entity, new CharacterSleepStateComponent(currentTimeMinutes));
@@ -50,7 +53,7 @@ export class SleepEffectsSystem extends System {
                     
                     // Was sleeping, but no longer is. Apply buff if duration was sufficient.
                     const sleepDurationMinutes = currentTimeMinutes - sleepState.sleepStartTimeMinutes;
-                    if (sleepDurationMinutes >= MIN_SLEEP_DURATION_FOR_RESTED_BUFF_MINUTES && needs?.sleep.current == needs?.sleep.max) {
+                    if (sleepDurationMinutes >= MIN_SLEEP_DURATION_FOR_RESTED_BUFF_MINUTES && sleep.current == sleep.max) {
                         let activeBuffs = this.ecs.getComponent(entity, BuffsComponent);
                         if (!activeBuffs) {
                             activeBuffs = new BuffsComponent();

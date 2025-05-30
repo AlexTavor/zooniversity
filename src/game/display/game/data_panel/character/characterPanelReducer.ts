@@ -1,9 +1,11 @@
 import { ECS, Entity } from "../../../../ECS";
+import { TimeConfig } from "../../../../config/TimeConfig";
 import { ActionIntentComponent } from "../../../../logic/action-intent/ActionIntentComponent";
 import { StrollComponent } from "../../../../logic/action-intent/StrollComponent";
 import { CharacterIntent, CharacterAction, isChoppingData, isSleepingData, isStrollingAtPointData, isWalkingData } from "../../../../logic/action-intent/actionIntentData";
+import { StatCalculator } from "../../../../logic/buffs/StatCalculator";
+import { AffectedStat } from "../../../../logic/buffs/buffsData";
 import { DormitoryComponent } from "../../../../logic/buildings/dormitory/DormitoryComponent";
-import { HomeComponent } from "../../../../logic/buildings/dormitory/HomeComponent";
 import { WoodDojo } from "../../../../logic/buildings/wood_dojo/WoodDojo";
 import { ScheduleComponent } from "../../../../logic/characters/ScheduleComponent";
 import { NeedsComponent } from "../../../../logic/needs/NeedsComponent";
@@ -30,12 +32,20 @@ export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
         };
     }
 
-    const currentScheduledIntent = schedule.entries[hour] ?? CharacterIntent.NONE;
+    const needsData = [...needs.needs].map(
+        ([key, value]) => (
+            { 
+                type:key.toString(), 
+                current:Math.floor(value.current), 
+                max:Math.floor(value.max), 
+                changeRatePerHour:((StatCalculator.getEffectiveStat(ecs, entity, AffectedStat.SLEEP_MODIFICATION_RATE)*TimeConfig.HoursPerDay).toFixed(2))
+            })
+        );
 
     return {
         currentAction: {type:actionIntent.currentPerformedAction, description:actionToString[actionIntent.currentPerformedAction]},
         schedule: {currentSlotIndex:hour, slots:schedule.entries},
-        needs: [{type:"SLEEP", current:Math.floor(needs.sleep.current), max:Math.floor(needs.sleep.max), changeRatePerHour:0}],
+        needs: needsData,
         statusEffects:deriveBuffs(ecs, entity, time.minutesElapsed),
         currentStatusText: deriveCurrentStatusText(ecs, entity, actionIntent)
     }
@@ -46,31 +56,6 @@ export enum CharacterScheduleIconType {
     HARVEST = "Harvest", SLEEP = "Sleep", STUDY = "Study", REST = "Rest", BUILD = "Build", NONE = "None",
   }
   
-function convertScheduleIntentToDisplayText(intent: CharacterIntent, ecs: ECS, entity: Entity): string {
-    const home = ecs.getComponent(entity, HomeComponent);
-    const homeName = home?.homeEntityId ? getEntityName(ecs, home.homeEntityId) : "their work area";
-    switch (intent) {
-        case CharacterIntent.HARVEST: return `Work @ ${homeName}`;
-        case CharacterIntent.SLEEP:   return "Bed Time";
-        case CharacterIntent.STUDY:   return "Studying";
-        case CharacterIntent.REST:    return "Personal Time";
-        case CharacterIntent.BUILD:   return `Building @ ${homeName}`;
-        case CharacterIntent.NONE:    return "Free Time";
-        default:                      return "Task";
-    }
-}
-
-function convertScheduleIntentToIconType(intent: CharacterIntent): CharacterScheduleIconType {
-    switch (intent) {
-        case CharacterIntent.HARVEST: return CharacterScheduleIconType.HARVEST;
-        case CharacterIntent.SLEEP:   return CharacterScheduleIconType.SLEEP;
-        case CharacterIntent.STUDY:   return CharacterScheduleIconType.STUDY;
-        case CharacterIntent.REST:    return CharacterScheduleIconType.REST;
-        case CharacterIntent.BUILD:   return CharacterScheduleIconType.BUILD;
-        default:                      return CharacterScheduleIconType.NONE;
-    }
-}
-
 function getStatusTextForRest(ecs: ECS, entity: Entity, aic: ActionIntentComponent): string {
     const strollComp = ecs.getComponent(entity, StrollComponent);
     if (strollComp) {

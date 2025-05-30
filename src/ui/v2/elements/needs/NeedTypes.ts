@@ -20,5 +20,5 @@ export const needDisplayInfoMap: Record<NeedType, NeedDisplayInfo> = {
 // Utility function to format the change rate
 export const formatChangeRate = (rate: number): string => {
     if (rate === 0) return "0/hr";
-    return `${rate > 0 ? '+' : ''}${rate}/hr`;
+    return `${rate > 0 ? '+' : rate < 0 ? '-' : ''}${rate}/hr`;
 };

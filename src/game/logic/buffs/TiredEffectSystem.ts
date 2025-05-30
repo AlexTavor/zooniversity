@@ -1,6 +1,6 @@
 import { System, Entity, ECS } from "../../ECS";
 import { TimeComponent } from "../time/TimeComponent"; // Adjust path
-import { NeedsComponent } from "../needs/NeedsComponent";
+import { NeedType, NeedsComponent } from "../needs/NeedsComponent";
 import { BuffsComponent } from "./BuffsComponent";
 import { BuffType } from "./buffsData";
 
@@ -25,8 +25,12 @@ export class TiredEffectSystem extends System {
 
         for (const entity of entities) {
             const needs = this.ecs.getComponent(entity, NeedsComponent);
+            const sleep = needs.need(NeedType.SLEEP);
+            if (!sleep){
+                continue;
+            }
             const buffs = this.ecs.getComponent(entity, BuffsComponent);
-            if (needs.sleep.current / needs.sleep.max > TIRED_THRESHOLD){
+            if (sleep.current / sleep.max > TIRED_THRESHOLD){
                 buffs.removeBuff(BuffType.TIRED);
                 return;
             }

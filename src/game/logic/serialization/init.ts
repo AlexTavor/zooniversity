@@ -51,7 +51,7 @@ import { BuffManagementSystem } from "../buffs/BuffManagementSystem.ts";
 import { WorkerComponent } from "../characters/WorkerComponent.ts";
 import { SleepEffectsSystem } from "../buffs/SleepEffectsSystem.ts";
 import { SleepNeedSystem } from "../needs/SleepNeedSystem.ts";
-import { NeedsComponent } from "../needs/NeedsComponent.ts";
+import { NeedData, NeedType, NeedsComponent } from "../needs/NeedsComponent.ts";
 import { IntentSelectionSystem } from "../intent-selection/IntentSelectionSystem.ts";
 import { TiredEffectSystem } from "../buffs/TiredEffectSystem.ts";
 
@@ -96,7 +96,7 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
     game.ecs.addSystem(new WeatherSystem());
     game.ecs.addSystem(new LocomotionSystem());
-    
+
     game.ecs.addSystem(new SleepNeedSystem());
 
     game.ecs.addSystem(new IntentSelectionSystem());
@@ -197,8 +197,14 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, d
     ecs.addComponent(booker, new HarvesterComponent());
     ecs.addComponent(booker, new BuffsComponent());
     ecs.addComponent(booker, new WorkerComponent());
-    ecs.addComponent(booker, new NeedsComponent());
-    ecs.addComponent(booker, createStandardSchedule());
+    ecs.addComponent(
+        booker,
+        new NeedsComponent(
+          new Map<NeedType, NeedData>([
+            [NeedType.SLEEP, { current: 75, max: 100 }]
+          ])
+        )
+      );    ecs.addComponent(booker, createStandardSchedule());
 
     woodDojo.assignedCharacters.push(booker);
     dorm.assignedCharacters.push(booker);

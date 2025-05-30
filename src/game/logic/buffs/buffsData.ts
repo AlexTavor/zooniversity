@@ -9,7 +9,8 @@ export enum AffectedStat {
     LOCOMOTION_SPEED = "locomotionSpeed",
     WORK_SPEED = "workSpeed",
     HARVEST_SPEED = "harvestSpeed",
-    SLEEP_MODIFICATION_RATE = "sleepModificationRate"
+    SLEEP_MODIFICATION_RATE = "sleepModificationRate",
+    HUNGER_MODIFICATION_RATE = "hungerModificationRate"
 }
 
 export enum BuffEffectApplicationType {
