@@ -46,13 +46,14 @@ import { ActionIntentComponent } from "../action-intent/ActionIntentComponent.ts
 import { ActionIntentSystem } from "../action-intent/ActionIntentSystem.ts";
 import { HomeComponent } from "../buildings/dormitory/HomeComponent.ts";
 import { RelaxBehaviorSystem } from "../action-intent/RelaxBehaviorSystem.ts";
-import { ActiveBuffsComponent } from "../buffs/ActiveBuffsComponent.ts";
+import { BuffsComponent } from "../buffs/BuffsComponent.ts";
 import { BuffManagementSystem } from "../buffs/BuffManagementSystem.ts";
 import { WorkerComponent } from "../characters/WorkerComponent.ts";
 import { SleepEffectsSystem } from "../buffs/SleepEffectsSystem.ts";
 import { SleepNeedSystem } from "../needs/SleepNeedSystem.ts";
 import { NeedsComponent } from "../needs/NeedsComponent.ts";
 import { IntentSelectionSystem } from "../intent-selection/IntentSelectionSystem.ts";
+import { TiredEffectSystem } from "../buffs/TiredEffectSystem.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -95,14 +96,19 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new TimeSystem());
     game.ecs.addSystem(new WeatherSystem());
     game.ecs.addSystem(new LocomotionSystem());
+    
     game.ecs.addSystem(new SleepNeedSystem());
+
     game.ecs.addSystem(new IntentSelectionSystem());
     game.ecs.addSystem(new ActionIntentSystem());
     game.ecs.addSystem(new SleepEffectsSystem());
+    game.ecs.addSystem(new TiredEffectSystem());
+
     game.ecs.addSystem(new TreeHarvestingSystem())
     game.ecs.addSystem(new RelaxBehaviorSystem());
     game.ecs.addSystem(new BuffManagementSystem());
     game.ecs.addSystem(new ResourceSystem());
+
     game.ecs.addSystem(new WoodDojoSystem());
     game.ecs.addSystem(new DormitorySystem());
 
@@ -189,7 +195,7 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, d
     ecs.addComponent(booker, new ActionIntentComponent());
     ecs.addComponent(booker, new LocomotionComponent());
     ecs.addComponent(booker, new HarvesterComponent());
-    ecs.addComponent(booker, new ActiveBuffsComponent());
+    ecs.addComponent(booker, new BuffsComponent());
     ecs.addComponent(booker, new WorkerComponent());
     ecs.addComponent(booker, new NeedsComponent());
     ecs.addComponent(booker, createStandardSchedule());

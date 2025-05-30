@@ -1,7 +1,7 @@
 import { Component } from "../../ECS";
 import { ActiveBuff, BuffType, BUFF_DEFINITIONS, BuffStackingBehavior } from "./buffsData";
 
-export class ActiveBuffsComponent extends Component {
+export class BuffsComponent extends Component {
     public buffs: ActiveBuff[] = [];
 
     public addBuff(buffTypeToAdd: BuffType, currentTimeMinutes: number): void {

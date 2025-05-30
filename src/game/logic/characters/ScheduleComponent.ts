@@ -16,6 +16,7 @@ export function createStandardSchedule(): ScheduleComponent {
     CharacterIntent.SLEEP,
     CharacterIntent.HARVEST,
     CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
     CharacterIntent.REST,
     CharacterIntent.HARVEST,
     CharacterIntent.HARVEST,

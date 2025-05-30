@@ -102,6 +102,7 @@ export const Icon: React.FC<IconProps> = ({
       bWidth={borderWidth}
       className={className}
       opacity={opacity}
+      title={alt}
     >
       {showFill && (
         <ForegroundFill

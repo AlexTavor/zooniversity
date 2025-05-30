@@ -6,6 +6,7 @@ import { DormitoryComponent } from "../../../../logic/buildings/dormitory/Dormit
 import { HomeComponent } from "../../../../logic/buildings/dormitory/HomeComponent";
 import { WoodDojo } from "../../../../logic/buildings/wood_dojo/WoodDojo";
 import { ScheduleComponent } from "../../../../logic/characters/ScheduleComponent";
+import { NeedsComponent } from "../../../../logic/needs/NeedsComponent";
 import { TimeComponent } from "../../../../logic/time/TimeComponent";
 import { Tree } from "../../../../logic/trees/Tree";
 import { deriveBuffs } from "./deriveBuffs";
@@ -14,6 +15,7 @@ import { deriveBuffs } from "./deriveBuffs";
 export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
     const actionIntent = ecs.getComponent(entity, ActionIntentComponent);
     const schedule = ecs.getComponent(entity, ScheduleComponent);
+    const needs = ecs.getComponent(entity, NeedsComponent);
     const timeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
     const time = ecs.getComponent(timeEntity, TimeComponent);
     const hour = time.hour;
@@ -31,13 +33,12 @@ export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
     const currentScheduledIntent = schedule.entries[hour] ?? CharacterIntent.NONE;
 
     return {
-        currentStatusText: deriveCurrentStatusText(ecs, entity, actionIntent),
-        currentPerformedAction: actionIntent.currentPerformedAction,
-        currentScheduleIndex: hour,
-        currentScheduleText: convertScheduleIntentToDisplayText(currentScheduledIntent, ecs, entity),
-        scheduleIconTypes: schedule.entries.map(entry => convertScheduleIntentToIconType(entry as CharacterIntent)),
-        activeBuffs: deriveBuffs(ecs, entity, time.minutesElapsed)
-    };
+        currentAction: {type:actionIntent.currentPerformedAction, description:actionToString[actionIntent.currentPerformedAction]},
+        schedule: {currentSlotIndex:hour, slots:schedule.entries},
+        needs: [{type:"SLEEP", current:Math.floor(needs.sleep.current), max:Math.floor(needs.sleep.max), changeRatePerHour:0}],
+        statusEffects:deriveBuffs(ecs, entity, time.minutesElapsed),
+        currentStatusText: deriveCurrentStatusText(ecs, entity, actionIntent)
+    }
 }
 
 
@@ -125,4 +126,16 @@ function getEntityName(ecs: ECS, entityId: Entity | null | undefined): string {
     if (ecs.hasComponent(entityId, WoodDojo)) return "the Wood Dojo";
     if (ecs.hasComponent(entityId, DormitoryComponent)) return "the Dormitory";
     return `location #${entityId}`;
+}
+
+const actionToString : Record<CharacterAction, string> = {
+    [CharacterAction.IDLE]: "Idle",
+    [CharacterAction.WALKING]: "Walking",
+    [CharacterAction.CHOPPING]: "Chopping",
+    [CharacterAction.BUILDING]: "Building",
+    [CharacterAction.STUDYING]: "Studying",
+    [CharacterAction.SLEEPING]: "Sleeping",
+    [CharacterAction.STROLLING]: "Resting",
+    [CharacterAction.RELAXING]: "Resting",
+    [CharacterAction.NONE]: "None"
 }

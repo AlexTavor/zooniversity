@@ -2,12 +2,13 @@ import React, { useEffect, useState } from "react";
 import {GameEvent} from "../../game/consts/GameEvent.ts";
 import {EventBus} from "../../game/EventBus.ts";
 import {MainMenu} from "./main_menu/MainMenu.tsx";
-import {TimeControls} from "./time_controls/TimeControls.tsx";
+import {TimeControls} from "../v2/elements/time/TimeControls.tsx";
 import {WeatherPanel} from "./weather/WeatherPanel.tsx";
-import {SelectionPanel} from "./selection/SelectionPanel.tsx";
 import { ResourceDisplay } from "./resources/ResourceDisplay.tsx";
+import { TopCharacterBar } from "../v2/elements/top-char-bar/TopCharactersBar.tsx";
+import { BottomBar } from "../v2/elements/bottom-bar/BottomBar.tsx";
 import { CharacterPortraitsLayer } from "./character_portaits/CharacterPortraitsLayer.tsx";
-import { TopCharacterBar } from "../v2/elements/containers/TopCharactersBar.tsx";
+import { useToolCursor } from "../v2/hooks/useToolCursor.tsx";
 
 export const GameContainer: React.FC = () => {
     const [gameLoaded, setGameLoaded] = useState(false);
@@ -20,11 +21,13 @@ export const GameContainer: React.FC = () => {
         };
     }, []);
 
+    useToolCursor();
+    
     return !gameLoaded ? <MainMenu /> : 
     <>
         <TimeControls/>
         <WeatherPanel/>
-        <SelectionPanel/>
+        <BottomBar/>
         <ResourceDisplay/>
         <CharacterPortraitsLayer/>
         <TopCharacterBar/>

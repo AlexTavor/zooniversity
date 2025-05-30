@@ -1,5 +1,5 @@
 export class TimeConfig {
-    static HoursPerDay = 8;
+    static HoursPerDay = 9;
     static DaysPerSemester = 30;
     static MinutesPerHour = 60;
 

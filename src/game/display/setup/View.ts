@@ -68,7 +68,7 @@ export class View {
 
     sprite.setOrigin(0.5, type === ViewType.TREE ? 1 : 0.5);
     sprite.setFrame(frame);
-    sprite.setInteractive({ useHandCursor: true });
+    sprite.setInteractive({ useHandCursor: false });
 
     const defaultSize = SpriteLibrary[spriteName as SpriteKey]?.defaultSize ?? { x: 1, y: 1 };
     const pxPerUnit = Config.Display.PixelsPerUnit;

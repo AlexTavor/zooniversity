@@ -8,6 +8,7 @@ import { PanelTypeReducer, PanelTypeReducers } from "./PanelReducersRegistry.ts"
 import { PanelActionImplementation, SelectionPanelReducer, SelectionPanelReducers, createPanelActions } from "./PanelAction.ts";
 
 export type PanelData = {
+  findAction?:()=>void;
   actionsImpl?: PanelActionImplementation[];
   panelTypeData?: unknown;
 } & PanelDefinition;
@@ -63,7 +64,8 @@ export class DataPanelModule extends DisplayModule<GameDisplayContext> {
             ...baseDef,
             ...reduced,
             actionsImpl: createPanelActions({...baseDef, actions:[findActionDefinition, ...(baseDef.actions || [])]}, this.activeEntity, view),
-            panelTypeData
+            panelTypeData,
+            findAction:()=>{EventBus.emit(UIEvent.FindViewRequested, view.viewContainer);}
         };
 
         const payload = JSON.stringify(fullDef);

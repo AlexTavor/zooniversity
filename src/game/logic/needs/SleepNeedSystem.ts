@@ -1,12 +1,12 @@
 import { System, Entity, ECS } from "../../ECS";
 import { TimeConfig } from "../../config/TimeConfig";
-import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
-import { CharacterAction } from "../action-intent/actionIntentData";
+import { StatCalculator } from "../buffs/StatCalculator";
+import { AffectedStat } from "../buffs/buffsData";
 import { getTime } from "../time/TimeComponent";
 import { NeedsComponent } from "./NeedsComponent";
 
 export class SleepNeedSystem extends System {
-    public componentsRequired = new Set<Function>([NeedsComponent, ActionIntentComponent]);
+    public componentsRequired = new Set<Function>([NeedsComponent]);
 
     private getDeltaInGameMinutes(ecs: ECS, deltaMs: number): number {
         const time = getTime(ecs);
@@ -24,15 +24,9 @@ export class SleepNeedSystem extends System {
 
         for (const entity of entities) {
             const needs = this.ecs.getComponent(entity, NeedsComponent);
-            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
+            const sleepModificationRate = StatCalculator.getEffectiveStat(this.ecs, entity, AffectedStat.SLEEP_MODIFICATION_RATE);
 
-            if (actionIntent.currentPerformedAction === CharacterAction.SLEEPING) {
-                needs.sleep.current += needs.sleep.upRatePerMinute * gameMinutesPassedThisFrame;
-            } else {
-                needs.sleep.current -= needs.sleep.downRatePerMinute * gameMinutesPassedThisFrame;
-            }
-
-            needs.sleep.current = Math.max(0, Math.min(needs.sleep.current, needs.sleep.max));
+            needs.sleep.current = Math.max(0, Math.min(needs.sleep.current + sleepModificationRate * gameMinutesPassedThisFrame, needs.sleep.max));
         }
     }
 }

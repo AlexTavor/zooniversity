@@ -4,6 +4,6 @@ import { ScheduleComponent } from "../characters/ScheduleComponent";
 import { NeedsComponent } from "../needs/NeedsComponent";
 
 export function calculateRestIntentWeight(ecs: ECS, entity: Entity, schedule: ScheduleComponent, needs: NeedsComponent, currentHour: number): number {
-    if (schedule.entries[currentHour] === CharacterIntent.REST) return 60;
+    if (schedule.entries[currentHour] === CharacterIntent.REST) return 10;
     return 10;
 }

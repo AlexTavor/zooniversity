@@ -1,5 +1,5 @@
 import { ECS, Entity } from "../../../../ECS";
-import { ActiveBuffsComponent } from "../../../../logic/buffs/ActiveBuffsComponent";
+import { BuffsComponent } from "../../../../logic/buffs/BuffsComponent";
 import { AffectedStat, BuffEffectApplicationType, BuffEffect, BUFF_DEFINITIONS } from "../../../../logic/buffs/buffsData";
 import { BuffDisplayRegistry } from "../BuffDisplayRegistry";
 
@@ -51,7 +51,7 @@ function effectToText(effect: BuffEffect): string {
 
 export function deriveBuffs(ecs: ECS, entity: Entity, currentTimeMinutes: number): DisplayableBuffData[] {
     const displayedBuffs: DisplayableBuffData[] = [];
-    const activeBuffsComp = ecs.getComponent(entity, ActiveBuffsComponent);
+    const activeBuffsComp = ecs.getComponent(entity, BuffsComponent);
 
     if (!activeBuffsComp || activeBuffsComp.buffs.length === 0) {
         return displayedBuffs;

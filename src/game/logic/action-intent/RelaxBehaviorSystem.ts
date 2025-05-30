@@ -1,5 +1,5 @@
 import { Entity, System } from "../../ECS";
-import { ActiveBuffsComponent } from "../buffs/ActiveBuffsComponent";
+import { BuffsComponent } from "../buffs/BuffsComponent";
 import { BuffType } from "../buffs/buffsData";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent";
 import { HomeComponent } from "../buildings/dormitory/HomeComponent";
@@ -27,7 +27,7 @@ export class RelaxBehaviorSystem extends System {
 
                     if (referencePointEntityId !== null) {
                         this.ecs.addComponent(entity, new StrollComponent(referencePointEntityId));
-                        const buffs = this.ecs.getComponent(entity, ActiveBuffsComponent);
+                        const buffs = this.ecs.getComponent(entity, BuffsComponent);
                         const time = this.ecs.getComponent(this.ecs.getEntitiesWithComponent(TimeComponent)[0], TimeComponent);
                         
                         buffs?.addBuff(BuffType.STROLL_SPEED, time.minutesElapsed);
@@ -38,7 +38,7 @@ export class RelaxBehaviorSystem extends System {
                 // Intent is NOT REST. If character was strolling, clean up.
                 if (hasStrollComponent) {
                     this.ecs.removeComponent(entity, StrollComponent);
-                    const buffs = this.ecs.getComponent(entity, ActiveBuffsComponent);
+                    const buffs = this.ecs.getComponent(entity, BuffsComponent);
                     buffs?.removeBuff(BuffType.STROLL_SPEED);
                 }
             }

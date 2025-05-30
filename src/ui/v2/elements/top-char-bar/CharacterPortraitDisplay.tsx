@@ -1,7 +1,7 @@
 // CharacterPortraitDisplay.tsx
 import React from 'react';
 import styled from '@emotion/styled';
-import { ActionIcon } from './../icons/ActionIcon'; 
+import { ActionIcon } from '../icons/ActionIcon'; 
 import { CharacterType } from '../../../../game/logic/characters/Character';
 import { CharacterAction } from '../../../../game/logic/action-intent/actionIntentData';
 
@@ -90,7 +90,7 @@ export const CharacterPortraitDisplay: React.FC<CharacterPortraitDisplayProps> =
       size={size}
       isSelected={isSelected}
       onClick={handleClick}
-      title={`Character ${id}`} // Basic title, can be enhanced with character name if available in CharacterUIData
+      title={`${characterType}`}
     >
       <PortraitImage src={portraitSrc} alt={`${characterType}`} />
         {

@@ -38,15 +38,12 @@ const FillbarBackground = styled.div<{ barHeight: string; bgColor: string }>`
 `;
 
 const FillbarFill = styled.div<{
-  percentage: number;
   fillColor: string;
   barHeight: string;
 }>`
-  width: ${props => props.percentage}%;
   height: ${props => props.barHeight};
   background-color: ${props => props.fillColor};
   border-radius: 4px; /* Can be same as background or slightly less */
-  transition: width 0.3s ease-in-out;
 `;
 
 export const Fillbar: React.FC<FillbarProps> = ({
@@ -68,7 +65,7 @@ export const Fillbar: React.FC<FillbarProps> = ({
       {label && <FillbarLabel labelColor={labelColor}>{label}</FillbarLabel>}
       <FillbarBackground barHeight={height} bgColor={barBackgroundColor}>
         <FillbarFill
-          percentage={cappedPercentage}
+          style={{"width": `${cappedPercentage}%`}}
           fillColor={fillColor}
           barHeight={height}
         />

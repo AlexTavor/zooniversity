@@ -1,9 +1,9 @@
 import { System, Entity } from "../../ECS";
 import { TimeComponent } from "../time/TimeComponent";
-import { ActiveBuffsComponent } from "./ActiveBuffsComponent";
+import { BuffsComponent } from "./BuffsComponent";
 
 export class BuffManagementSystem extends System {
-    public componentsRequired = new Set<Function>([ActiveBuffsComponent]);
+    public componentsRequired = new Set<Function>([BuffsComponent]);
     private worldTimeEntity: Entity | null = null;
 
     private getCurrentTimeMinutes(): number | null {
@@ -25,7 +25,7 @@ export class BuffManagementSystem extends System {
         }
 
         for (const entity of entities) {
-            const activeBuffs = this.ecs.getComponent(entity, ActiveBuffsComponent);
+            const activeBuffs = this.ecs.getComponent(entity, BuffsComponent);
             
             activeBuffs.buffs = activeBuffs.buffs.filter(
                 buff => buff.expirationTimeMinutes > currentTimeMinutes

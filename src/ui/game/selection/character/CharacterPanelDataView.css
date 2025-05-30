@@ -1,7 +1,0 @@
-.character-panel-expanded {
-  display: flex;
-  flex-direction: column;
-  padding: 8px 12px;
-  height: 100%;
-  justify-content: flex-end;
-}

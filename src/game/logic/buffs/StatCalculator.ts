@@ -2,7 +2,7 @@ import { ECS, Entity } from "../../ECS"; // Adjust path
 import { AffectedStat, BuffEffect, BuffEffectApplicationType } from "./buffsData";
 import { LocomotionComponent } from "../locomotion/LocomotionComponent"; // Adjust path
 import { HarvesterComponent as HarvesterComponent } from "../trees/HarvesterComponent"; // Adjust path, aliased to avoid name clash
-import { ActiveBuffsComponent } from "./ActiveBuffsComponent";
+import { BuffsComponent } from "./BuffsComponent";
 import { WorkerComponent } from "../characters/WorkerComponent";
 
 export class StatCalculator {
@@ -23,6 +23,9 @@ export class StatCalculator {
                 const baseHarvestSpeedAdditive = harvesterForHS?.harvestPerMinute ?? 0;
                 return effectiveWorkSpeed + baseHarvestSpeedAdditive;
             }       
+            case AffectedStat.SLEEP_MODIFICATION_RATE:{
+                return -0.1;
+            }
             default:
                 console.warn(`StatCalculator: Base value for stat type ${statType} not defined.`);
                 return 0;
@@ -36,7 +39,7 @@ export class StatCalculator {
     ): number {
         let currentValue = StatCalculator.getBaseValue(ecs, entity, statType);
         
-        const activeBuffsComp = ecs.getComponent(entity, ActiveBuffsComponent);
+        const activeBuffsComp = ecs.getComponent(entity, BuffsComponent);
         if (!activeBuffsComp || activeBuffsComp.buffs.length === 0) {
             return currentValue;
         }

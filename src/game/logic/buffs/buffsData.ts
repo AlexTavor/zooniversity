@@ -1,12 +1,15 @@
 export enum BuffType {
     RESTED = "RESTED",
-    STROLL_SPEED = "STROLL_SPEED"
+    STROLL_SPEED = "STROLL_SPEED",
+    SLEEPING = "SLEEPING",
+    TIRED = "TIRED"
 }
 
 export enum AffectedStat {
     LOCOMOTION_SPEED = "locomotionSpeed",
     WORK_SPEED = "workSpeed",
     HARVEST_SPEED = "harvestSpeed",
+    SLEEP_MODIFICATION_RATE = "sleepModificationRate"
 }
 
 export enum BuffEffectApplicationType {
@@ -44,7 +47,7 @@ export interface BuffDefinition {
     readonly displayName?: string; // Optional display name for UI
 }
 
-export const MIN_SLEEP_DURATION_FOR_RESTED_BUFF_MINUTES = 90;
+export const MIN_SLEEP_DURATION_FOR_RESTED_BUFF_MINUTES = 30;
 
 export const BUFF_DEFINITIONS: Readonly<Record<BuffType, BuffDefinition>> = {
     [BuffType.RESTED]: {
@@ -58,10 +61,27 @@ export const BUFF_DEFINITIONS: Readonly<Record<BuffType, BuffDefinition>> = {
     },
     [BuffType.STROLL_SPEED]: {
         type: BuffType.STROLL_SPEED,
-        defaultDurationMinutes: 60 * 24 * 7, // Effectively indefinite, managed by adding/removing
+        defaultDurationMinutes: Number.MAX_SAFE_INTEGER, // Effectively indefinite, managed by adding/removing
         effects: [
             { stat: AffectedStat.LOCOMOTION_SPEED, type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: 0.1, order: 50 }
         ],
         stackingBehavior: BuffStackingBehavior.NO_STACK, // Only one instance of this effect
+    },
+    [BuffType.SLEEPING]:{
+        type: BuffType.SLEEPING,
+        defaultDurationMinutes:Number.MAX_SAFE_INTEGER,
+        effects:[
+            {stat: AffectedStat.SLEEP_MODIFICATION_RATE, type:BuffEffectApplicationType.FLAT_ADDITIVE, value:0.6}
+        ],
+        stackingBehavior: BuffStackingBehavior.INDEPENDENT_STACKING
+    },
+    [BuffType.TIRED]:{
+        type: BuffType.TIRED,
+        defaultDurationMinutes:Number.MAX_SAFE_INTEGER,
+        effects: [
+            { stat: AffectedStat.LOCOMOTION_SPEED, type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: 0.75, order: 100 },
+            { stat: AffectedStat.WORK_SPEED,       type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: .75, order: 100 },
+        ],
+        stackingBehavior: BuffStackingBehavior.REFRESH_DURATION,
     }
 };

@@ -21,13 +21,12 @@ export function calculateSleepIntentWeight(ecs: ECS, entity: Entity, intent: Act
     }
 
     if (schedule.entries[currentHour] === CharacterIntent.SLEEP) {
-        weight += 80;
+        weight += 20;
     }
 
     if (intent.intentType == CharacterIntent.SLEEP){
         weight += 100;
     }
-
 
     return canSleep(ecs, entity) ? weight : 0;
 }

@@ -3,6 +3,7 @@ import { GameEvent } from "../../../consts/GameEvent";
 import { UIEvent } from "../../../consts/UIEvent";
 import { GameDisplayContext } from "../../GameDisplay";
 import { DisplayModule } from "../../setup/DisplayModule";
+import { RightClickHandler } from "../../utils/RightClickHandler";
 import { SelectionTool } from "./selection/SelectionTool";
 import { TreeCutSelectionTool } from "./trees/TreeCutSelectionTool";
 
@@ -25,6 +26,7 @@ export class GameTools extends DisplayModule<GameDisplayContext> {
     private modules: Tool[] = [new SelectionTool(), new TreeCutSelectionTool()];
     private activeTool: ToolType = ToolType.None;
     private awaitingReset: boolean = false;
+    private rClickHandler!: RightClickHandler;
 
     init(context: GameDisplayContext): void {
         this.context = context;
@@ -32,14 +34,15 @@ export class GameTools extends DisplayModule<GameDisplayContext> {
             module.init(context);
         });
 
-        EventBus.on(UIEvent.ShowPanelCalled, this.handleShowPanelCalled, this);
         EventBus.on(GameEvent.ToolSelected, this.handleToolSelected, this);
         EventBus.emit(GameEvent.ToolSelected, ToolType.Selection);
+
+        this.rClickHandler = new RightClickHandler(this.handleRightClick.bind(this));
+        this.rClickHandler.start();
     }
-    handleShowPanelCalled(data: unknown): void {
-        if (data == null) {
-            this.awaitingReset = true;
-        }
+
+    handleRightClick(){
+        this.awaitingReset = true;
     }
 
     handleToolSelected(toolType: ToolType): void {
@@ -75,6 +78,6 @@ export class GameTools extends DisplayModule<GameDisplayContext> {
             module.destroy();
         });
         EventBus.off(GameEvent.ToolSelected, this.handleToolSelected, this);
-        EventBus.off(UIEvent.ShowPanelCalled, this.handleShowPanelCalled, this);
+        this.rClickHandler.stop();
     }
 }

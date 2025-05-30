@@ -2,6 +2,7 @@ import { Entity } from "../../game/ECS";
 import { ToolType } from "../../game/display/game/tools/GameTools";
 import { CharacterAction } from "../../game/logic/action-intent/actionIntentData";
 import { CharacterType } from "../../game/logic/characters/Character";
+import { NeedType } from "./elements/needs/NeedTypes";
 
 interface CharacterUIData {
     id: Entity;
@@ -19,20 +20,12 @@ interface ToolsUIData {
     activeTool: ToolType | null;
 }
 
-enum NeedType { /* ... e.g., SLEEP, FOOD, FUN */ }
 enum StatusEffectType { /* ... e.g., RESTED, HUNGRY, INSPIRED */ }
 enum ScheduleActivityType { /* ... e.g., WORK, SLEEP, STUDY, FREE_TIME */ } // Corresponds to CharacterIntent
 
 interface Thought {
     timestamp: number; // Or Date object, depending on how you want to format it
     message: string;
-}
-
-interface NeedUIData {
-    type: NeedType;
-    max: number;
-    current: number;
-    changeRatePerHour: number; // Can be positive or negative
 }
 
 interface StatusEffectUIData {
@@ -54,6 +47,15 @@ interface ScheduleUIData {
     slots: ScheduleActivityType[]; // Array representing each hour/block of the day
     currentActivity: ScheduleActivityType; // The activity for the current time slot
     // currentIndex?: number; // Optional: if UI needs to highlight current slot
+}
+
+interface NeedUIData {
+    type: NeedType;
+    max: number;
+    current: number;
+    changeRatePerHour: number; // Can be positive or negative
+    fillColor?: string;
+    label:string;
 }
 
 interface SelectedCharacterUIData {
