@@ -1,4 +1,4 @@
-import { ECS, Entity } from "../../../ECS";
+import { ECS, Entity } from "../../../../ECS";
 import { ActionIntentComponent } from "../ActionIntentComponent";
 import {
     CharacterAction,
@@ -7,11 +7,11 @@ import {
     SleepingData,
     CharacterIntent
 } from "../actionIntentData";
-import { Transform } from "../../../components/Transform";
-import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
-import { DormitoryComponent } from "../../buildings/dormitory/DormitoryComponent";
-import { Pos } from "../../../../utils/Math";
-import { LocomotionComponent } from "../../locomotion/LocomotionComponent"; 
+import { Transform } from "../../../../components/Transform";
+import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
+import { DormitoryComponent } from "../../../buildings/dormitory/DormitoryComponent";
+import { Pos } from "../../../../../utils/Math";
+import { LocomotionComponent } from "../../../locomotion/LocomotionComponent"; 
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;

@@ -3,7 +3,7 @@ import React from 'react';
 import styled from '@emotion/styled';
 import { ActionIcon } from '../icons/ActionIcon'; 
 import { CharacterType } from '../../../../game/logic/characters/Character';
-import { CharacterAction } from '../../../../game/logic/action-intent/actionIntentData';
+import { CharacterAction } from '../../../../game/logic/intent/intent-to-action/actionIntentData';
 
 const characterPortraitIconMap: Partial<Record<CharacterType, string>> = {
   [CharacterType.PROFESSOR]: 'assets/characters/booker/booker_icon.png'

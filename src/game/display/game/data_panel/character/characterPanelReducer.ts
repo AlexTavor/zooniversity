@@ -1,18 +1,22 @@
 import { ECS, Entity } from "../../../../ECS";
 import { TimeConfig } from "../../../../config/TimeConfig";
-import { ActionIntentComponent } from "../../../../logic/action-intent/ActionIntentComponent";
-import { StrollComponent } from "../../../../logic/action-intent/StrollComponent";
-import { CharacterIntent, CharacterAction, isChoppingData, isSleepingData, isStrollingAtPointData, isWalkingData } from "../../../../logic/action-intent/actionIntentData";
+import { ActionIntentComponent } from "../../../../logic/intent/intent-to-action/ActionIntentComponent";
+import { StrollComponent } from "../../../../logic/intent/intent-to-action/relaxation/StrollComponent";
+import { CharacterIntent, CharacterAction, isChoppingData, isSleepingData, isStrollingAtPointData, isWalkingData } from "../../../../logic/intent/intent-to-action/actionIntentData";
 import { StatCalculator } from "../../../../logic/buffs/StatCalculator";
 import { AffectedStat } from "../../../../logic/buffs/buffsData";
 import { DormitoryComponent } from "../../../../logic/buildings/dormitory/DormitoryComponent";
 import { WoodDojo } from "../../../../logic/buildings/wood_dojo/WoodDojo";
 import { ScheduleComponent } from "../../../../logic/characters/ScheduleComponent";
-import { NeedsComponent } from "../../../../logic/needs/NeedsComponent";
+import { NeedType, NeedsComponent } from "../../../../logic/needs/NeedsComponent";
 import { TimeComponent } from "../../../../logic/time/TimeComponent";
 import { Tree } from "../../../../logic/trees/Tree";
 import { deriveBuffs } from "./deriveBuffs";
 
+const NeedTypeToStatMap = new Map<NeedType, AffectedStat>([
+    [NeedType.FOOD, AffectedStat.HUNGER_MODIFICATION_RATE],
+    [NeedType.SLEEP, AffectedStat.SLEEP_MODIFICATION_RATE]
+]);
 
 export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
     const actionIntent = ecs.getComponent(entity, ActionIntentComponent);
@@ -38,7 +42,7 @@ export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
                 type:key.toString(), 
                 current:Math.floor(value.current), 
                 max:Math.floor(value.max), 
-                changeRatePerHour:((StatCalculator.getEffectiveStat(ecs, entity, AffectedStat.SLEEP_MODIFICATION_RATE)*TimeConfig.HoursPerDay).toFixed(2))
+                changeRatePerHour:((StatCalculator.getEffectiveStat(ecs, entity, NeedTypeToStatMap.get(key)!)*TimeConfig.HoursPerDay).toFixed(2))
             })
         );
 
@@ -122,5 +126,6 @@ const actionToString : Record<CharacterAction, string> = {
     [CharacterAction.SLEEPING]: "Sleeping",
     [CharacterAction.STROLLING]: "Resting",
     [CharacterAction.RELAXING]: "Resting",
-    [CharacterAction.NONE]: "None"
+    [CharacterAction.NONE]: "None",
+    [CharacterAction.EATING]: "Eating"
 }

@@ -2,15 +2,16 @@ export enum BuffType {
     RESTED = "RESTED",
     STROLL_SPEED = "STROLL_SPEED",
     SLEEPING = "SLEEPING",
-    TIRED = "TIRED"
+    TIRED = "TIRED",
+    EATING = "EATING"
 }
 
 export enum AffectedStat {
-    LOCOMOTION_SPEED = "locomotionSpeed",
-    WORK_SPEED = "workSpeed",
-    HARVEST_SPEED = "harvestSpeed",
-    SLEEP_MODIFICATION_RATE = "sleepModificationRate",
-    HUNGER_MODIFICATION_RATE = "hungerModificationRate"
+    LOCOMOTION_SPEED = "LOCOMOTION_SPEED",
+    WORK_SPEED = "WORK_SPEED",
+    HARVEST_SPEED = "HARVEST_SPEED",
+    SLEEP_MODIFICATION_RATE = "SLEEP_MODIFICATION_RATE",
+    HUNGER_MODIFICATION_RATE = "HUNGER_MODIFICATION_RATE"
 }
 
 export enum BuffEffectApplicationType {
@@ -75,6 +76,14 @@ export const BUFF_DEFINITIONS: Readonly<Record<BuffType, BuffDefinition>> = {
             {stat: AffectedStat.SLEEP_MODIFICATION_RATE, type:BuffEffectApplicationType.FLAT_ADDITIVE, value:0.6}
         ],
         stackingBehavior: BuffStackingBehavior.INDEPENDENT_STACKING
+    },
+    [BuffType.EATING]:{
+        type: BuffType.EATING,
+        defaultDurationMinutes:10,
+        effects: [
+            { stat: AffectedStat.HUNGER_MODIFICATION_RATE, type: BuffEffectApplicationType.FLAT_ADDITIVE, value: 2.5, order: 100 },
+        ],
+        stackingBehavior: BuffStackingBehavior.REFRESH_DURATION,
     },
     [BuffType.TIRED]:{
         type: BuffType.TIRED,

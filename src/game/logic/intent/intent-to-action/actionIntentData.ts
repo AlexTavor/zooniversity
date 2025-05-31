@@ -1,17 +1,21 @@
-import { Entity } from "../../ECS";
-import { Pos } from "../../../utils/Math";
+import { Entity } from "../../../ECS";
+import { Pos } from "../../../../utils/Math";
 
 /** Defines the high-level goal or scheduled task for a character. */
+
 export enum CharacterIntent {
-    NONE = 0,
-    HARVEST = 1,
-    BUILD = 2,
-    SLEEP = 3,
-    REST = 4,
-    STUDY = 5,
+    NONE = "NONE",
+    HARVEST = "HARVEST",
+    BUILD = "BUILD",
+    SLEEP = "SLEEP",
+    REST = "REST",
+    EAT = "EAT",
+    STUDY = "STUDY",
+    FORAGE_FOOD = "FORAGE_FOOD"
 }
 
 /** Defines the concrete, observable, low-level action a character is currently performing. */
+
 export enum CharacterAction {
     IDLE = "Idle",
     WALKING = "Walking",
@@ -19,17 +23,20 @@ export enum CharacterAction {
     BUILDING = "Building",
     STUDYING = "Studying",
     SLEEPING = "Sleeping",
-    STROLLING = "Strolling", // Covers walking during stroll and pausing at stroll points
+    STROLLING = "Strolling",// Covers walking during stroll and pausing at stroll points
     RELAXING = "Relaxing",
     NONE = "None",
+    EATING = "EATING"
 }
 
 /** Enum to discriminate between different actionData payload structures. */
+
 export enum ActionDataType {
     WalkingData,
     ChoppingData,
     SleepingData,
     StrollingAtPointData,
+    EatingData
 }
 
 // --- Payload Interfaces for ActionIntentComponent.actionData ---
@@ -55,8 +62,15 @@ export interface StrollingAtPointData {
     atTreeEntityId: Entity; // The tree/point they are currently at
 }
 
+export interface EatingData {
+    readonly type: ActionDataType.EatingData; 
+}
 
 // --- Type Guards for ActionData Payloads ---
+
+export function isEatingData(data: any): data is EatingData {
+    return data?.type === ActionDataType.EatingData;
+}
 
 export function isWalkingData(data: any): data is WalkingData {
     return data?.type === ActionDataType.WalkingData &&

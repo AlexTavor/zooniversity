@@ -1,7 +1,7 @@
 // src/ui/panel/content_views/character/CharacterInfoContentCollapsed.tsx
 import React from 'react';
 import styled from '@emotion/styled';
-import { CharacterAction } from '../../../../../game/logic/action-intent/actionIntentData';
+import { CharacterAction } from '../../../../../game/logic/intent/intent-to-action/actionIntentData';
 import { ActionIcon } from '../../icons/ActionIcon';
 import { NeedUIData } from '../../needs/NeedBar';
 import { NeedsDisplay } from '../../needs/NeedsDisplay';

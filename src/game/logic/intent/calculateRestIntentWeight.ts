@@ -1,5 +1,5 @@
 import { ECS, Entity } from "../../ECS";
-import { CharacterIntent } from "../action-intent/actionIntentData";
+import { CharacterIntent } from "./intent-to-action/actionIntentData";
 import { ScheduleComponent } from "../characters/ScheduleComponent";
 import { NeedsComponent } from "../needs/NeedsComponent";
 

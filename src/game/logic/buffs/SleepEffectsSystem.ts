@@ -1,6 +1,6 @@
 import { System, Entity, ECS } from "../../ECS";
-import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
-import { CharacterAction } from "../action-intent/actionIntentData";
+import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent";
+import { CharacterAction } from "../intent/intent-to-action/actionIntentData";
 import { BuffsComponent } from "./BuffsComponent";
 import { MIN_SLEEP_DURATION_FOR_RESTED_BUFF_MINUTES, BuffType } from "./buffsData";
 import { TimeComponent } from "../time/TimeComponent"; // Adjust path

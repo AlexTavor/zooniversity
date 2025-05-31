@@ -42,18 +42,19 @@ import { HarvesterComponent } from "../trees/HarvesterComponent.ts";
 import { loadPanelRegistry } from "../../display/game/data_panel/PanelRegistry.ts";
 import { DormitorySystem } from "../buildings/dormitory/DormitorySystem.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
-import { ActionIntentComponent } from "../action-intent/ActionIntentComponent.ts";
-import { ActionIntentSystem } from "../action-intent/ActionIntentSystem.ts";
+import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent.ts";
+import { ActionIntentSystem } from "../intent/intent-to-action/ActionIntentSystem.ts";
 import { HomeComponent } from "../buildings/dormitory/HomeComponent.ts";
-import { RelaxBehaviorSystem } from "../action-intent/RelaxBehaviorSystem.ts";
+import { RelaxBehaviorSystem } from "../intent/intent-to-action/relaxation/RelaxBehaviorSystem.ts";
 import { BuffsComponent } from "../buffs/BuffsComponent.ts";
 import { BuffManagementSystem } from "../buffs/BuffManagementSystem.ts";
 import { WorkerComponent } from "../characters/WorkerComponent.ts";
 import { SleepEffectsSystem } from "../buffs/SleepEffectsSystem.ts";
 import { SleepNeedSystem } from "../needs/SleepNeedSystem.ts";
 import { NeedData, NeedType, NeedsComponent } from "../needs/NeedsComponent.ts";
-import { IntentSelectionSystem } from "../intent-selection/IntentSelectionSystem.ts";
+import { IntentSelectionSystem } from "../intent/IntentSelectionSystem.ts";
 import { TiredEffectSystem } from "../buffs/TiredEffectSystem.ts";
+import { FoodNeedSystem } from "../needs/FoodNeedSystem.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -98,6 +99,7 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new LocomotionSystem());
 
     game.ecs.addSystem(new SleepNeedSystem());
+    game.ecs.addSystem(new FoodNeedSystem());
 
     game.ecs.addSystem(new IntentSelectionSystem());
     game.ecs.addSystem(new ActionIntentSystem());
@@ -168,7 +170,6 @@ export function initWorld(ecs: ECS): number {
 }
 
 export function createProfessorBooker(ecs: ECS): number {
-    // Get the wood dojo transform, get position from it for booker
     const woodDojoEntity = ecs.getEntitiesWithComponent(WoodDojo)[0];
     const woodDojoTransform = ecs.getComponent(woodDojoEntity, Transform);
     const woodDojo = ecs.getComponent(woodDojoEntity, WoodDojo);
@@ -176,7 +177,6 @@ export function createProfessorBooker(ecs: ECS): number {
     const dormEntity = ecs.getEntitiesWithComponent(DormitoryComponent)[0];
     const dorm = ecs.getComponent(dormEntity, DormitoryComponent);
 
-    // and add booker entity to the ECS
     const booker = addBooker(ecs, woodDojoTransform, woodDojo, dorm, dormEntity);
     
     return booker;
@@ -201,10 +201,13 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, d
         booker,
         new NeedsComponent(
           new Map<NeedType, NeedData>([
-            [NeedType.SLEEP, { current: 75, max: 100 }]
+            [NeedType.SLEEP, { current: 75, max: 100 }],
+            [NeedType.FOOD, { current: 50, max: 100 }],
           ])
         )
-      );    ecs.addComponent(booker, createStandardSchedule());
+    );
+      
+      ecs.addComponent(booker, createStandardSchedule());
 
     woodDojo.assignedCharacters.push(booker);
     dorm.assignedCharacters.push(booker);

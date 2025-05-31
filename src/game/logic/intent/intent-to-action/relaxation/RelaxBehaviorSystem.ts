@@ -1,13 +1,13 @@
-import { Entity, System } from "../../ECS";
-import { BuffsComponent } from "../buffs/BuffsComponent";
-import { BuffType } from "../buffs/buffsData";
-import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent";
-import { HomeComponent } from "../buildings/dormitory/HomeComponent";
-import { WoodDojo } from "../buildings/wood_dojo/WoodDojo";
-import { TimeComponent } from "../time/TimeComponent";
-import { ActionIntentComponent } from "./ActionIntentComponent";
+import { Entity, System } from "../../../../ECS";
+import { BuffsComponent } from "../../../buffs/BuffsComponent";
+import { BuffType } from "../../../buffs/buffsData";
+import { DormitoryComponent } from "../../../buildings/dormitory/DormitoryComponent";
+import { HomeComponent } from "../../../buildings/dormitory/HomeComponent";
+import { WoodDojo } from "../../../buildings/wood_dojo/WoodDojo";
+import { TimeComponent } from "../../../time/TimeComponent";
+import { ActionIntentComponent } from "../ActionIntentComponent";
 import { StrollComponent } from "./StrollComponent";
-import { CharacterIntent } from "./actionIntentData";
+import { CharacterIntent } from "../actionIntentData";
 
 
 export class RelaxBehaviorSystem extends System {

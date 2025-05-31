@@ -1,7 +1,7 @@
 import { ECS, Entity } from "../../ECS";
-import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
-import { CharacterIntent } from "../action-intent/actionIntentData";
-import { canSleep as canSleep } from "../action-intent/intent-handlers/handleSleepIntentLogic";
+import { ActionIntentComponent } from "./intent-to-action/ActionIntentComponent";
+import { CharacterIntent } from "./intent-to-action/actionIntentData";
+import { canSleep as canSleep } from "./intent-to-action/intent-handlers/handleSleepIntentLogic";
 import { ScheduleComponent } from "../characters/ScheduleComponent";
 import { NeedType, NeedsComponent } from "../needs/NeedsComponent";
 

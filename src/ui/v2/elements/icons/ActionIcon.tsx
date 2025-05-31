@@ -1,7 +1,7 @@
 // ActionIcon.tsx
 import React from 'react';
 import { Icon } from './Icon';
-import { CharacterAction } from '../../../../game/logic/action-intent/actionIntentData';
+import { CharacterAction } from '../../../../game/logic/intent/intent-to-action/actionIntentData';
 import { actionIconMap } from './actionIconMap';
 
 interface ActionIconProps {

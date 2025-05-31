@@ -2,7 +2,7 @@ import { Component } from "../../ECS";
 
 export enum NeedType {
     SLEEP = "Sleep",
-    FOOD = "Food"
+    FOOD = "Hunger"
 }
 
 export interface NeedData {
@@ -22,10 +22,14 @@ export class NeedsComponent extends Component {
         return this.needs.get(type);
     }
 
-    public updateNeedCurrent(type: NeedType, amount: number): void {
+    public updateNeedCurrent(type: NeedType, amount: number, delta:boolean = false): void {
         const need = this.needs.get(type);
         if (need) {
-            need.current = Math.max(0, Math.min(amount, need.max));
+            if (delta){
+                need.current = Math.max(0, Math.min(need.current + amount, need.max));
+            } else {
+                need.current = Math.max(0, Math.min(amount, need.max));
+            }
         }
     }
 

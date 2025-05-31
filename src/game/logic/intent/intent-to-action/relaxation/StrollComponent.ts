@@ -1,5 +1,5 @@
-import { Pos } from "../../../utils/Math";
-import { Component, Entity } from "../../ECS";
+import { Pos } from "../../../../../utils/Math";
+import { Component, Entity } from "../../../../ECS";
 
 export class StrollComponent extends Component {
     public referencePointEntityId: Entity;

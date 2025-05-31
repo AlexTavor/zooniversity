@@ -12,8 +12,8 @@ import { EffectType } from "../../setup/ViewEffectController";
 import { createView } from "../../setup/ViewStore";
 import { ViewTracker } from "../../setup/ViewTracker";
 import { GameDisplayContext } from "../../GameDisplay";
-import { ActionIntentComponent } from "../../../logic/action-intent/ActionIntentComponent";
-import { CharacterAction } from "../../../logic/action-intent/actionIntentData";
+import { ActionIntentComponent } from "../../../logic/intent/intent-to-action/ActionIntentComponent";
+import { CharacterAction } from "../../../logic/intent/intent-to-action/actionIntentData";
 
 export class CharacterViewModule extends ViewDisplayModule {
     init(context: GameDisplayContext): void {

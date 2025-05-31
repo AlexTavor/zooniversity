@@ -1,4 +1,4 @@
-import { ECS, Entity } from "../../../ECS";
+import { ECS, Entity } from "../../../../ECS";
 import { ActionIntentComponent } from "../ActionIntentComponent";
 import {
     CharacterAction,
@@ -7,12 +7,12 @@ import {
     ChoppingData,
     CharacterIntent
 } from "../actionIntentData";
-import { Transform } from "../../../components/Transform";
-import { HarvesterComponent } from "../../trees/HarvesterComponent";
-import { Tree } from "../../trees/Tree";
-import { HarvestableComponent } from "../../trees/HarvestableComponent";
-import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
-import { Pos } from "../../../../utils/Math";
+import { Transform } from "../../../../components/Transform";
+import { HarvesterComponent } from "../../../trees/HarvesterComponent";
+import { Tree } from "../../../trees/Tree";
+import { HarvestableComponent } from "../../../trees/HarvestableComponent";
+import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
+import { Pos } from "../../../../../utils/Math";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;

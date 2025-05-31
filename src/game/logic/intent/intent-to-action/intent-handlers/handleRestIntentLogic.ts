@@ -1,11 +1,11 @@
-import { Pos, MathUtils } from "../../../../utils/Math";
-import { Entity, ECS } from "../../../ECS";
-import { Transform } from "../../../components/Transform";
-import { LocomotionComponent } from "../../locomotion/LocomotionComponent";
-import { TimeComponent } from "../../time/TimeComponent";
-import { Tree } from "../../trees/Tree";
+import { Pos, MathUtils } from "../../../../../utils/Math";
+import { Entity, ECS } from "../../../../ECS";
+import { Transform } from "../../../../components/Transform";
+import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
+import { TimeComponent } from "../../../time/TimeComponent";
+import { Tree } from "../../../trees/Tree";
 import { ActionIntentComponent } from "../ActionIntentComponent";
-import { StrollComponent } from "../StrollComponent";
+import { StrollComponent } from "../relaxation/StrollComponent";
 import { CharacterAction, ActionDataType, WalkingData, StrollingAtPointData, isWalkingData, CharacterIntent } from "../actionIntentData";
 
 const STROLL_BEHIND_TREE_OFFSET = 30;

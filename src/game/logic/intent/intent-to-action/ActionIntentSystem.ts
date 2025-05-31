@@ -1,6 +1,7 @@
-import { System, Entity } from "../../ECS";
+import { System, Entity } from "../../../ECS";
 import { ActionIntentComponent } from "./ActionIntentComponent";
 import { CharacterIntent, CharacterAction } from "./actionIntentData";
+import { handleEatIntentLogic } from "./intent-handlers/handleEatIntentLogic";
 import { handleHarvestIntentLogic } from "./intent-handlers/handleHarvestIntentLogic";
 import { handleRestIntentLogic } from "./intent-handlers/handleRestIntentLogic";
 import { handleSleepIntentLogic } from "./intent-handlers/handleSleepIntentLogic";
@@ -22,6 +23,9 @@ export class ActionIntentSystem extends System {
                     break;
                 case CharacterIntent.REST:
                     handleRestIntentLogic(this.ecs, entity, actionIntent);
+                    break;
+                case CharacterIntent.EAT:
+                    handleEatIntentLogic(this.ecs, entity, actionIntent);
                     break;
                 default:
                     actionIntent.currentPerformedAction = CharacterAction.IDLE;

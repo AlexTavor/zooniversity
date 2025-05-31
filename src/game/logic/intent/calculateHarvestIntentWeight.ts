@@ -1,6 +1,6 @@
 import { ECS, Entity } from "../../ECS";
-import { CharacterIntent } from "../action-intent/actionIntentData";
-import { canHarvest as canHarvest } from "../action-intent/intent-handlers/handleHarvestIntentLogic";
+import { CharacterIntent } from "./intent-to-action/actionIntentData";
+import { canHarvest as canHarvest } from "./intent-to-action/intent-handlers/handleHarvestIntentLogic";
 import { ScheduleComponent } from "../characters/ScheduleComponent";
 import { NeedsComponent } from "../needs/NeedsComponent";
 

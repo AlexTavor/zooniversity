@@ -1,5 +1,5 @@
 import { Component } from "../../ECS";
-import { CharacterIntent } from "../action-intent/actionIntentData";
+import { CharacterIntent } from "../intent/intent-to-action/actionIntentData";
 
 export type ScheduleEntry = CharacterIntent; // One entry per hour
 

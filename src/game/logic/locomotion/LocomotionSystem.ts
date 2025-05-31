@@ -1,7 +1,7 @@
 import { System, Entity } from "../../ECS";
 import { LocationState, Transform } from "../../components/Transform";
-import { ActionIntentComponent } from "../action-intent/ActionIntentComponent";
-import { CharacterAction, WalkingData} from "../action-intent/actionIntentData";
+import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent";
+import { CharacterAction, WalkingData} from "../intent/intent-to-action/actionIntentData";
 import { TimeComponent } from "../time/TimeComponent";
 import { LocomotionComponent } from "./LocomotionComponent";
 import { Pos } from "../../../utils/Math";

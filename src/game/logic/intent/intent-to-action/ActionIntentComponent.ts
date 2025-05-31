@@ -1,4 +1,4 @@
-import { Component } from "../../ECS";
+import { Component } from "../../../ECS";
 import { CharacterIntent, CharacterAction } from "./actionIntentData";
 
 /**

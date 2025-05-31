@@ -1,4 +1,4 @@
-import { CharacterAction } from '../../../../game/logic/action-intent/actionIntentData';
+import { CharacterAction } from '../../../../game/logic/intent/intent-to-action/actionIntentData';
 
 export const actionIconMap: Partial<Record<CharacterAction, string>> = {
     [CharacterAction.IDLE]: 'assets/icons/idle_icon.png',
@@ -9,4 +9,5 @@ export const actionIconMap: Partial<Record<CharacterAction, string>> = {
     [CharacterAction.STUDYING]: 'assets/icons/book_icon.png',
     [CharacterAction.BUILDING]: 'assets/icons/build_icon.png',
     [CharacterAction.STROLLING]: 'assets/icons/relax_icon.png',
+    [CharacterAction.EATING]: 'assets/icons/eat_icon.png',
 };

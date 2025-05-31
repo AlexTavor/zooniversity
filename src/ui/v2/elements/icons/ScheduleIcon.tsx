@@ -2,7 +2,7 @@
 import React from 'react';
 // import styled from '@emotion/styled'; // Not strictly needed if all styling is handled by Icon component
 import { Icon } from './Icon'; // Assuming Icon.tsx is in the same directory or adjust path
-import { CharacterIntent } from '../../../../game/logic/action-intent/actionIntentData'; // Adjust path as needed
+import { CharacterIntent } from '../../../../game/logic/intent/intent-to-action/actionIntentData'; // Adjust path as needed
 
 export type ScheduleActivityType = CharacterIntent;
 

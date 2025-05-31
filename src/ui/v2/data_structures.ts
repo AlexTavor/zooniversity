@@ -1,6 +1,6 @@
 import { Entity } from "../../game/ECS";
 import { ToolType } from "../../game/display/game/tools/GameTools";
-import { CharacterAction } from "../../game/logic/action-intent/actionIntentData";
+import { CharacterAction } from "../../game/logic/intent/intent-to-action/actionIntentData";
 import { CharacterType } from "../../game/logic/characters/Character";
 import { NeedType } from "./elements/needs/NeedTypes";
 
