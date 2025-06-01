@@ -3,6 +3,7 @@ import {DisplayModule} from "../../setup/DisplayModule.ts";
 import {TimeComponent} from "../../../logic/time/TimeComponent.ts";
 import {TimeConfig} from "../../../config/TimeConfig.ts";
 import {Config} from "../../../config/Config.ts";
+import { getWorldEntity } from "../../../logic/serialization/getWorldEntity.ts";
 
 export class StarfieldModule extends DisplayModule<GameDisplayContext> {
     private starContainer!: Phaser.GameObjects.Container;
@@ -20,7 +21,7 @@ export class StarfieldModule extends DisplayModule<GameDisplayContext> {
         const { scene, layers, ecs } = context;
         this.scene = scene;
 
-        this.worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+        this.worldEntity = getWorldEntity(ecs);
 
         const camera = scene.cameras.main;
         const width = camera.width * Config.Camera.MaxZoom;

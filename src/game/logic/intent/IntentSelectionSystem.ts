@@ -2,7 +2,7 @@ import { Entity, System } from "../../ECS";
 import { ActionIntentComponent } from "./intent-to-action/ActionIntentComponent";
 import { CharacterIntent, CharacterAction } from "./intent-to-action/actionIntentData";
 import { ScheduleComponent } from "../characters/ScheduleComponent";
-import { getCurrentHour } from "../time/TimeComponent";
+import { getTime } from "../time/TimeComponent";
 import { NeedsComponent } from "../needs/NeedsComponent";
 import { calculateHarvestIntentWeight } from "./calculateHarvestIntentWeight";
 import { calculateSleepIntentWeight } from "./calculateSleepIntentWeight";
@@ -17,8 +17,7 @@ export class IntentSelectionSystem extends System {
     ]);
 
     public update(entities: Set<Entity>, delta: number): void {
-        const currentHour = getCurrentHour(this.ecs);
-        if (currentHour === null) return;
+        const currentHour = getTime(this.ecs).hour;
 
         for (const entity of entities) {
             const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);

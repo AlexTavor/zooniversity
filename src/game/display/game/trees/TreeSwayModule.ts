@@ -5,6 +5,7 @@ import {WeatherComponent} from "../../../logic/weather/WeatherComponent.ts";
 import {TimeComponent} from "../../../logic/time/TimeComponent.ts";
 import {SimplexNoise} from "../../../../utils/SimplexNoise.ts";
 import {ViewType} from "../../setup/ViewDefinition.ts";
+import { getWorldEntity } from "../../../logic/serialization/getWorldEntity.ts";
 
 export class TreeSwayConfig {
     public static MaxRotation = Phaser.Math.DegToRad(6);
@@ -20,7 +21,7 @@ export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
 
     init(context: GameDisplayContext): void {
         this.context = context;
-        this.worldEntity = context.ecs.getEntitiesWithComponent(TimeComponent)[0];
+        this.worldEntity = getWorldEntity(context.ecs);
     }
 
     update(delta: number): void {

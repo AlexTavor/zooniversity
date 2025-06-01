@@ -13,7 +13,7 @@ import { GameDisplayContext } from "../../GameDisplay";
 import { ProgressBarConfig, ValueRef } from "../effects/ProgressBar";
 import { ShudderEffectConfig } from "../effects/ShudderEffect";
 import { TreeFallAnimation } from "./TreeFallAnimation";
-import { TimeComponent } from "../../../logic/time/TimeComponent";
+import { TimeComponent, getTime } from "../../../logic/time/TimeComponent";
 
 const harvestBarConfig: ProgressBarConfig = {
   position: "left",
@@ -97,8 +97,7 @@ export class TreeViewModule extends ViewDisplayModule {
       this.harvested.set(entity, true);
     });
 
-    const timeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
-    const time = ecs.getComponent(timeEntity, TimeComponent);
+    const time = getTime(ecs);
     this.fallAnimations.forEach((anim, _) => {
       const speed = time.speedFactor;
       anim.setSpeed(speed);

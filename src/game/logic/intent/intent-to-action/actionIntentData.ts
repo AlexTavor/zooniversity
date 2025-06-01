@@ -26,7 +26,8 @@ export enum CharacterAction {
     STROLLING = "Strolling",// Covers walking during stroll and pausing at stroll points
     RELAXING = "Relaxing",
     NONE = "None",
-    EATING = "EATING"
+    EATING = "Eating",
+    FORAGING = "Foraging"
 }
 
 /** Enum to discriminate between different actionData payload structures. */
@@ -36,7 +37,13 @@ export enum ActionDataType {
     ChoppingData,
     SleepingData,
     StrollingAtPointData,
-    EatingData
+    EatingData,
+    ForagingActionData
+}
+
+export interface ForagingActionData {
+    readonly type: ActionDataType.ForagingActionData; 
+    targetForagableEntityId: Entity;
 }
 
 // --- Payload Interfaces for ActionIntentComponent.actionData ---
@@ -67,6 +74,10 @@ export interface EatingData {
 }
 
 // --- Type Guards for ActionData Payloads ---
+
+export function isForagingActionData(data: any): data is ForagingActionData {
+   return data?.type === ActionDataType.ForagingActionData;
+}
 
 export function isEatingData(data: any): data is EatingData {
     return data?.type === ActionDataType.EatingData;

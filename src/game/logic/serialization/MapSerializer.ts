@@ -14,6 +14,7 @@ import { InteractionSlots, SlotLayout, SlotType } from "../../components/Interac
 import { initWorld, createProfessorBooker } from "./init.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
 import { InsideLocationComponent } from "../locomotion/InsideLocationComponent.ts";
+import { ForagableComponent } from "../foraging/ForagableComponent.ts";
 
 function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
     for (const [id, obj] of Object.entries(map.objects)) {
@@ -40,7 +41,8 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
                     ecs.addComponent(entity, new InteractionSlots({
                         [SlotType.WORK]: { layout: SlotLayout.RADIAL, radius: 120, count: 2 }
                       }));
-                    } 
+                    ecs.addComponent(entity, new ForagableComponent(ResourceType.FOOD, 20, 20, 0.001, 0.02));
+                }
                 else {
                     console.warn(`Tree object ${id} is missing a sprite key.`);
                 }

@@ -1,5 +1,6 @@
 import { Component, ECS } from "../../ECS";
 import { TimeConfig } from "../../config/TimeConfig";
+import { getWorldEntity } from "../serialization/getWorldEntity";
 
 export class TimeComponent extends Component {
     constructor(
@@ -14,23 +15,7 @@ export class TimeComponent extends Component {
     }
 }
 
-let worldEntity:number;
-let hasWorlEntity:boolean;
-
-export function getCurrentHour(ecs: ECS): number {
-    if (!hasWorlEntity){
-        worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
-        hasWorlEntity = true;
-    }
-    const time = ecs.getComponent(worldEntity, TimeComponent);
-    return time?.hour || 0;
-}
-
 export function getTime(ecs: ECS): TimeComponent {
-    if (!hasWorlEntity){
-        worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
-        hasWorlEntity = true;
-    }
-    const time = ecs.getComponent(worldEntity, TimeComponent);
+    const time = ecs.getComponent(getWorldEntity(ecs), TimeComponent);
     return time!;
 }

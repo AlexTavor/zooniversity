@@ -4,7 +4,7 @@ import { BuffType } from "../../../buffs/buffsData";
 import { DormitoryComponent } from "../../../buildings/dormitory/DormitoryComponent";
 import { HomeComponent } from "../../../buildings/dormitory/HomeComponent";
 import { WoodDojo } from "../../../buildings/wood_dojo/WoodDojo";
-import { TimeComponent } from "../../../time/TimeComponent";
+import { getTime } from "../../../time/TimeComponent";
 import { ActionIntentComponent } from "../ActionIntentComponent";
 import { StrollComponent } from "./StrollComponent";
 import { CharacterIntent } from "../actionIntentData";
@@ -28,7 +28,7 @@ export class RelaxBehaviorSystem extends System {
                     if (referencePointEntityId !== null) {
                         this.ecs.addComponent(entity, new StrollComponent(referencePointEntityId));
                         const buffs = this.ecs.getComponent(entity, BuffsComponent);
-                        const time = this.ecs.getComponent(this.ecs.getEntitiesWithComponent(TimeComponent)[0], TimeComponent);
+                        const time = getTime(this.ecs);
                         
                         buffs?.addBuff(BuffType.STROLL_SPEED, time.minutesElapsed);
                     }

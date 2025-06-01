@@ -3,11 +3,12 @@ import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentCo
 import { CharacterAction, isChoppingData } from "../intent/intent-to-action/actionIntentData";
 import { HarvestableComponent } from "./HarvestableComponent";
 import { HarvesterComponent } from "./HarvesterComponent"; // For harvest speed/ability
-import { TimeComponent } from "../time/TimeComponent";
+import {  getTime } from "../time/TimeComponent";
 import { ResourceComponent } from "../resources/ResourceComponent";
 import { ResourceType } from "../resources/ResourceType";
 import { InteractionSlots } from "../../components/InteractionSlots";
 import { Tree } from "../trees/Tree";
+import { getWorldEntity } from "../serialization/getWorldEntity";
 
 export class TreeHarvestingSystem extends System {
     public componentsRequired = new Set<Function>([
@@ -16,10 +17,7 @@ export class TreeHarvestingSystem extends System {
     ]);
 
     public update(entities: Set<Entity>, delta: number): void {
-        const timeEntity = this.ecs.getEntitiesWithComponent(TimeComponent)[0];
-        if (!timeEntity) return; // No time, no progress
-
-        const time = this.ecs.getComponent(timeEntity, TimeComponent);
+        const time = getTime(this.ecs);
         if (time.speedFactor === 0) return; // Game paused
         
         const scaledDeltaSeconds = (delta / 1000) * time.speedFactor;
@@ -75,13 +73,10 @@ export class TreeHarvestingSystem extends System {
         tree.isBeingCut = false;
         tree.selectedForCutting = false;
 
-        const resourcesEntity = ecs.getEntitiesWithComponent(ResourceComponent)[0];
-        if (resourcesEntity) {
-            const resources = ecs.getComponent(resourcesEntity, ResourceComponent);
-            harvestable.drops.forEach((drop) => {
-                resources.amounts[drop.type as ResourceType] = (resources.amounts[drop.type as ResourceType] || 0) + drop.amount;
-            });
-        }
+        const resources = ecs.getComponent(getWorldEntity(ecs), ResourceComponent);
+        harvestable.drops.forEach((drop) => {
+            resources.amounts[drop.type as ResourceType] = (resources.amounts[drop.type as ResourceType] || 0) + drop.amount;
+        });
     }
 
     private clearActionState(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity | null, treeComponent?: Tree) {

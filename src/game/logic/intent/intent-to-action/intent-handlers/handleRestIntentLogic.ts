@@ -2,7 +2,7 @@ import { Pos, MathUtils } from "../../../../../utils/Math";
 import { Entity, ECS } from "../../../../ECS";
 import { Transform } from "../../../../components/Transform";
 import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
-import { TimeComponent } from "../../../time/TimeComponent";
+import { TimeComponent, getTime } from "../../../time/TimeComponent";
 import { Tree } from "../../../trees/Tree";
 import { ActionIntentComponent } from "../ActionIntentComponent";
 import { StrollComponent } from "../relaxation/StrollComponent";
@@ -86,7 +86,6 @@ export function handleRestIntentLogic(
     ecs: ECS,
     entity: Entity,
     actionIntent: ActionIntentComponent
-    // deltaTimeMs is removed
 ): void {
     const locomotion = ecs.getComponent(entity, LocomotionComponent);
     const strollComp = ecs.getComponent(entity, StrollComponent);
@@ -95,10 +94,7 @@ export function handleRestIntentLogic(
     if (!locomotion || !characterTransform) return setIdle(actionIntent);
     if (!strollComp) return setRelaxing(actionIntent);
 
-    const worldTimeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
-    if (!worldTimeEntity) return setRelaxing(actionIntent); // Cannot manage pause without time
-    const time = ecs.getComponent(worldTimeEntity, TimeComponent);
-    const currentGameTime = time.minutesElapsed;
+    const currentGameTime = getTime(ecs).minutesElapsed;
 
     if (strollComp.isPausedAtTarget) {
         if (currentGameTime >= strollComp.pauseUntilTime) {

@@ -13,6 +13,8 @@ import { Tree } from "../../../trees/Tree";
 import { HarvestableComponent } from "../../../trees/HarvestableComponent";
 import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
 import { Pos } from "../../../../../utils/Math";
+import { WoodDojoWorker } from "../../../buildings/wood_dojo/WoodDojoWorker";
+import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.currentPerformedAction = CharacterAction.IDLE;
@@ -56,16 +58,45 @@ function releaseAnyWorkSlotHeldByCharacter(ecs: ECS, characterEntity: Entity): v
     }
 }
 
-function findAndReserveNewHarvestTarget(ecs: ECS, characterEntity: Entity): { treeId: Entity, slotOffset: Pos, treeTransform: Transform } | null {
-    releaseAnyWorkSlotHeldByCharacter(ecs, characterEntity);
-    const allTrees = ecs.getEntitiesWithComponents([Tree, HarvestableComponent, InteractionSlots, Transform]);
 
-    for (const treeId of allTrees) {
-        if (isTreeValidForHarvest(ecs, treeId)) {
-            const slots = ecs.getComponent(treeId, InteractionSlots);
-            const offset = slots.reserve(characterEntity, SlotType.WORK);
-            if (offset) {
-                return { treeId, slotOffset: offset, treeTransform: ecs.getComponent(treeId, Transform) };
+export function findAndReserveNewHarvestTarget(
+    ecs: ECS,
+    characterEntity: Entity
+): { treeId: Entity; slotOffset: Pos;} | null {
+    releaseAnyWorkSlotHeldByCharacter(ecs, characterEntity);
+
+    const workerInfo = ecs.getComponent(characterEntity, WoodDojoWorker);
+    if (!workerInfo || workerInfo.dojoId === null || workerInfo.dojoId === undefined) {
+        return null;
+    }
+    const assignedDojoId = workerInfo.dojoId;
+
+    if (!ecs.hasEntity(assignedDojoId)) {
+        // The assigned dojo entity itself doesn't exist
+        return null;
+    }
+
+    const caveTreeLUTComponent = getCaveTreeLUT(ecs); // Get the global LUT component
+    if (!caveTreeLUTComponent || !caveTreeLUTComponent.lut) {
+        // Should not happen if getCaveTreeLUT ensures creation
+        return null;
+    }
+    
+    const nearbyTreeIds = caveTreeLUTComponent.lut[assignedDojoId];
+
+    if (nearbyTreeIds && nearbyTreeIds.length > 0) {
+        for (const treeId of nearbyTreeIds) {
+            if (!ecs.hasEntity(treeId)) continue;
+
+            if (isTreeValidForHarvest(ecs, treeId)) {
+                const slots = ecs.getComponent(treeId, InteractionSlots);
+
+                if (slots) {
+                    const offset = slots.reserve(characterEntity, SlotType.WORK);
+                    if (offset) {
+                        return { treeId, slotOffset: offset};
+                    }
+                }
             }
         }
     }
@@ -100,11 +131,14 @@ export function handleHarvestIntentLogic(
     const targetInfo = findAndReserveNewHarvestTarget(ecs, entity);
 
     if (!targetInfo) {
-        setWaitingOrBlocked(actionIntent,);
+        setWaitingOrBlocked(actionIntent);
         return;
     }
     
-    const { treeId, slotOffset, treeTransform } = targetInfo;
+
+    const { treeId, slotOffset } = targetInfo;
+    const treeTransform = ecs.getComponent(treeId, Transform); 
+
     const exactApproachPosition = { 
         x: Math.round(treeTransform.x + slotOffset.x), 
         y: Math.round(treeTransform.y + slotOffset.y) 

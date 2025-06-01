@@ -5,6 +5,7 @@ import {DisplayModule} from "../../setup/DisplayModule.ts";
 import {TimeConfig} from "../../../config/TimeConfig.ts";
 import {Config} from "../../../config/Config.ts";
 import {getColorForMinute, SKY_TINT_GRADIENT} from "../time_tint/getColorForMinute.ts";
+import { getWorldEntity } from "../../../logic/serialization/getWorldEntity.ts";
 
 export class SkyDisplayModule extends DisplayModule<GameDisplayContext> {
     private background!: Phaser.GameObjects.Rectangle;
@@ -14,7 +15,7 @@ export class SkyDisplayModule extends DisplayModule<GameDisplayContext> {
         this.context = context;
         const { scene, ecs } = context;
 
-        this.worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+        this.worldEntity = getWorldEntity(ecs);
         const w = (scene.scale.width*Config.Camera.MaxZoom) + 200;
         const h = (scene.scale.height*Config.Camera.MaxZoom)  + 200;
         this.background = scene.add

@@ -5,6 +5,7 @@ import { TimeConfig } from "../../../config/TimeConfig.ts";
 import { getColorForMinute } from "../time_tint/getColorForMinute.ts";
 import { Config } from "../../../config/Config.ts";
 import { WeatherComponent } from "../../../logic/weather/WeatherComponent.ts";
+import { getWorldEntity } from "../../../logic/serialization/getWorldEntity.ts";
 
 interface CloudLayerConfig {
     speed: number;
@@ -78,7 +79,7 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
     init(context: GameDisplayContext): void {
         this.context = context;
         const { scene, ecs, layers } = context;
-        this.worldEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
+        this.worldEntity = getWorldEntity(ecs);
         this.sceneWidth = scene.scale.width * 2 * Config.Camera.MaxZoom;
 
         CLOUD_LAYERS.forEach((layer, index) => {

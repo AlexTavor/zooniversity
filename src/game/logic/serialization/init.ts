@@ -55,6 +55,7 @@ import { NeedData, NeedType, NeedsComponent } from "../needs/NeedsComponent.ts";
 import { IntentSelectionSystem } from "../intent/IntentSelectionSystem.ts";
 import { TiredEffectSystem } from "../buffs/TiredEffectSystem.ts";
 import { FoodNeedSystem } from "../needs/FoodNeedSystem.ts";
+import { getWorldEntity } from "./getWorldEntity.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -122,7 +123,7 @@ export const initSystems = (game:Game)=>{
 const initLut = (game:Game) => {
     const handleViewsInitialized = ()=>{
         const lut = new CaveTreeLUTComponent(buildCaveTreeLUTFromViews(game.gameDisplay.viewsByEntity));
-        game.ecs.addComponent(game.ecs.addEntity(), lut);
+        game.ecs.addComponent(getWorldEntity(game.ecs), lut);
     }
     
     EventBus.on(GameEvent.ViewsInitialized, handleViewsInitialized);
@@ -159,14 +160,12 @@ export const initDisplay = (game:Game)=>{
     game.gameDisplay.init(game, game.ecs, modules);
 }
 
-export function initWorld(ecs: ECS): number {
-    const world = ecs.addEntity();
+export function initWorld(ecs: ECS) {
+    const world = getWorldEntity(ecs);
     ecs.addComponent(world, new TimeComponent());
     ecs.addComponent(world, new InputComponent());
     ecs.addComponent(world, new WeatherComponent());
     ecs.addComponent(world, new ResourceComponent());
-    
-    return world;
 }
 
 export function createProfessorBooker(ecs: ECS): number {
@@ -177,12 +176,12 @@ export function createProfessorBooker(ecs: ECS): number {
     const dormEntity = ecs.getEntitiesWithComponent(DormitoryComponent)[0];
     const dorm = ecs.getComponent(dormEntity, DormitoryComponent);
 
-    const booker = addBooker(ecs, woodDojoTransform, woodDojo, dorm, dormEntity);
+    const booker = addBooker(ecs, woodDojoTransform, woodDojo, woodDojoEntity, dorm, dormEntity);
     
     return booker;
 }
 
-function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, dorm:DormitoryComponent, homeEntity:Entity) {
+function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, woodDojoEntity:Entity, dorm:DormitoryComponent, homeEntity:Entity) {
     const booker = ecs.addEntity();
     
     ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y));
@@ -209,7 +208,7 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, d
       
       ecs.addComponent(booker, createStandardSchedule());
 
-    woodDojo.assignedCharacters.push(booker);
+    woodDojo.assignCharacter(ecs, woodDojoEntity, booker);
     dorm.assignedCharacters.push(booker);
 
     return booker;

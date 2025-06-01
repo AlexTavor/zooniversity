@@ -1,9 +1,9 @@
 // src/ui/common/NeedTypes.ts (example path)
 
 export enum NeedType {
-    SLEEP = "SLEEP",
-    FOOD = "FOOD",
-    SOCIAL = "SOCIAL"
+    SLEEP = "Sleep",
+    FOOD = "Hunger",
+    FUN = "Fun"
 }
 
 export interface NeedDisplayInfo {
@@ -14,7 +14,7 @@ export interface NeedDisplayInfo {
 export const needDisplayInfoMap: Record<NeedType, NeedDisplayInfo> = {
     [NeedType.SLEEP]: { label: "Sleep", defaultFillColor: "#3498DB"},
     [NeedType.FOOD]: { label: "Food", defaultFillColor: "#E67E22"},
-    [NeedType.SOCIAL]: { label: "Social", defaultFillColor: "#2ECC71"},
+    [NeedType.FUN]: { label: "Fun", defaultFillColor: "#2ECC71"},
 };
 
 // Utility function to format the change rate

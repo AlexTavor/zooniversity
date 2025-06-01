@@ -3,6 +3,7 @@ import {DisplayModule} from "../../setup/DisplayModule.ts";
 import {TimeComponent} from "../../../logic/time/TimeComponent.ts";
 import {WeatherComponent} from "../../../logic/weather/WeatherComponent.ts";
 import {updateTimeTintPipeline} from "./updateTimeTintPineline.ts";
+import { getWorldEntity } from "../../../logic/serialization/getWorldEntity.ts";
 
 export class TinterModule extends DisplayModule<GameDisplayContext> {
     private worldEntity!: number;
@@ -12,7 +13,7 @@ export class TinterModule extends DisplayModule<GameDisplayContext> {
         this.context = context;
         const { ecs } = context;
 
-        this.worldEntity = ecs.getEntitiesWithComponents([TimeComponent, WeatherComponent])[0];
+        this.worldEntity = getWorldEntity(ecs);
     }
 
     update(_: number): void {

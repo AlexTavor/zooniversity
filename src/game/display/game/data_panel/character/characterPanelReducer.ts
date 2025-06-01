@@ -9,7 +9,7 @@ import { DormitoryComponent } from "../../../../logic/buildings/dormitory/Dormit
 import { WoodDojo } from "../../../../logic/buildings/wood_dojo/WoodDojo";
 import { ScheduleComponent } from "../../../../logic/characters/ScheduleComponent";
 import { NeedType, NeedsComponent } from "../../../../logic/needs/NeedsComponent";
-import { TimeComponent } from "../../../../logic/time/TimeComponent";
+import { getTime } from "../../../../logic/time/TimeComponent";
 import { Tree } from "../../../../logic/trees/Tree";
 import { deriveBuffs } from "./deriveBuffs";
 
@@ -22,8 +22,7 @@ export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
     const actionIntent = ecs.getComponent(entity, ActionIntentComponent);
     const schedule = ecs.getComponent(entity, ScheduleComponent);
     const needs = ecs.getComponent(entity, NeedsComponent);
-    const timeEntity = ecs.getEntitiesWithComponent(TimeComponent)[0];
-    const time = ecs.getComponent(timeEntity, TimeComponent);
+    const time = getTime(ecs);
     const hour = time.hour;
 
     if (!actionIntent || !schedule) {
@@ -127,5 +126,6 @@ const actionToString : Record<CharacterAction, string> = {
     [CharacterAction.STROLLING]: "Resting",
     [CharacterAction.RELAXING]: "Resting",
     [CharacterAction.NONE]: "None",
-    [CharacterAction.EATING]: "Eating"
+    [CharacterAction.EATING]: "Eating",
+    [CharacterAction.FORAGING]: "Foraging"
 }

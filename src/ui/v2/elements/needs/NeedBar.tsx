@@ -4,6 +4,28 @@ import styled from '@emotion/styled';
 import { Fillbar } from '../Fillbar';
 import { NeedType, needDisplayInfoMap, formatChangeRate } from './NeedTypes';
 
+interface NeedColorConfig {
+  fillColor: string;       // Primary color for the Fillbar fill
+  backgroundColor?: string; // Optional: Specific background for this need's Fillbar
+  labelColor?: string;      // Optional: Specific color for this need's label text
+}
+
+const needVisualConfigMap: Record<NeedType, NeedColorConfig> = {
+  [NeedType.SLEEP]: {
+    fillColor: "#5DADE2", // A calm blue
+    // backgroundColor: "#2C3E50",
+    // labelColor: "#ECF0F1",
+  },
+  [NeedType.FOOD]: {
+    fillColor: "#F39C12", // A warm orange/yellow
+    // backgroundColor: "#4A2E0D",
+    // labelColor: "#ECF0F1",
+  },
+  [NeedType.FUN]: {
+    fillColor: "#58D68D", // A pleasant green
+  },
+};
+
 export interface NeedUIData {
   type: NeedType;
   current: number;
@@ -32,6 +54,8 @@ const NeedBarWrapper = styled.div<{ height: string }>`
 `;
 
 const FillbarContainer = styled.div<{ width: string }>`
+  display: flex;
+  align-items: baseline;
   width: ${props => props.width};
   flex-shrink: 0;
 `;
@@ -72,6 +96,8 @@ export const NeedBar: React.FC<NeedBarProps> = ({
 }) => {
   // Directly use needData.current and needData.max from props
   const { current, max, type, changeRatePerHour, fillColorOverride } = needData;
+  const visualConfig = needVisualConfigMap[needData.type];
+  const fillColorForBar = needData.fillColorOverride || visualConfig?.fillColor || '#7F8C8D'; // Fallback
 
   const displayInfo = needDisplayInfoMap[type] || {
     label: type.toString(),
@@ -91,18 +117,23 @@ export const NeedBar: React.FC<NeedBarProps> = ({
         <Fillbar
           currentValue={current} 
           maxValue={max}
-          fillColor={fillColorOverride || displayInfo.defaultFillColor}
+          fillColor={fillColorForBar}
           height={fillbarVisualHeight}
           width="50%"
         />
-      </FillbarContainer>
-      {!isCollapsed && (
-        <InfoRow>
+        {!isCollapsed && (
+          <div style={{width:"24px"}}/>)
+        }
+        {!isCollapsed && (
           <NeedLabel color={labelColor} title={displayInfo.label}>
             {displayInfo.label}
           </NeedLabel>
+        )}
+      </FillbarContainer>
+      {!isCollapsed && (
+        <InfoRow>
           <ChangeRateText color={rateColor}>
-          {current}/{max} {formatChangeRate(changeRatePerHour)}
+            {current}/{max} {formatChangeRate(changeRatePerHour)}
           </ChangeRateText>
         </InfoRow>
       )}

@@ -1,27 +1,17 @@
-import { System, Entity, ECS } from "../../ECS";
+import { System, Entity } from "../../ECS";
 import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent";
 import { CharacterAction } from "../intent/intent-to-action/actionIntentData";
 import { BuffsComponent } from "./BuffsComponent";
 import { MIN_SLEEP_DURATION_FOR_RESTED_BUFF_MINUTES, BuffType } from "./buffsData";
-import { TimeComponent } from "../time/TimeComponent"; // Adjust path
+import { getTime } from "../time/TimeComponent"; // Adjust path
 import { CharacterSleepStateComponent } from "../buildings/dormitory/CharacterSleepStateComponent";
 import { NeedType, NeedsComponent } from "../needs/NeedsComponent";
 
 export class SleepEffectsSystem extends System {
     public componentsRequired = new Set<Function>([ActionIntentComponent]);
-    private worldTimeEntity: Entity | null = null;
-
-    private getCurrentTimeMinutes(ecs: ECS): number | null {
-        if (this.worldTimeEntity === null || !ecs.hasEntity(this.worldTimeEntity)) {
-            const timeEntities = ecs.getEntitiesWithComponent(TimeComponent);
-            this.worldTimeEntity = timeEntities.length > 0 ? timeEntities[0] : null;
-        }
-        if (!this.worldTimeEntity) return null;
-        return ecs.getComponent(this.worldTimeEntity, TimeComponent).minutesElapsed;
-    }
 
     public update(entities: Set<Entity>, delta: number): void {
-        const currentTimeMinutes = this.getCurrentTimeMinutes(this.ecs);
+        const currentTimeMinutes = getTime(this.ecs).minutesElapsed;
         if (currentTimeMinutes === null) return;
 
         for (const entity of entities) {

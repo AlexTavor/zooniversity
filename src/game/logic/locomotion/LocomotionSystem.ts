@@ -2,7 +2,7 @@ import { System, Entity } from "../../ECS";
 import { LocationState, Transform } from "../../components/Transform";
 import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent";
 import { CharacterAction, WalkingData} from "../intent/intent-to-action/actionIntentData";
-import { TimeComponent } from "../time/TimeComponent";
+import { getTime } from "../time/TimeComponent";
 import { LocomotionComponent } from "./LocomotionComponent";
 import { Pos } from "../../../utils/Math";
 import { InsideLocationComponent } from "./InsideLocationComponent";
@@ -17,9 +17,7 @@ export class LocomotionSystem extends System {
     ]);
 
     public update(entities: Set<Entity>, delta: number): void {
-        const timeEntity = this.ecs.getEntitiesWithComponent(TimeComponent)[0];
-        if (!timeEntity) return;
-        const time = this.ecs.getComponent(timeEntity, TimeComponent);
+        const time = getTime(this.ecs);
         if (time.speedFactor === 0) return;
 
         const scaledDelta = delta * time.speedFactor;
