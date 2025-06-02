@@ -35,17 +35,17 @@
 TODO:
     Foraging
         * ForagableComponent
-        ForageRegenerationSystem
-        Forage intent
-        Foraging action
-        ForagingSystem (when foraging and arrived at forage target, do change values in ForagableComponent and resources)
-        handleForageIntentLogic
+        * handleForageIntentLogic
+        * Forage intent
+        * Foraging action
+        * ForagingSystem (when foraging and arrived at forage target, do change values in ForagableComponent and resources)
         Tree panel
             wood yield
             hitpoints current/max
             food current/max
             food regen rate
             reducer from ecs
+        ForageRegenerationSystem
     Display
         Game
             Highlight

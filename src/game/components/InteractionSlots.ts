@@ -1,8 +1,10 @@
 import { Entity } from "../ECS";
 
+
 export enum SlotType {
     WORK = "work",
-    SLEEP = "sleep"
+    SLEEP = "sleep",
+    FORAGE = "forage"
 }
 
 export enum SlotLayout {
@@ -48,6 +50,10 @@ export class InteractionSlots {
     const group = this.slots.get(slotType);
     if (!group) return null;
 
+    if (slotType === SlotType.WORK) {
+      console.log(`reserve WORK slot for entity ${entity}`);
+    }
+
     for (const slot of group) {
       if (slot.occupiedBy === null) {
         slot.occupiedBy = entity;
@@ -72,7 +78,7 @@ export class InteractionSlots {
     if (!group) return;
 
     for (const slot of group) {
-      if (slot.occupiedBy === entity) {
+      if (slot.occupiedBy == entity) {
         slot.occupiedBy = null;
       }
     }
@@ -80,6 +86,13 @@ export class InteractionSlots {
 
   public getSlotsArray(type: SlotType): ReadonlyArray<Slot> {
     return this.slots.get(type) || [];
+  }
+
+  public inUse(type:SlotType):boolean {
+    if (this.slots.has(type)) {
+      return this.slots.get(type)!.some(slot => slot.occupiedBy !== null);
+    }
+    return false;
   }
 }
 

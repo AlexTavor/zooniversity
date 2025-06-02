@@ -38,10 +38,11 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
                 if (def.spriteName) {
                     ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
                     ecs.addComponent(entity, new HarvestableComponent(1000, [{type:ResourceType.WOOD, amount:10}]));
-                    ecs.addComponent(entity, new InteractionSlots({
-                        [SlotType.WORK]: { layout: SlotLayout.RADIAL, radius: 120, count: 2 }
-                      }));
                     ecs.addComponent(entity, new ForagableComponent(ResourceType.FOOD, 20, 20, 0.001, 0.02));
+                    ecs.addComponent(entity, new InteractionSlots({
+                        [SlotType.WORK]: { layout: SlotLayout.RADIAL, radius: 120, count: 2 },
+                        [SlotType.FORAGE]: { layout: SlotLayout.RADIAL, radius: 120, count: 4 }
+                      }));
                 }
                 else {
                     console.warn(`Tree object ${id} is missing a sprite key.`);

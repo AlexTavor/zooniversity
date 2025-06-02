@@ -10,4 +10,5 @@ export const actionIconMap: Partial<Record<CharacterAction, string>> = {
     [CharacterAction.BUILDING]: 'assets/icons/build_icon.png',
     [CharacterAction.STROLLING]: 'assets/icons/relax_icon.png',
     [CharacterAction.EATING]: 'assets/icons/eat_icon.png',
+    [CharacterAction.FORAGING]: 'assets/icons/forage_icon.png',
 };

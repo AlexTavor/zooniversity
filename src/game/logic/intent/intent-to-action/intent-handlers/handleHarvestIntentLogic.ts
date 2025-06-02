@@ -8,15 +8,18 @@ import {
     CharacterIntent
 } from "../actionIntentData";
 import { Transform } from "../../../../components/Transform";
-import { HarvesterComponent } from "../../../trees/HarvesterComponent";
 import { Tree } from "../../../trees/Tree";
 import { HarvestableComponent } from "../../../trees/HarvestableComponent";
 import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
 import { Pos } from "../../../../../utils/Math";
 import { WoodDojoWorker } from "../../../buildings/wood_dojo/WoodDojoWorker";
 import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
+import { HarvestingState } from "../../character-states/HarvestingState";
+import { abortHarvesting } from "../intent-abort/abortHarvesting";
+import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
 
 function setIdle(aic: ActionIntentComponent): void {
+    aic.intentType = CharacterIntent.NONE;
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
@@ -51,35 +54,25 @@ function isTreeValidForHarvest(ecs: ECS, treeId: Entity): boolean {
     return !!(tree && tree.selectedForCutting && harvestable && harvestable.harvestable && !harvestable.harvested);
 }
 
-function releaseAnyWorkSlotHeldByCharacter(ecs: ECS, characterEntity: Entity): void {
-    const allTreesWithSlots = ecs.getEntitiesWithComponents([Tree, InteractionSlots]);
-    for (const treeId of allTreesWithSlots) {
-        ecs.getComponent(treeId, InteractionSlots)?.release(characterEntity, SlotType.WORK);
-    }
-}
-
-
 export function findAndReserveNewHarvestTarget(
     ecs: ECS,
     characterEntity: Entity
-): { treeId: Entity; slotOffset: Pos;} | null {
-    releaseAnyWorkSlotHeldByCharacter(ecs, characterEntity);
+): boolean {
+    abortHarvesting(ecs, characterEntity);
 
     const workerInfo = ecs.getComponent(characterEntity, WoodDojoWorker);
     if (!workerInfo || workerInfo.dojoId === null || workerInfo.dojoId === undefined) {
-        return null;
+        return false; 
     }
     const assignedDojoId = workerInfo.dojoId;
 
     if (!ecs.hasEntity(assignedDojoId)) {
-        // The assigned dojo entity itself doesn't exist
-        return null;
+        return false; 
     }
 
     const caveTreeLUTComponent = getCaveTreeLUT(ecs); // Get the global LUT component
     if (!caveTreeLUTComponent || !caveTreeLUTComponent.lut) {
-        // Should not happen if getCaveTreeLUT ensures creation
-        return null;
+        return false; 
     }
     
     const nearbyTreeIds = caveTreeLUTComponent.lut[assignedDojoId];
@@ -90,17 +83,29 @@ export function findAndReserveNewHarvestTarget(
 
             if (isTreeValidForHarvest(ecs, treeId)) {
                 const slots = ecs.getComponent(treeId, InteractionSlots);
+                const transform = ecs.getComponent(treeId, Transform);
 
-                if (slots) {
-                    const offset = slots.reserve(characterEntity, SlotType.WORK);
-                    if (offset) {
-                        return { treeId, slotOffset: offset};
-                    }
+                if (!slots || !transform)
+                    return false; // No interaction slots or transform, cannot harvest
+                
+                const offset = slots.reserve(characterEntity, SlotType.WORK);
+                if (!offset) {
+                    continue; // No available slot, try next tree
                 }
+
+                const targetPos = { x: offset.x + transform.x, y: offset.y + transform.y };
+                const harvesting = ecs.getComponent(characterEntity, HarvestingState) ?? new HarvestingState(treeId, targetPos);
+                harvesting.target = treeId;
+                harvesting.targetPos = targetPos;
+
+                !ecs.hasComponent(characterEntity, HarvestingState) && ecs.addComponent(characterEntity, harvesting);
+
+                return true; // Successfully reserved a slot for harvesting
             }
         }
     }
-    return null;
+
+    return false;
 }
 
 export function canHarvest(ecs: ECS, entity: Entity): boolean {
@@ -117,38 +122,39 @@ export function canHarvest(ecs: ECS, entity: Entity): boolean {
     return false;
 }
 
-
 export function handleHarvestIntentLogic(
     ecs: ECS,
     entity: Entity,
     actionIntent: ActionIntentComponent
 ): void {
-    const characterTransform = ecs.getComponent(entity, Transform);
-    const harvester = ecs.getComponent(entity, HarvesterComponent);
+    const harvesting = ecs.getComponent(entity, HarvestingState);
 
-    if (!characterTransform || !harvester) return setIdle(actionIntent);
-
-    const targetInfo = findAndReserveNewHarvestTarget(ecs, entity);
-
-    if (!targetInfo) {
-        setWaitingOrBlocked(actionIntent);
+    if (!harvesting || harvesting.target == -1){
+        if (!findAndReserveNewHarvestTarget(ecs, entity)){
+            setWaitingOrBlocked(actionIntent);
+        }
         return;
     }
-    
 
-    const { treeId, slotOffset } = targetInfo;
-    const treeTransform = ecs.getComponent(treeId, Transform); 
+    updateActions(ecs, entity, actionIntent, harvesting);
+}
 
-    const exactApproachPosition = { 
-        x: Math.round(treeTransform.x + slotOffset.x), 
-        y: Math.round(treeTransform.y + slotOffset.y) 
-    };
-    
-    const roundedCharX = Math.round(characterTransform.x);
-    const roundedCharY = Math.round(characterTransform.y);
+function updateActions(ecs: ECS, entity:number, actionIntent: ActionIntentComponent, harvesting: HarvestingState): void {
+    const { target:treeId, targetPos } = harvesting;
+    if (treeId == -1 || !targetPos) {
+        setIdle(actionIntent);
+        return;
+    }
 
-    if (roundedCharX !== exactApproachPosition.x || roundedCharY !== exactApproachPosition.y) {
-        setWalkingToSlot(actionIntent, exactApproachPosition, treeId);
+    const locomotion = ecs.getComponent(entity, LocomotionComponent);
+
+    if (!locomotion) {
+        setIdle(actionIntent); // No locomotion component, cannot proceed
+        return;
+    }
+
+    if (!locomotion.arrived) {
+        setWalkingToSlot(actionIntent, targetPos, treeId);
     } else {
         // Arrived at the designated WORK slot for the target tree.
         setChopping(actionIntent, treeId);

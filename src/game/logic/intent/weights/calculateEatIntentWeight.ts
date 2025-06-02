@@ -1,9 +1,9 @@
-import { ECS, Entity } from "../../ECS";
-import { ActionIntentComponent } from "./intent-to-action/ActionIntentComponent";
-import { canSleep as canSleep } from "./intent-to-action/intent-handlers/handleSleepIntentLogic";
-import { ScheduleComponent } from "../characters/ScheduleComponent";
-import { NeedType, NeedsComponent } from "../needs/NeedsComponent";
-import { CharacterAction } from "./intent-to-action/actionIntentData";
+import { ECS, Entity } from "../../../ECS";
+import { ActionIntentComponent } from "../intent-to-action/ActionIntentComponent";
+import { canSleep as canSleep } from "../intent-to-action/intent-handlers/handleSleepIntentLogic";
+import { ScheduleComponent } from "../../characters/ScheduleComponent";
+import { NeedType, NeedsComponent } from "../../needs/NeedsComponent";
+import { CharacterAction } from "../intent-to-action/actionIntentData";
 
 export function calculateEatIntentWeight(ecs: ECS, entity: Entity, intent: ActionIntentComponent, schedule: ScheduleComponent, needs: NeedsComponent, currentHour: number): number {
     let weight = 0;

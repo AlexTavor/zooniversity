@@ -1,4 +1,3 @@
-// src/game/logic/action-intent/intent-handlers/handleForageIntentLogic.ts
 import { ECS, Entity } from "../../../../ECS";
 import { ActionIntentComponent } from "../ActionIntentComponent";
 import {
@@ -6,28 +5,32 @@ import {
     ActionDataType,
     WalkingData,
     CharacterIntent,
-    ForagingActionData,
-    // ForagingActionData and isForagingActionData should be defined in actionIntentData.ts
+    ForagingActionData
 } from "../actionIntentData";
 import { Transform } from "../../../../components/Transform";
-import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
-import { Pos, MathUtils } from "../../../../../utils/Math"; // MathUtils for distance
+import { Pos } from "../../../../../utils/Math";
 import { ForagableComponent } from "../../../foraging/ForagableComponent";
+import { WoodDojoWorker } from "../../../buildings/wood_dojo/WoodDojoWorker";
+import { HomeComponent } from "../../../buildings/dormitory/HomeComponent";
+import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
+import { WoodDojo } from "../../../buildings/wood_dojo/WoodDojo"; // Placeholder for KitchenComponent
+import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
+import { ForagingState } from "../../character-states/ForagingState";
+import { abortForaging } from "../intent-abort/abortForaging";
 
-function setIdleAndClearIntent(aic: ActionIntentComponent): void {
-    aic.currentPerformedAction = CharacterAction.IDLE;
+function setIdle(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.NONE;
+    aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
 function setNoForageTargetsAvailable(aic: ActionIntentComponent): void {
-    // If no targets, character might rest or do something else low priority
-    aic.intentType = CharacterIntent.REST;
+    aic.intentType = CharacterIntent.REST; // Fallback intent
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
-function setWalkingToForageTarget(aic: ActionIntentComponent, targetPosition: Pos, targetEntityId: Entity): void {
+function setWalkingToForageSlot(aic: ActionIntentComponent, targetPosition: Pos, targetEntityId: Entity): void {
     aic.currentPerformedAction = CharacterAction.WALKING;
     aic.actionData = {
         type: ActionDataType.WalkingData,
@@ -36,84 +39,158 @@ function setWalkingToForageTarget(aic: ActionIntentComponent, targetPosition: Po
     } as WalkingData;
 }
 
-function setForaging(aic: ActionIntentComponent, targetEntityId: Entity): void {
+function setForagingAction(aic: ActionIntentComponent, targetEntityId: Entity, slotOffset: Pos): void {
     aic.currentPerformedAction = CharacterAction.FORAGING;
     aic.actionData = {
         type: ActionDataType.ForagingActionData,
-        targetForagableEntityId: targetEntityId
-    } as ForagingActionData;
+        targetForagableEntityId: targetEntityId,
+        slotOffset // Storing relative offset as per other similar actions
+    } as ForagingActionData; // Cast to ForagingActionData, ensure it's defined
 }
 
-function findClosestAvailableForageTarget(ecs: ECS, characterTransform: Transform): { id: Entity, transform: Transform, component: ForagableComponent } | null {
-    const foragableEntities = ecs.getEntitiesWithComponents([ForagableComponent, Transform]);
-    let closestTarget: { id: Entity, transform: Transform, component: ForagableComponent } | null = null;
-    let minDistanceSq = Infinity;
+function getPrimaryForagingReferencePoint(ecs: ECS, characterEntity: Entity): Entity | null {
+    const workerInfo = ecs.getComponent(characterEntity, WoodDojoWorker);
+    if (workerInfo && workerInfo.dojoId !== null && ecs.hasEntity(workerInfo.dojoId)) {
+        if (ecs.hasComponent(workerInfo.dojoId, WoodDojo)) { // Replace WoodDojo with actual KitchenComponent if it's distinct
+            return workerInfo.dojoId;
+        }
+    }
+    const home = ecs.getComponent(characterEntity, HomeComponent);
+    if (home && home.homeEntityId !== null && ecs.hasEntity(home.homeEntityId)) {
+        return home.homeEntityId;
+    }
+    return null;
+}
 
-    for (const entityId of foragableEntities) {
-        const foragableComponent = ecs.getComponent(entityId, ForagableComponent);
-        if (foragableComponent.currentAmount > 0) {
-            const targetTransform = ecs.getComponent(entityId, Transform);
-            const distanceSq = MathUtils.distance(characterTransform, targetTransform) ** 2; // Using squared distance for efficiency
-            if (distanceSq < minDistanceSq) {
-                minDistanceSq = distanceSq;
-                closestTarget = { id: entityId, transform: targetTransform, component: foragableComponent };
+export function canForage(ecs: ECS, characterEntity: Entity): boolean {
+    const referenceEntityId = getPrimaryForagingReferencePoint(ecs, characterEntity);
+    if (referenceEntityId === null) {
+        return false; // No valid reference point (Kitchen or Dormitory) to forage from
+    }
+
+    const caveTreeLUTComponent = getCaveTreeLUT(ecs);
+    if (!caveTreeLUTComponent || !caveTreeLUTComponent.lut) {
+        return false; // LUT not available
+    }
+
+    const nearbyEntityIds = caveTreeLUTComponent.lut[referenceEntityId];
+
+    if (nearbyEntityIds && nearbyEntityIds.length > 0) {
+        for (const entityId of nearbyEntityIds) {
+            if (!ecs.hasEntity(entityId)) continue;
+
+            const foragableComponent = ecs.getComponent(entityId, ForagableComponent);
+            const slots = ecs.getComponent(entityId, InteractionSlots);
+
+            if (foragableComponent && foragableComponent.currentAmount > 0 && slots) {
+                // Check if ANY forage slot is available or already occupied by this character
+                if (slots.getSlotsArray(SlotType.FORAGE).some(slot => slot.occupiedBy === null || slot.occupiedBy === characterEntity)) {
+                    return true; // Found a valid, available foragable entity with a free slot
+                }
             }
         }
     }
-    return closestTarget;
+    return false; // No suitable target found
+}
+
+function findAndAssignForageTarget(ecs: ECS, characterEntity: Entity): boolean {
+    abortForaging(ecs, characterEntity);
+
+    const referenceEntityId = getPrimaryForagingReferencePoint(ecs, characterEntity);
+    if (referenceEntityId === null) return false;
+
+    const caveTreeLUTComponent = getCaveTreeLUT(ecs);
+    if (!caveTreeLUTComponent || !caveTreeLUTComponent.lut) return false;
+
+    const nearbyEntityIds = caveTreeLUTComponent.lut[referenceEntityId];
+
+    if (nearbyEntityIds && nearbyEntityIds.length > 0) {
+        for (const entityId of nearbyEntityIds) {
+            if (!ecs.hasEntity(entityId)) continue;
+
+            const foragableComp = ecs.getComponent(entityId, ForagableComponent);
+            const targetTransform = ecs.getComponent(entityId, Transform);
+            const slots = ecs.getComponent(entityId, InteractionSlots);
+
+            if (foragableComp && foragableComp.currentAmount > 0 && targetTransform && slots) {
+                const offset = slots.reserve(characterEntity, SlotType.FORAGE);
+                if (offset) {
+                    const targetPosition = {
+                        x: Math.round(targetTransform.x + offset.x),
+                        y: Math.round(targetTransform.y + offset.y)
+                    };
+                    let foragingState = ecs.getComponent(characterEntity, ForagingState);
+                    if (!foragingState) {
+                        foragingState = new ForagingState(entityId, targetPosition);
+                        ecs.addComponent(characterEntity, foragingState);
+                    } else {
+                        foragingState.targetForagableEntityId = entityId;
+                        foragingState.targetPosition = targetPosition;
+                    }
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function updateForageActions(ecs: ECS, entity: Entity, actionIntent: ActionIntentComponent, foragingState: ForagingState): void {
+    const characterTransform = ecs.getComponent(entity, Transform);
+    
+    const { targetForagableEntityId: targetId, targetPosition: exactTargetPosition } = foragingState;
+
+    if (targetId === -1 || !exactTargetPosition) {
+        return setIdle(actionIntent);
+    }
+    if (!ecs.hasEntity(targetId) || (ecs.getComponent(targetId, ForagableComponent)?.currentAmount || 0) <= 0) {
+        // Target became invalid after assignment (e.g. depleted by another)
+        abortForaging(ecs, entity); // Abort will clear ForagingState, leading to re-search next tick
+        actionIntent.currentPerformedAction = CharacterAction.IDLE; // Prevent immediate re-pathing this tick
+        actionIntent.actionData = null;
+        return;
+    }
+
+
+    if (!characterTransform) return setIdle(actionIntent);
+
+    const roundedCharX = Math.round(characterTransform.x);
+    const roundedCharY = Math.round(characterTransform.y);
+
+    if (roundedCharX !== exactTargetPosition.x || roundedCharY !== exactTargetPosition.y) {
+        setWalkingToForageSlot(actionIntent, exactTargetPosition, targetId);
+    } else {
+        // Arrived at the designated FORAGE slot.
+        // The ForagingActionData needs the relative slotOffset, not the world position
+        const targetTransform = ecs.getComponent(targetId, Transform);
+        const slotOffset: Pos = {
+            x: exactTargetPosition.x - targetTransform.x,
+            y: exactTargetPosition.y - targetTransform.y
+        };
+        setForagingAction(actionIntent, targetId, slotOffset);
+    }
 }
 
 export function handleForageIntentLogic(
     ecs: ECS,
     entity: Entity,
     actionIntent: ActionIntentComponent
-    // deltaTimeMs is not strictly needed by this handler for state transitions,
-    // but ForagingSystem will need it.
 ): void {
-    const characterTransform = ecs.getComponent(entity, Transform);
-    const locomotion = ecs.getComponent(entity, LocomotionComponent);
+    const foragingState = ecs.getComponent(entity, ForagingState);
 
-    if (!characterTransform || !locomotion) {
-        return setIdleAndClearIntent(actionIntent);
-    }
-
-    // If already foraging at a target, ForagingSystem handles it.
-    // This logic is primarily for finding a target or pathing to it.
-    const currentActionData = actionIntent.actionData as ForagingActionData | WalkingData;
-    if (actionIntent.currentPerformedAction === CharacterAction.FORAGING &&
-        (currentActionData as ForagingActionData)?.type === ActionDataType.ForagingActionData) {
-        // Check if current target is still valid (e.g., not depleted by someone else)
-        const targetForagable = ecs.getComponent((currentActionData as ForagingActionData).targetForagableEntityId, ForagableComponent);
-        if (!targetForagable || targetForagable.currentAmount <= 0) {
-            // Target depleted or gone, re-evaluate (find new target or stop)
-            // For simplicity, let's make it re-evaluate by clearing current action.
-            // A more advanced system might immediately search for a new target.
-            actionIntent.actionData = null; 
-            // Fall through to find a new target.
-        } else {
-             return; // Already foraging a valid target, ForagingSystem will do the work.
+    if (!foragingState || foragingState.targetForagableEntityId === -1) {
+        if (!findAndAssignForageTarget(ecs, entity)) {
+            setNoForageTargetsAvailable(actionIntent);
         }
+        // If a target was found, ForagingState is now populated.
+        // Next tick will call updateForageActions.
+        // Or, re-fetch and proceed immediately if desired:
+        const newlyAssignedState = ecs.getComponent(entity, ForagingState);
+        if (newlyAssignedState && newlyAssignedState.targetForagableEntityId !== -1) {
+            updateForageActions(ecs, entity, actionIntent, newlyAssignedState);
+        }
+        return;
     }
 
-
-    const forageTargetInfo = findClosestAvailableForageTarget(ecs, characterTransform);
-
-    if (!forageTargetInfo) {
-        return setNoForageTargetsAvailable(actionIntent);
-    }
-
-    const { id: targetId, transform: targetTransform } = forageTargetInfo;
-
-    if (locomotion.arrived &&
-        actionIntent.currentPerformedAction === CharacterAction.WALKING &&
-        (currentActionData as WalkingData)?.type === ActionDataType.WalkingData &&
-        (currentActionData as WalkingData).ultimateTargetEntityId === targetId) {
-        // Arrived at forage target
-        return setForaging(actionIntent, targetId);
-    } else if (actionIntent.currentPerformedAction !== CharacterAction.WALKING || (currentActionData as WalkingData)?.ultimateTargetEntityId !== targetId) {
-        // Not at target and not already walking to this specific target, so start walking
-        // TODO: Path to an available InteractionSlot if ForagableComponent uses them
-        setWalkingToForageTarget(actionIntent, { x: targetTransform.x, y: targetTransform.y }, targetId);
-    }
-    // If already walking to the correct target, LocomotionSystem handles it.
+    updateForageActions(ecs, entity, actionIntent, foragingState);
 }

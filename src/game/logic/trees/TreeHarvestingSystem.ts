@@ -43,18 +43,16 @@ export class TreeHarvestingSystem extends System {
             const harvester = this.ecs.getComponent(characterEntity, HarvesterComponent);
 
             if (!tree || !harvestable || !harvester) {
-                this.abortHarvest(actionIntent, characterEntity, targetTreeId, tree);
+                this.abortHarvest(actionIntent, characterEntity, targetTreeId);
                 continue;
             }
 
             // Re-validate conditions, though IntentActionSystem's helper should have ensured this.
             // This is a safety check.
             if (!tree.selectedForCutting || !harvestable.harvestable || harvestable.harvested) {
-                this.abortHarvest(actionIntent, characterEntity, targetTreeId, tree);
+                this.abortHarvest(actionIntent, characterEntity, targetTreeId);
                 continue;
             }
-
-            tree.isBeingCut = true;
 
             const harvestAmountThisFrame = harvester.harvestPerMinute * scaledDeltaSeconds;
             harvestable.amount -= harvestAmountThisFrame;
@@ -70,7 +68,6 @@ export class TreeHarvestingSystem extends System {
         harvestable.amount = 0;
         harvestable.harvested = true;
         harvestable.harvestable = false;
-        tree.isBeingCut = false;
         tree.selectedForCutting = false;
 
         const resources = ecs.getComponent(getWorldEntity(ecs), ResourceComponent);
@@ -79,8 +76,7 @@ export class TreeHarvestingSystem extends System {
         });
     }
 
-    private clearActionState(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity | null, treeComponent?: Tree) {
-        if (treeComponent) treeComponent.isBeingCut = false;
+    private clearActionState(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity | null,) {
         if (treeId !== null) {
             const slots = this.ecs.getComponent(treeId, InteractionSlots);
             slots?.releaseAll(characterEntity);
@@ -89,11 +85,11 @@ export class TreeHarvestingSystem extends System {
         aic.actionData = null;
     }
 
-    private abortHarvest(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity | null, tree?: Tree): void {
-        this.clearActionState(aic, characterEntity, treeId, tree);
+    private abortHarvest(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity | null): void {
+        this.clearActionState(aic, characterEntity, treeId);
     }
 
     private finishHarvest(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity): void {
-        this.clearActionState(aic, characterEntity, treeId, this.ecs.getComponent(treeId,Tree));
+        this.clearActionState(aic, characterEntity, treeId);
     }
 }

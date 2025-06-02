@@ -14,6 +14,7 @@ import { ProgressBarConfig, ValueRef } from "../effects/ProgressBar";
 import { ShudderEffectConfig } from "../effects/ShudderEffect";
 import { TreeFallAnimation } from "./TreeFallAnimation";
 import { TimeComponent, getTime } from "../../../logic/time/TimeComponent";
+import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
 
 const harvestBarConfig: ProgressBarConfig = {
   position: "left",
@@ -90,8 +91,10 @@ export class TreeViewModule extends ViewDisplayModule {
     view.viewContainer.y = posY;
     view.viewContainer.scaleY = isFallen ? 0 : 1;
 
+    const slots = ecs.getComponent(entity, InteractionSlots);
+
     this.updateHarvestProgress(entity, harvestable, view);
-    this.updateShudderEffect(tree, harvestable, view);
+    this.updateShudderEffect(!!(slots?.inUse(SlotType.WORK)), view);
     this.spawnFallAnimation(entity, tree, view, posX, posY, isFallen, () => {
       this.fallAnimations.delete(entity);
       this.harvested.set(entity, true);
@@ -124,14 +127,16 @@ export class TreeViewModule extends ViewDisplayModule {
     }
   }
 
-  private updateShudderEffect(tree: Tree, harvestable: HarvestableComponent, view: View): void {
-    if (tree.isBeingCut && harvestable.amount > 0) {
+  private updateShudderEffect(inUse:boolean, view: View): void {
+    if (inUse) {
       const fps = view.getSprite()?.scene.game.loop.actualFps || 60;
       view.applyEffect(EffectType.Shudder, {
         duration: 1 * fps,
         interval: 3 * fps,
         strength: 20
       } as ShudderEffectConfig);
+    } else {
+      view.clearEffect(EffectType.Shudder);
     }
   }
 

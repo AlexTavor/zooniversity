@@ -11,7 +11,7 @@ export enum CharacterIntent {
     REST = "REST",
     EAT = "EAT",
     STUDY = "STUDY",
-    FORAGE_FOOD = "FORAGE_FOOD"
+    FORAGE = "FORAGE"
 }
 
 /** Defines the concrete, observable, low-level action a character is currently performing. */

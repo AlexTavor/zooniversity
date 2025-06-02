@@ -26,7 +26,7 @@ export const ResourceDisplay: React.FC = () => {
                 return (
                     <div className="resource-row" key={type} title={description}>
                         <img src={icon} alt={type} className="resource-icon" />
-                        <span className="resource-value">{formatResourceNumber(value)}</span>
+                        <span className="resource-value">{formatResourceNumber(Math.round(value))}</span>
                     </div>
                 );
             })}

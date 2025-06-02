@@ -15,12 +15,12 @@ export function createStandardSchedule(): ScheduleComponent {
   return new ScheduleComponent([
     CharacterIntent.SLEEP,
     CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
+    CharacterIntent.FORAGE,
+    CharacterIntent.FORAGE,
     CharacterIntent.REST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
+    CharacterIntent.FORAGE,
+    CharacterIntent.FORAGE,
+    CharacterIntent.FORAGE,
     CharacterIntent.SLEEP
   ]);
 }

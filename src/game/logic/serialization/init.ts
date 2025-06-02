@@ -56,6 +56,8 @@ import { IntentSelectionSystem } from "../intent/IntentSelectionSystem.ts";
 import { TiredEffectSystem } from "../buffs/TiredEffectSystem.ts";
 import { FoodNeedSystem } from "../needs/FoodNeedSystem.ts";
 import { getWorldEntity } from "./getWorldEntity.ts";
+import { ForagingSystem } from "../foraging/ForagingSystem.ts";
+import { HarvestingComponentRemovalSystem } from "../trees/HarvestingComponentRemovalSystem.tsx";
 
 export const init = (game:Game) => {
     initData(game);
@@ -114,7 +116,9 @@ export const initSystems = (game:Game)=>{
 
     game.ecs.addSystem(new WoodDojoSystem());
     game.ecs.addSystem(new DormitorySystem());
-
+    game.ecs.addSystem(new ForagingSystem());
+    game.ecs.addSystem(new HarvestingComponentRemovalSystem());
+    
     initInput(game);
     initStory(game);
     initLut(game);

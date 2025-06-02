@@ -15,7 +15,7 @@ export interface TabDefinition {
       { id: 'dojo_overview', label: 'Details' }
     ],
     [PanelType.TREE]: [
-      { id: 'tree_info', label: 'Details' },
+      { id: 'info', label: 'Details' },
     ],
     [PanelType.CAVE]: [
       { id: 'cave_details', label: 'Details' },

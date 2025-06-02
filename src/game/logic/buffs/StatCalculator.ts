@@ -29,6 +29,9 @@ export class StatCalculator {
             case AffectedStat.HUNGER_MODIFICATION_RATE:{
                 return -0.25;
             }
+            case AffectedStat.FOOD_GATHERING_YIELD_MULTIPLIER:{
+                return 1;
+            }
             default:
                 console.warn(`StatCalculator: Base value for stat type ${statType} not defined.`);
                 return 0;

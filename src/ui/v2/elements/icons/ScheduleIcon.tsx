@@ -13,6 +13,7 @@ const scheduleIconMap: Partial<Record<ScheduleActivityType, string>> = {
   [CharacterIntent.SLEEP]: 'assets/icons/sleep_icon.png',
   [CharacterIntent.REST]: 'assets/icons/relax_icon.png',
   [CharacterIntent.STUDY]: 'assets/icons/book_icon.png',
+  [CharacterIntent.FORAGE]: 'assets/icons/forage_icon.png',
 };
 
 interface ScheduleIconProps {

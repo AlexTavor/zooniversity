@@ -19,11 +19,8 @@ export class ResourceTracker {
     }
 
     static set(type: ResourceType, value: number) {
-        const clamped = Math.max(0, Math.floor(value));
-        if (clamped !== this.resources[type]) {
-            this.resources[type] = clamped;
-            this.notify([type]);
-        }
+        this.resources[type] = value;
+        this.notify([type]);
     }
 
     static add(type: ResourceType, delta: number) {

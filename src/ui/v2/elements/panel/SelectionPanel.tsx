@@ -11,6 +11,7 @@ import { CharacterThoughtsContentCollapsed } from './character/CharacterThoughts
 import { CharacterThoughtsContent } from './character/CharacterThoughtsContent';
 import { CharacterInfoContent } from './character/CharacterInfoContent';
 import { CharacterInfoContentCollapsed } from './character/CharcterInfoContentCollapsed';
+import { TreePanelContent } from './tree/TreePanelContent';
 
 export interface SelectedEntityPayload {
   id: string | number;
@@ -33,8 +34,15 @@ const charContentRegistry: ContentByTab = {
   ['info']: ({ data, isContentAreaCollapsed }) => isContentAreaCollapsed ? <CharacterInfoContentCollapsed data={data}/> : <CharacterInfoContent  data={data}/>,
 };
 
+const treeContentRegistry: ContentByTab = {
+  "info": ({ data, isContentAreaCollapsed }) => {
+    return <TreePanelContent data={data} />;
+  }
+};
+
 const contentViewRegistry: Partial<Record<PanelType, ContentByTab>> = {
     [PanelType.CHARACTER]: charContentRegistry,
+    [PanelType.TREE]: treeContentRegistry,
 };
 
 const PanelOuterWrapper = styled.div`

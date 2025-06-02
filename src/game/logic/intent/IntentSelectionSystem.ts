@@ -4,10 +4,11 @@ import { CharacterIntent, CharacterAction } from "./intent-to-action/actionInten
 import { ScheduleComponent } from "../characters/ScheduleComponent";
 import { getTime } from "../time/TimeComponent";
 import { NeedsComponent } from "../needs/NeedsComponent";
-import { calculateHarvestIntentWeight } from "./calculateHarvestIntentWeight";
-import { calculateSleepIntentWeight } from "./calculateSleepIntentWeight";
-import { calculateRestIntentWeight } from "./calculateRestIntentWeight";
-import { calculateEatIntentWeight } from "./calculateEatIntentWeight";
+import { calculateHarvestIntentWeight } from "./weights/calculateHarvestIntentWeight";
+import { calculateSleepIntentWeight } from "./weights/calculateSleepIntentWeight";
+import { calculateRestIntentWeight } from "./weights/calculateRestIntentWeight";
+import { calculateEatIntentWeight } from "./weights/calculateEatIntentWeight";
+import { calculateForagetIntentWeight } from "./weights/calculateForagetIntentWeight";
 
 export class IntentSelectionSystem extends System {
     public componentsRequired = new Set<Function>([
@@ -31,6 +32,7 @@ export class IntentSelectionSystem extends System {
             intentWeights.push({ intent: CharacterIntent.EAT, weight: calculateEatIntentWeight(this.ecs, entity, actionIntent, schedule, needs, currentHour) });
             intentWeights.push({ intent: CharacterIntent.HARVEST, weight: calculateHarvestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
             intentWeights.push({ intent: CharacterIntent.REST, weight: calculateRestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
+            intentWeights.push({ intent: CharacterIntent.FORAGE, weight: calculateForagetIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
 
             // Sort by weight descending
             intentWeights.sort((a, b) => b.weight - a.weight);
