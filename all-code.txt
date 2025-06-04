@@ -1746,6 +1746,86 @@ export function deriveBuffs(ecs: ECS, entity: Entity, currentTimeMinutes: number
 
 // ---
 
+import { Pos } from "../../../../../utils/Math";
+import { Entity } from "../../../../ECS";
+
+function mulberry32(seed: number) {
+    return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+}
+
+export function generateUniqueApplePositions(
+    treeEntityId: Entity,
+    maxApplesToDisplay: number,
+    treeAppleClusterCenter: Pos = { x: 0, y: 200 }, 
+    baseSpreadRadius: number = 200, 
+    numInitialPointsToGenerate: number = 15, 
+    minShiftFactor: number = 0,  // Min factor (0-1) to shift towards the calculated center
+    maxShiftFactor: number = 0.6   // Max factor (0-1) to shift towards the calculated center
+): Pos[] {
+    if (maxApplesToDisplay === 0) {
+        return [];
+    }
+
+    const random = mulberry32(treeEntityId);
+    const generatedBasePoints: Pos[] = [];
+
+    const actualNumInitialPoints = Math.max(maxApplesToDisplay, numInitialPointsToGenerate);
+
+    for (let i = 0; i < actualNumInitialPoints; i++) {
+        const angle = random() * 2 * Math.PI;
+        const distance = random() * baseSpreadRadius;
+        generatedBasePoints.push({
+            x: treeAppleClusterCenter.x + Math.cos(angle) * distance,
+            y: treeAppleClusterCenter.y + Math.sin(angle) * distance,
+        });
+    }
+
+    if (generatedBasePoints.length === 0) return [];
+
+    let sumX = 0;
+    let sumY = 0;
+    for (const p of generatedBasePoints) {
+        sumX += p.x;
+        sumY += p.y;
+    }
+    const calculatedCenterOfGeneratedPoints: Pos = {
+        x: sumX / generatedBasePoints.length,
+        y: sumY / generatedBasePoints.length,
+    };
+
+    // Shuffle the generated base points to pick from for the final display count
+    const shuffledPoints = [...generatedBasePoints];
+    for (let i = shuffledPoints.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [shuffledPoints[i], shuffledPoints[j]] = [shuffledPoints[j], shuffledPoints[i]];
+    }
+
+    const finalPositions: Pos[] = [];
+    const pointsToProcess = Math.min(shuffledPoints.length, maxApplesToDisplay);
+
+    for (let i = 0; i < pointsToProcess; i++) {
+        const basePosition = shuffledPoints[i];
+        const deltaX = calculatedCenterOfGeneratedPoints.x - basePosition.x;
+        const deltaY = calculatedCenterOfGeneratedPoints.y - basePosition.y;
+
+        const shiftFactor = minShiftFactor + random() * (maxShiftFactor - minShiftFactor);
+
+        const newX = basePosition.x + deltaX * shiftFactor;
+        const newY = basePosition.y + deltaY * shiftFactor;
+
+        finalPositions.push({ x: Math.round(newX), y: Math.round(newY) });
+    }
+
+    return finalPositions;
+}
+
+// ---
+
 // src/game/display/game/data_panel/tree/treePanelReducer.ts
 import { ECS, Entity } from "../../../../ECS";
 import { Tree } from "../../../../logic/trees/Tree";
@@ -1768,7 +1848,6 @@ export interface TreeForagableUIData {
   currentAmount: number;
   maxAmount: number;
   regenRatePerMinute: number;
-  yieldPerMinute: number;
 }
 
 export interface TreePanelUIData {
@@ -1823,12 +1902,105 @@ export function treePanelReducer(entity: Entity, ecs: ECS): TreePanelUIData | nu
             resourceType: foragable.resourceType,
             currentAmount: foragable.currentAmount,
             maxAmount: foragable.maxAmount,
-            regenRatePerMinute: foragable.regenRatePerMinute,
-            yieldPerMinute: foragable.yieldPerMinute,
+            regenRatePerMinute: foragable.regenRatePerMinute
         };
     }
     
     return baseData;
+}
+
+// ---
+
+// src/game/display/game/effects/AppleQuantityEffect.ts
+import Phaser from 'phaser';
+import { View } from '../../setup/View'; // Adjust path
+import { EffectInstance } from '../../setup/ViewEffectController'; // Adjust path
+import { Pos } from '../../../../utils/Math'; // Adjust path
+import { ValueRef } from './ProgressBar'; // Assuming ValueRef is in ProgressBar.ts or a common types file
+
+export interface AppleQuantityEffectConfig {
+  valueRef: ValueRef; // Holds current and max foragable amount
+  spriteKey: string;  // Sprite key for the apple/fruit
+  maxSprites: number; // Max number of apple sprites to display
+  unitsPerSprite: number; // How many 'currentAmount' units one visual apple represents
+  fixedRelativePositions: Pos[]; // Pre-calculated positions for each of the maxSprites
+  container: Phaser.GameObjects.Container; // Container to add apple sprites to (usually view.viewContainer)
+  // Optional: initial visibility, scale for apples, etc.
+  initialVisible?: boolean;
+  spriteScale?: number;
+}
+
+export class AppleQuantityEffect implements EffectInstance {
+  private view: View;
+  private config: Required<AppleQuantityEffectConfig>; // Use Required to ensure all defaults are handled
+  private appleSprites: Phaser.GameObjects.Sprite[] = [];
+  private lastVisibleCount: number = -1;
+
+  constructor(view: View, config: AppleQuantityEffectConfig) {
+    this.view = view;
+    // Apply defaults to the configuration
+    this.config = {
+        initialVisible: true,
+        spriteScale: 0.15, // Example default scale for small apple sprites
+        ...config,
+    };
+  }
+
+  public start(): void {
+    if (this.appleSprites.length > 0) { // Already initialized
+        this.updateVisibility();
+        return;
+    }
+
+    const scene = this.config.container.scene;
+    for (let i = 0; i < this.config.maxSprites; i++) {
+        const pos = this.config.fixedRelativePositions[i] || { x: 0, y: 0 }; // Fallback position
+        const appleSprite = scene.add.sprite(pos.x, pos.y, this.config.spriteKey);
+        appleSprite.setScale(this.config.spriteScale);
+        appleSprite.setOrigin(0.5, 0.5); // Or adjust as needed
+        appleSprite.setVisible(false); // Initially hide all
+        this.config.container.add(appleSprite); // Add to the specified container
+        this.appleSprites.push(appleSprite);
+    }
+    this.updateVisibility(); // Set initial visibility based on current value
+  }
+
+  public stop(): void {
+    this.appleSprites.forEach(sprite => sprite.setVisible(false)); // Hide on stop
+    this.lastVisibleCount = -1; // Reset last count
+  }
+
+  public update(delta: number): void {
+    // valueRef is updated externally (e.g., by TreeViewModule)
+    this.updateVisibility();
+  }
+
+  private updateVisibility(): void {
+    if (!this.config.valueRef || this.config.unitsPerSprite <= 0) return;
+
+    const currentAmount = this.config.valueRef.current;
+    let numApplesToShow = 0;
+    if (currentAmount > 0) {
+        numApplesToShow = Math.min(
+            this.config.maxSprites,
+            Math.ceil(currentAmount / this.config.unitsPerSprite)
+        );
+    }
+
+
+    if (numApplesToShow === this.lastVisibleCount) return; // No change in visibility
+
+    for (let i = 0; i < this.appleSprites.length; i++) {
+        this.appleSprites[i].setVisible(i < numApplesToShow);
+    }
+    this.lastVisibleCount = numApplesToShow;
+  }
+
+  // Call this if the effect instance is being permanently removed
+  public destroy(): void {
+    this.appleSprites.forEach(sprite => sprite.destroy());
+    this.appleSprites = [];
+  }
 }
 
 // ---
@@ -3273,7 +3445,7 @@ import { GameDisplayContext } from "../../GameDisplay";
 import { ProgressBarConfig, ValueRef } from "../effects/ProgressBar";
 import { ShudderEffectConfig } from "../effects/ShudderEffect";
 import { TreeFallAnimation } from "./TreeFallAnimation";
-import { TimeComponent, getTime } from "../../../logic/time/TimeComponent";
+import { getTime } from "../../../logic/time/TimeComponent";
 import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
 
 const harvestBarConfig: ProgressBarConfig = {
@@ -3300,7 +3472,7 @@ export class TreeViewModule extends ViewDisplayModule {
   private harvestRefs: Map<number, ValueRef> = new Map();
   private fallAnimations: Map<number, TreeFallAnimation> = new Map();
   private harvested: Map<number, boolean> = new Map();
-
+  
   init(context: GameDisplayContext): void {
     registerViewDisplayModule(this, context, context.viewsByEntity);
   }
@@ -3769,25 +3941,29 @@ export function registerViewDisplayModule(
 
 // ---
 
+import { View } from "./View";
 import { ProgressBar, ProgressBarConfig } from "../game/effects/ProgressBar";
 import { ShudderEffect, ShudderEffectConfig } from "../game/effects/ShudderEffect";
-import { View } from "./View";
+import { AppleQuantityEffect, AppleQuantityEffectConfig } from "../game/effects/AppleQuantityEffect";
 
 export interface EffectInstance {
   start(): void;
   stop(): void;
   update?(delta: number): void;
+  destroy?(): void; // Optional destroy method for effects that create persistent objects
 }
 
 export enum EffectType {
   Red = "red",
-  Highlight = "highlight",
+  Highlight = "highlight", // Currently same as Red
   Shader = "shader",
   Shake = "shake",
   Progress = "progress",
   Shudder = "shudder",
+  APPLE_QUANTITY_DISPLAY = "apple_quantity_display", // New effect type
 }
 
+// Ensure ProgressBarOptions matches if it was defined elsewhere, or use ProgressBarConfig directly
 export type ProgressBarOptions = ProgressBarConfig & { container: Phaser.GameObjects.Container };
 
 export class ViewEffectController {
@@ -3798,8 +3974,10 @@ export class ViewEffectController {
     this.view = view;
   }
 
-  apply(type: EffectType, opts?: Record<string, any>): void {
-    if (this.active.has(type)) return;
+  public apply(type: EffectType, opts?: any): void {
+    if (this.active.has(type)) {
+        return; 
+    }
 
     let instance: EffectInstance | undefined;
 
@@ -3808,7 +3986,7 @@ export class ViewEffectController {
         instance = this.makeRed(opts);
         break;
       case EffectType.Highlight:
-        instance = this.makeRed(opts);
+        instance = this.makeRed(opts); // Highlight currently uses makeRed
         break;
       case EffectType.Shader:
         instance = this.makeShader(opts);
@@ -3822,6 +4000,9 @@ export class ViewEffectController {
       case EffectType.Shudder:
         instance = new ShudderEffect(this.view, opts as ShudderEffectConfig);
         break;
+      case EffectType.APPLE_QUANTITY_DISPLAY:
+        instance = this.makeAppleQuantityDisplay(opts as AppleQuantityEffectConfig);
+        break;
     }
 
     if (instance) {
@@ -3830,22 +4011,24 @@ export class ViewEffectController {
     }
   }
 
-  clear(type: EffectType): void {
+  public clear(type: EffectType): void {
     const effect = this.active.get(type);
     if (effect) {
       effect.stop();
+      effect.destroy?.(); // Call destroy if it exists
       this.active.delete(type);
     }
   }
 
-  clearAll(): void {
+  public clearAll(): void {
     for (const effect of this.active.values()) {
       effect.stop();
+      effect.destroy?.();
     }
     this.active.clear();
   }
 
-  update(delta: number): void {
+  public update(delta: number): void {
     for (const effect of this.active.values()) {
       effect.update?.(delta);
     }
@@ -3854,56 +4037,80 @@ export class ViewEffectController {
   private makeShake(opts?: Record<string, any>): EffectInstance {
     const sprite = this.view.getSprite?.();
     if (!sprite) return { start: () => {}, stop: () => {} };
-
     const tween = sprite.scene.tweens.add({
       targets: sprite,
-      scale: { from: 1, to: opts?.scale ?? 1.15 },
+      scale: { from: sprite.scale, to: sprite.scale * (opts?.scaleFactor ?? 1.15) }, // Use scaleFactor
       yoyo: true,
       duration: opts?.duration ?? 200,
       repeat: opts?.repeat ?? 0,
     });
-
     return {
-      start: () => {},
+      start: () => { if(sprite.active) tween.play(); },
       stop: () => tween.stop(),
+      destroy: () => tween.remove(),
     };
   }
 
   private makeRed(opts?: Record<string, any>): EffectInstance {
     const sprite = this.view.getSprite?.();
     if (!sprite) return { start: () => {}, stop: () => {} };
-
     const tint = opts?.color ?? 0xff0000;
+    let originalTint: number | undefined;
+    let isTinted: boolean = false;
 
     return {
-      start: () => sprite.setTint(tint),
-      stop: () => sprite.clearTint(),
+      start: () => {
+        if (sprite.isTinted) {
+            originalTint = sprite.tintTopLeft; // Assuming uniform tint
+        } else {
+            originalTint = undefined;
+        }
+        sprite.setTint(tint);
+        isTinted = true;
+      },
+      stop: () => {
+        if(isTinted){
+            if(originalTint !== undefined){
+                sprite.setTint(originalTint);
+            } else {
+                sprite.clearTint();
+            }
+            isTinted = false;
+        }
+      },
     };
   }
 
   private makeShader(opts?: Record<string, any>): EffectInstance {
     const sprite = this.view.getSprite?.();
     if (!sprite) return { start: () => {}, stop: () => {} };
-
-    const shader = opts?.shader ?? "TimeTint";
-
+    const shaderName = opts?.shader ?? "TimeTint";
     return {
-      start: () => sprite.setPipeline(shader),
-      stop: () => sprite.resetPipeline(),
+      start: () => sprite.setPipeline(shaderName),
+      stop: () => sprite.resetPipeline(), // Or setPipeline() to remove custom one
     };
   }
 
   private makeProgress(config: ProgressBarOptions): EffectInstance {
     const bar = new ProgressBar(config.container, config);
-  
     return {
       start: bar.show.bind(bar),
       stop: bar.hide.bind(bar),
-      update: (delta: number) => bar.update(delta, this.view.viewDefinition.position)
+      update: (delta: number) => bar.update(delta, this.view.viewDefinition.position),
+      destroy: bar.destroy.bind(bar),
+    };
+  }
+
+  private makeAppleQuantityDisplay(config: AppleQuantityEffectConfig): EffectInstance {
+    const appleEffect = new AppleQuantityEffect(this.view, config);
+    return {
+        start: appleEffect.start.bind(appleEffect),
+        stop: appleEffect.stop.bind(appleEffect),
+        update: appleEffect.update.bind(appleEffect),
+        destroy: appleEffect.destroy.bind(appleEffect),
     };
   }
 }
-
 
 // ---
 
@@ -4460,6 +4667,7 @@ import { LocomotionComponent } from "../locomotion/LocomotionComponent"; // Adju
 import { HarvesterComponent as HarvesterComponent } from "../trees/HarvesterComponent"; // Adjust path, aliased to avoid name clash
 import { BuffsComponent } from "./BuffsComponent";
 import { WorkerComponent } from "../characters/WorkerComponent";
+import { ForagerComponent } from "../foraging/ForagerComponent";
 
 export class StatCalculator {
 
@@ -4477,6 +4685,13 @@ export class StatCalculator {
                 const effectiveWorkSpeed = StatCalculator.getEffectiveStat(ecs, entity, AffectedStat.WORK_SPEED);
                 const harvesterForHS = ecs.getComponent(entity, HarvesterComponent);
                 const baseHarvestSpeedAdditive = harvesterForHS?.harvestPerMinute ?? 0;
+                return effectiveWorkSpeed + baseHarvestSpeedAdditive;
+            }       
+            case AffectedStat.FORAGING_SPEED:{
+                // Scale it down to foraging numbers
+                const effectiveWorkSpeed = StatCalculator.getEffectiveStat(ecs, entity, AffectedStat.WORK_SPEED) * 0.01;
+                const forager = ecs.getComponent(entity, ForagerComponent);
+                const baseHarvestSpeedAdditive = forager?.foragePerMinute ?? 0;
                 return effectiveWorkSpeed + baseHarvestSpeedAdditive;
             }       
             case AffectedStat.SLEEP_MODIFICATION_RATE:{
@@ -4603,7 +4818,8 @@ export enum AffectedStat {
     HARVEST_SPEED = "HARVEST_SPEED",
     SLEEP_MODIFICATION_RATE = "SLEEP_MODIFICATION_RATE",
     HUNGER_MODIFICATION_RATE = "HUNGER_MODIFICATION_RATE",
-    FOOD_GATHERING_YIELD_MULTIPLIER = "FOOD_GATHERING_YIELD_MULTIPLIER"
+    FOOD_GATHERING_YIELD_MULTIPLIER = "FOOD_GATHERING_YIELD_MULTIPLIER",
+    FORAGING_SPEED = "FORAGING_SPEED"
 }
 
 export enum BuffEffectApplicationType {
@@ -4876,12 +5092,12 @@ export function createStandardSchedule(): ScheduleComponent {
   return new ScheduleComponent([
     CharacterIntent.SLEEP,
     CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
+    CharacterIntent.FORAGE,
+    CharacterIntent.FORAGE,
     CharacterIntent.REST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
-    CharacterIntent.HARVEST,
+    CharacterIntent.FORAGE,
+    CharacterIntent.FORAGE,
+    CharacterIntent.FORAGE,
     CharacterIntent.SLEEP
   ]);
 }
@@ -4909,21 +5125,18 @@ export class ForagableComponent extends Component {
   public currentAmount: number;
   public maxAmount: number;
   public regenRatePerMinute: number; // Units regenerated per game minute for the node
-  public yieldPerMinute: number;     // Base units a character can extract per minute of foraging at this node
 
   constructor(
     resourceType: ResourceType,
     initialAmount: number,
     maxAmount: number,
     regenRatePerMinute: number,
-    yieldPerMinute: number = 1 // Default base yield of 1 unit per minute of foraging
   ) {
     super();
     this.resourceType = resourceType;
     this.currentAmount = initialAmount;
     this.maxAmount = maxAmount;
     this.regenRatePerMinute = regenRatePerMinute;
-    this.yieldPerMinute = yieldPerMinute;
   }
 
   public isDepleted(): boolean {
@@ -4933,21 +5146,68 @@ export class ForagableComponent extends Component {
 
 // ---
 
+import { Component } from "../../ECS";
+
+export class ForageRegenComponent extends Component {
+    
+}
+
+// ---
+
+import { System, Entity } from "../../ECS"; 
+import { ForagableComponent } from "./ForagableComponent"; 
+import { getDeltaInGameMinutes } from "../../display/utils/getDeltaInGameMinutes"; 
+import { ForageRegenComponent } from "./ForageRegenComponent";
+
+export class ForageRegenerationSystem extends System {
+    public componentsRequired = new Set<Function>([ForagableComponent]);
+
+    public update(entities: Set<Entity>, deltaMs: number): void {
+        const gameMinutesPassedThisFrame = getDeltaInGameMinutes(this.ecs, deltaMs);
+        if (gameMinutesPassedThisFrame === 0) return;
+
+        for (const entity of entities) {
+            const foragable = this.ecs.getComponent(entity, ForagableComponent);
+
+            if (foragable.currentAmount < foragable.maxAmount) {
+                const regen = this.ecs.getComponent(entity, ForageRegenComponent);
+                if (!regen){
+                    this.ecs.addComponent(entity, new ForageRegenComponent)
+                }
+                const amountToRegen = foragable.regenRatePerMinute * gameMinutesPassedThisFrame;
+                foragable.currentAmount += amountToRegen;
+                if (foragable.currentAmount >= foragable.maxAmount) {
+                    foragable.currentAmount = foragable.maxAmount;
+                    this.ecs.removeComponent(entity, ForageRegenComponent);
+                }
+            }
+        }
+    }
+}
+
+// ---
+
+import { Component } from "../../ECS";
+
+export class ForagerComponent extends Component {
+    public foragePerMinute: number = 1;
+
+    constructor() {
+        super();
+    }
+}
+
+// ---
+
 import { System, Entity, ECS } from "../../ECS";
 import { ForagableComponent } from "./ForagableComponent";
 import { ResourceTracker } from "../resources/ResourceTracker";
 import { StatCalculator } from "../buffs/StatCalculator";
 import { AffectedStat } from "../buffs/buffsData"; 
-import { InteractionSlots, SlotType } from "../../components/InteractionSlots"; 
 import { getDeltaInGameMinutes } from "../../display/utils/getDeltaInGameMinutes";
 import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent";
-import { CharacterAction, ForagingActionData, ActionDataType, CharacterIntent } from "../intent/intent-to-action/actionIntentData";
-
-function releaseForageSlot(ecs: ECS, characterEntity: Entity, foragableEntityId: Entity): void {
-    if (ecs.hasEntity(foragableEntityId) && ecs.hasComponent(foragableEntityId, InteractionSlots)) {
-        ecs.getComponent(foragableEntityId, InteractionSlots)?.release(characterEntity, SlotType.FORAGE);
-    }
-}
+import { CharacterAction, ForagingActionData, ActionDataType } from "../intent/intent-to-action/actionIntentData";
+import { abortForaging } from "../intent/intent-to-action/intent-abort/abortForaging";
 
 export class ForagingSystem extends System {
     public componentsRequired = new Set<Function>([ActionIntentComponent]);
@@ -4968,24 +5228,18 @@ export class ForagingSystem extends System {
             const targetEntityId = foragingData.targetForagableEntityId;
 
             if (!this.ecs.hasEntity(targetEntityId)) {
-                releaseForageSlot(this.ecs, characterEntity, targetEntityId);
-                actionIntent.intentType = CharacterIntent.FORAGE_FOOD; // Re-evaluate for new target
-                actionIntent.currentPerformedAction = CharacterAction.IDLE;
-                actionIntent.actionData = null;
+                abortForaging(this.ecs, characterEntity);
                 continue;
             }
 
             const foragableNode = this.ecs.getComponent(targetEntityId, ForagableComponent);
 
             if (!foragableNode || foragableNode.currentAmount <= 0) {
-                releaseForageSlot(this.ecs, characterEntity, targetEntityId);
-                actionIntent.intentType = CharacterIntent.FORAGE_FOOD; // Node depleted, re-evaluate
-                actionIntent.currentPerformedAction = CharacterAction.IDLE;
-                actionIntent.actionData = null;
+                abortForaging(this.ecs, characterEntity);
                 continue;
             }
 
-            const baseYieldFromNodeThisFrame = foragableNode.yieldPerMinute * gameMinutesPassedThisFrame;
+            const baseYieldFromNodeThisFrame = StatCalculator.getEffectiveStat(this.ecs, characterEntity, AffectedStat.FORAGING_SPEED) * gameMinutesPassedThisFrame;
             
             // Apply character's yield multiplier (e.g., from Kitchen worker buff)
             const characterYieldMultiplier = StatCalculator.getEffectiveStat(
@@ -5003,10 +5257,7 @@ export class ForagingSystem extends System {
             }
 
             if (foragableNode.currentAmount <= 0) {
-                releaseForageSlot(this.ecs, characterEntity, targetEntityId);
-                actionIntent.intentType = CharacterIntent.FORAGE_FOOD; // Node depleted, re-evaluate
-                actionIntent.currentPerformedAction = CharacterAction.IDLE;
-                actionIntent.actionData = null;
+                abortForaging(this.ecs, characterEntity);
             }
         }
     }
@@ -5090,6 +5341,7 @@ import { calculateHarvestIntentWeight } from "./weights/calculateHarvestIntentWe
 import { calculateSleepIntentWeight } from "./weights/calculateSleepIntentWeight";
 import { calculateRestIntentWeight } from "./weights/calculateRestIntentWeight";
 import { calculateEatIntentWeight } from "./weights/calculateEatIntentWeight";
+import { calculateForagetIntentWeight } from "./weights/calculateForagetIntentWeight";
 
 export class IntentSelectionSystem extends System {
     public componentsRequired = new Set<Function>([
@@ -5113,6 +5365,7 @@ export class IntentSelectionSystem extends System {
             intentWeights.push({ intent: CharacterIntent.EAT, weight: calculateEatIntentWeight(this.ecs, entity, actionIntent, schedule, needs, currentHour) });
             intentWeights.push({ intent: CharacterIntent.HARVEST, weight: calculateHarvestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
             intentWeights.push({ intent: CharacterIntent.REST, weight: calculateRestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
+            intentWeights.push({ intent: CharacterIntent.FORAGE, weight: calculateForagetIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
 
             // Sort by weight descending
             intentWeights.sort((a, b) => b.weight - a.weight);
@@ -5129,6 +5382,22 @@ export class IntentSelectionSystem extends System {
                 actionIntent.actionData = null; // Clear data for the new intent
             }
         }
+    }
+}
+
+// ---
+
+import { Component, Entity } from "../../../ECS";
+import { Pos } from "../../../../utils/Math";
+
+export class ForagingState extends Component {
+    public targetForagableEntityId: Entity = -1;
+    public targetPosition: Pos | undefined; // Exact world position of the reserved slot
+
+    constructor(targetForagableEntityId: Entity = -1, targetPosition: Pos | undefined = undefined) {
+        super();
+        this.targetForagableEntityId = targetForagableEntityId;
+        this.targetPosition = targetPosition;
     }
 }
 
@@ -5204,8 +5473,9 @@ import { handleForageIntentLogic } from "./intent-handlers/handleForageIntentLog
 import { handleHarvestIntentLogic } from "./intent-handlers/handleHarvestIntentLogic";
 import { handleRestIntentLogic } from "./intent-handlers/handleRestIntentLogic";
 import { handleSleepIntentLogic } from "./intent-handlers/handleSleepIntentLogic";
-import { abortHarvesting } from "./intent-handlers/abortHarvesting";
-import { abortSleeping } from "./intent-handlers/abortSleeping";
+import { abortHarvesting } from "./intent-abort/abortHarvesting";
+import { abortSleeping } from "./intent-abort/abortSleeping";
+import { abortForaging } from "./intent-abort/abortForaging";
 
 export class ActionIntentSystem extends System {
     public componentsRequired = new Set<Function>([ActionIntentComponent]);
@@ -5223,9 +5493,11 @@ export class ActionIntentSystem extends System {
                     case CharacterIntent.SLEEP:
                         abortSleeping(this.ecs, entity);
                         break;
+                    case CharacterIntent.FORAGE:
+                        abortForaging(this.ecs, entity);
+                        break;
                     case CharacterIntent.REST:
                     case CharacterIntent.EAT:
-                    case CharacterIntent.FORAGE_FOOD:
                     default:
                         break;
                 }
@@ -5246,7 +5518,7 @@ export class ActionIntentSystem extends System {
                 case CharacterIntent.EAT:
                     handleEatIntentLogic(this.ecs, entity, actionIntent);
                     break;
-                case CharacterIntent.FORAGE_FOOD:
+                case CharacterIntent.FORAGE:
                     handleForageIntentLogic(this.ecs, entity, actionIntent);
                     break;
                 default:
@@ -5273,7 +5545,7 @@ export enum CharacterIntent {
     REST = "REST",
     EAT = "EAT",
     STUDY = "STUDY",
-    FORAGE_FOOD = "FORAGE_FOOD"
+    FORAGE = "FORAGE"
 }
 
 /** Defines the concrete, observable, low-level action a character is currently performing. */
@@ -5368,6 +5640,27 @@ export function isStrollingAtPointData(data: any): data is StrollingAtPointData 
 import { ECS, Entity } from "../../../../ECS";
 import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
 import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
+import { ForagingState } from "../../character-states/ForagingState";
+
+
+export function abortForaging(ecs: ECS, characterEntity: Entity): void {
+    const foragingState = ecs.getComponent(characterEntity, ForagingState);
+    const slots = ecs.getComponent(foragingState?.targetForagableEntityId, InteractionSlots);
+    slots?.release(characterEntity, SlotType.FORAGE);
+
+    ecs.removeComponent(characterEntity, ForagingState);
+    
+    const locomotion = ecs.getComponent(characterEntity, LocomotionComponent);
+    if (locomotion) {
+        locomotion.arrived = false;
+    }
+}
+
+// ---
+
+import { ECS, Entity } from "../../../../ECS";
+import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
+import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
 import { HarvestingState } from "../../character-states/HarvestingState";
 
 
@@ -5426,9 +5719,8 @@ import { Pos } from "../../../../../utils/Math";
 import { NeedsComponent, NeedType } from "../../../needs/NeedsComponent";
 import { ResourceTracker } from "../../../resources/ResourceTracker";
 import { ResourceType } from "../../../resources/ResourceType";
-import { BuffType } from "../../../buffs/buffsData"; // Assuming BuffType.EATING is defined here
-import { WoodDojo } from "../../../buildings/wood_dojo/WoodDojo"; // Placeholder for KitchenComponent
-import { getTime } from "../../../time/TimeComponent"; // Required for buff application timestamp
+import { BuffType } from "../../../buffs/buffsData"; 
+import { getTime } from "../../../time/TimeComponent";
 import { BuffsComponent } from "../../../buffs/BuffsComponent";
 
 const FOOD_UNITS_CONSUMED_AT_ACTION_START = 1;
@@ -5440,7 +5732,7 @@ function setIdleAndClearIntent(aic: ActionIntentComponent): void {
 }
 
 function setForageIntent(aic: ActionIntentComponent): void {
-    aic.intentType = CharacterIntent.FORAGE_FOOD; // Ensure this is in CharacterIntent enum
+    aic.intentType = CharacterIntent.FORAGE; // Ensure this is in CharacterIntent enum
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
@@ -5470,12 +5762,6 @@ function applyEatingBuffAndSetAction(ecs: ECS, entity: Entity, aic: ActionIntent
 }
 
 function getKitchenInfo(ecs: ECS): { id: Entity, transform: Transform } | null {
-    const kitchens = ecs.getEntitiesWithComponents([WoodDojo, Transform]); // Replace WoodDojo
-    if (kitchens.length > 0) {
-        const kitchenId = kitchens[0];
-        const kitchenTransform = ecs.getComponent(kitchenId, Transform);
-        return { id: kitchenId, transform: kitchenTransform };
-    }
     return null;
 }
 
@@ -5517,10 +5803,7 @@ export function handleEatIntentLogic(
         const { id: kitchenId, transform: kitchenTransform } = kitchenInfo;
         const walkingData = actionIntent.actionData as WalkingData;
 
-        if (locomotion.arrived &&
-            actionIntent.currentPerformedAction === CharacterAction.WALKING &&
-            walkingData?.type === ActionDataType.WalkingData &&
-            walkingData.ultimateTargetEntityId === kitchenId) {
+        if (locomotion?.arrived && walkingData?.ultimateTargetEntityId === kitchenId) {
             // Arrived at kitchen for eating
             applyEatingBuffAndSetAction(ecs, entity, actionIntent);
         } else if (actionIntent.currentPerformedAction !== CharacterAction.WALKING || walkingData?.ultimateTargetEntityId !== kitchenId) {
@@ -5541,27 +5824,28 @@ import {
     ActionDataType,
     WalkingData,
     CharacterIntent,
-    ForagingActionData,
+    ForagingActionData
 } from "../actionIntentData";
 import { Transform } from "../../../../components/Transform";
-import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
 import { Pos } from "../../../../../utils/Math";
 import { ForagableComponent } from "../../../foraging/ForagableComponent";
 import { WoodDojoWorker } from "../../../buildings/wood_dojo/WoodDojoWorker";
 import { HomeComponent } from "../../../buildings/dormitory/HomeComponent";
-import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots"; 
-import { WoodDojo } from "../../../buildings/wood_dojo/WoodDojo"; // Placeholder
+import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
+import { WoodDojo } from "../../../buildings/wood_dojo/WoodDojo"; // Placeholder for KitchenComponent
 import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
+import { ForagingState } from "../../character-states/ForagingState";
+import { abortForaging } from "../intent-abort/abortForaging";
+import { ForageRegenComponent } from "../../../foraging/ForageRegenComponent";
 
-
-function setIdleAndClearIntent(aic: ActionIntentComponent): void {
-    aic.currentPerformedAction = CharacterAction.IDLE;
+function setIdle(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.NONE;
+    aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
 
 function setNoForageTargetsAvailable(aic: ActionIntentComponent): void {
-    aic.intentType = CharacterIntent.REST;
+    aic.intentType = CharacterIntent.REST; // Fallback intent
     aic.currentPerformedAction = CharacterAction.IDLE;
     aic.actionData = null;
 }
@@ -5575,27 +5859,19 @@ function setWalkingToForageSlot(aic: ActionIntentComponent, targetPosition: Pos,
     } as WalkingData;
 }
 
-function setForaging(aic: ActionIntentComponent, targetEntityId: Entity, slotOffset: Pos): void {
+function setForagingAction(aic: ActionIntentComponent, targetEntityId: Entity, slotOffset: Pos): void {
     aic.currentPerformedAction = CharacterAction.FORAGING;
     aic.actionData = {
         type: ActionDataType.ForagingActionData,
         targetForagableEntityId: targetEntityId,
-        slotOffset
-    } as ForagingActionData;
-}
-
-function releaseAnyForageSlotHeldByCharacter(ecs: ECS, characterEntity: Entity): void {
-    // Iterate all entities that might have forage slots (e.g., those with ForagableComponent and InteractionSlots)
-    const foragableEntities = ecs.getEntitiesWithComponents([ForagableComponent, InteractionSlots]);
-    for (const entityId of foragableEntities) {
-        ecs.getComponent(entityId, InteractionSlots)?.release(characterEntity, SlotType.FORAGE);
-    }
+        slotOffset // Storing relative offset as per other similar actions
+    } as ForagingActionData; // Cast to ForagingActionData, ensure it's defined
 }
 
 function getPrimaryForagingReferencePoint(ecs: ECS, characterEntity: Entity): Entity | null {
-    const workerInfo = ecs.getComponent(characterEntity, WoodDojoWorker); // Assumes WoodDojoWorker implies Kitchen access
+    const workerInfo = ecs.getComponent(characterEntity, WoodDojoWorker);
     if (workerInfo && workerInfo.dojoId !== null && ecs.hasEntity(workerInfo.dojoId)) {
-        if (ecs.hasComponent(workerInfo.dojoId, WoodDojo)) { // Replace with KitchenComponent if distinct
+        if (ecs.hasComponent(workerInfo.dojoId, WoodDojo)) { // Replace WoodDojo with actual KitchenComponent if it's distinct
             return workerInfo.dojoId;
         }
     }
@@ -5606,15 +5882,16 @@ function getPrimaryForagingReferencePoint(ecs: ECS, characterEntity: Entity): En
     return null;
 }
 
-function findAndReserveForageTargetViaLUT(
-    ecs: ECS,
-    characterEntity: Entity
-): { id: Entity, slotOffset: Pos } | null {
+export function canForage(ecs: ECS, characterEntity: Entity): boolean {
     const referenceEntityId = getPrimaryForagingReferencePoint(ecs, characterEntity);
-    if (referenceEntityId === null) return null;
+    if (referenceEntityId === null) {
+        return false; // No valid reference point (Kitchen or Dormitory) to forage from
+    }
 
     const caveTreeLUTComponent = getCaveTreeLUT(ecs);
-    if (!caveTreeLUTComponent || !caveTreeLUTComponent.lut) return null;
+    if (!caveTreeLUTComponent || !caveTreeLUTComponent.lut) {
+        return false; // LUT not available
+    }
 
     const nearbyEntityIds = caveTreeLUTComponent.lut[referenceEntityId];
 
@@ -5623,18 +5900,98 @@ function findAndReserveForageTargetViaLUT(
             if (!ecs.hasEntity(entityId)) continue;
 
             const foragableComponent = ecs.getComponent(entityId, ForagableComponent);
-            const targetTransform = ecs.getComponent(entityId, Transform);
             const slots = ecs.getComponent(entityId, InteractionSlots);
 
-            if (foragableComponent && foragableComponent.currentAmount > 0 && targetTransform && slots) {
-                const offset = slots.reserve(characterEntity, SlotType.FORAGE); 
-                if (offset) {
-                    return { id: entityId, slotOffset: offset };
+            if (foragableComponent && foragableComponent.currentAmount == foragableComponent.maxAmount && slots) {
+                // Check if ANY forage slot is available or already occupied by this character
+                if (slots.getSlotsArray(SlotType.FORAGE).some(slot => slot.occupiedBy === null || slot.occupiedBy === characterEntity)) {
+                    return true; // Found a valid, available foragable entity with a free slot
                 }
             }
         }
     }
-    return null;
+    return false; // No suitable target found
+}
+
+function findAndAssignForageTarget(ecs: ECS, characterEntity: Entity): boolean {
+    abortForaging(ecs, characterEntity);
+
+    const referenceEntityId = getPrimaryForagingReferencePoint(ecs, characterEntity);
+    if (referenceEntityId === null) return false;
+
+    const caveTreeLUTComponent = getCaveTreeLUT(ecs);
+    if (!caveTreeLUTComponent || !caveTreeLUTComponent.lut) return false;
+
+    const nearbyEntityIds = caveTreeLUTComponent.lut[referenceEntityId];
+
+    if (nearbyEntityIds && nearbyEntityIds.length > 0) {
+        for (const entityId of nearbyEntityIds) {
+            if (!ecs.hasEntity(entityId)) continue;
+            if (ecs.hasComponent(entityId, ForageRegenComponent)){
+                continue;
+            }
+
+            const foragableComp = ecs.getComponent(entityId, ForagableComponent);
+            const targetTransform = ecs.getComponent(entityId, Transform);
+            const slots = ecs.getComponent(entityId, InteractionSlots);
+
+            if (foragableComp && foragableComp.currentAmount > 0.2 && targetTransform && slots) {
+                const offset = slots.reserve(characterEntity, SlotType.FORAGE);
+                if (offset) {
+                    const targetPosition = {
+                        x: Math.round(targetTransform.x + offset.x),
+                        y: Math.round(targetTransform.y + offset.y)
+                    };
+                    let foragingState = ecs.getComponent(characterEntity, ForagingState);
+                    if (!foragingState) {
+                        foragingState = new ForagingState(entityId, targetPosition);
+                        ecs.addComponent(characterEntity, foragingState);
+                    } else {
+                        foragingState.targetForagableEntityId = entityId;
+                        foragingState.targetPosition = targetPosition;
+                    }
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+function updateForageActions(ecs: ECS, entity: Entity, actionIntent: ActionIntentComponent, foragingState: ForagingState): void {
+    const characterTransform = ecs.getComponent(entity, Transform);
+    
+    const { targetForagableEntityId: targetId, targetPosition: exactTargetPosition } = foragingState;
+
+    if (targetId === -1 || !exactTargetPosition) {
+        return setIdle(actionIntent);
+    }
+    if (!ecs.hasEntity(targetId) || (ecs.getComponent(targetId, ForagableComponent)?.currentAmount || 0) <= 0) {
+        // Target became invalid after assignment (e.g. depleted by another)
+        abortForaging(ecs, entity); // Abort will clear ForagingState, leading to re-search next tick
+        actionIntent.currentPerformedAction = CharacterAction.IDLE; // Prevent immediate re-pathing this tick
+        actionIntent.actionData = null;
+        return;
+    }
+
+
+    if (!characterTransform) return setIdle(actionIntent);
+
+    const roundedCharX = Math.round(characterTransform.x);
+    const roundedCharY = Math.round(characterTransform.y);
+
+    if (roundedCharX !== exactTargetPosition.x || roundedCharY !== exactTargetPosition.y) {
+        setWalkingToForageSlot(actionIntent, exactTargetPosition, targetId);
+    } else {
+        // Arrived at the designated FORAGE slot.
+        // The ForagingActionData needs the relative slotOffset, not the world position
+        const targetTransform = ecs.getComponent(targetId, Transform);
+        const slotOffset: Pos = {
+            x: exactTargetPosition.x - targetTransform.x,
+            y: exactTargetPosition.y - targetTransform.y
+        };
+        setForagingAction(actionIntent, targetId, slotOffset);
+    }
 }
 
 export function handleForageIntentLogic(
@@ -5642,47 +5999,29 @@ export function handleForageIntentLogic(
     entity: Entity,
     actionIntent: ActionIntentComponent
 ): void {
-    const characterTransform = ecs.getComponent(entity, Transform);
-    const locomotion = ecs.getComponent(entity, LocomotionComponent);
+    const foragingState = ecs.getComponent(entity, ForagingState);
 
-    if (!characterTransform || !locomotion) return setIdleAndClearIntent(actionIntent);
-
-    const currentActionData = actionIntent.actionData;
-
-    if (actionIntent.currentPerformedAction === CharacterAction.FORAGING &&
-        (currentActionData as ForagingActionData)?.type === ActionDataType.ForagingActionData) {
-        const targetId = (currentActionData as ForagingActionData).targetForagableEntityId;
-        if (!ecs.hasEntity(targetId) || (ecs.getComponent(targetId, ForagableComponent)?.currentAmount || 0) <= 0) {
-            releaseAnyForageSlotHeldByCharacter(ecs, entity); // Release slot if target depleted
-            actionIntent.actionData = null; 
-        } else {
-            return; 
+    if (!foragingState || foragingState.targetForagableEntityId === -1) {
+        if (!findAndAssignForageTarget(ecs, entity)) {
+            setNoForageTargetsAvailable(actionIntent);
         }
+        // If a target was found, ForagingState is now populated.
+        // Next tick will call updateForageActions.
+        // Or, re-fetch and proceed immediately if desired:
+        const newlyAssignedState = ecs.getComponent(entity, ForagingState);
+        if (newlyAssignedState && newlyAssignedState.targetForagableEntityId !== -1) {
+            updateForageActions(ecs, entity, actionIntent, newlyAssignedState);
+        }
+        return;
     }
-    
-    releaseAnyForageSlotHeldByCharacter(ecs, entity); // Ensure any old slots are cleared before finding new
-    const forageTargetInfo = findAndReserveForageTargetViaLUT(ecs, entity);
 
-    if (!forageTargetInfo) {
-        return setNoForageTargetsAvailable(actionIntent);
+    const forageableComponent = ecs.getComponent(foragingState.targetForagableEntityId, ForagableComponent);
+    if (!forageableComponent || forageableComponent.currentAmount <= 0) {
+        abortForaging(ecs, entity);
+        return;
     }
 
-    const { id: targetId, slotOffset } = forageTargetInfo;
-    const treeTransform = ecs.getComponent(targetId, Transform); 
-
-    const exactApproachPosition = { 
-        x: Math.round(treeTransform.x + slotOffset.x), 
-        y: Math.round(treeTransform.y + slotOffset.y) 
-    };
-    
-    const roundedCharX = Math.round(characterTransform.x);
-    const roundedCharY = Math.round(characterTransform.y);
-
-    if (roundedCharX !== exactApproachPosition.x || roundedCharY !== exactApproachPosition.y) {
-        setWalkingToForageSlot(actionIntent, exactApproachPosition, targetId);
-    } else {
-        return setForaging(actionIntent, targetId, slotOffset);
-    }
+    updateForageActions(ecs, entity, actionIntent, foragingState);
 }
 
 // ---
@@ -5704,7 +6043,7 @@ import { Pos } from "../../../../../utils/Math";
 import { WoodDojoWorker } from "../../../buildings/wood_dojo/WoodDojoWorker";
 import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
 import { HarvestingState } from "../../character-states/HarvestingState";
-import { abortHarvesting } from "./abortHarvesting";
+import { abortHarvesting } from "../intent-abort/abortHarvesting";
 import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
 
 function setIdle(aic: ActionIntentComponent): void {
@@ -6029,7 +6368,7 @@ import { Transform } from "../../../../components/Transform";
 import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
 import { DormitoryComponent } from "../../../buildings/dormitory/DormitoryComponent";
 import { Pos } from "../../../../../utils/Math";
-import { abortSleeping } from "./abortSleeping"; // New helper
+import { abortSleeping } from "../intent-abort/abortSleeping"; // New helper
 import { SleepingState } from "../../character-states/SleepingState";
 import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
 
@@ -6241,6 +6580,20 @@ export function calculateEatIntentWeight(ecs: ECS, entity: Entity, intent: Actio
     }
 
     return canSleep(ecs, entity) ? weight : 0;
+}
+
+
+// ---
+
+import { ECS, Entity } from "../../../ECS";
+import { CharacterIntent } from "../intent-to-action/actionIntentData";
+import { ScheduleComponent } from "../../characters/ScheduleComponent";
+import { NeedsComponent } from "../../needs/NeedsComponent";
+import { canForage } from "../intent-to-action/intent-handlers/handleForageIntentLogic";
+
+export function calculateForagetIntentWeight(ecs: ECS, entity: Entity, schedule: ScheduleComponent, needs: NeedsComponent, currentHour: number): number {
+    if (schedule.entries[currentHour] !== CharacterIntent.FORAGE) return 0;
+    return canForage(ecs, entity) ? 100 : 0;
 }
 
 
@@ -6725,11 +7078,8 @@ export class ResourceTracker {
     }
 
     static set(type: ResourceType, value: number) {
-        const clamped = Math.max(0, Math.floor(value));
-        if (clamped !== this.resources[type]) {
-            this.resources[type] = clamped;
-            this.notify([type]);
-        }
+        this.resources[type] = value;
+        this.notify([type]);
     }
 
     static add(type: ResourceType, delta: number) {
@@ -6891,7 +7241,7 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
                 if (def.spriteName) {
                     ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
                     ecs.addComponent(entity, new HarvestableComponent(1000, [{type:ResourceType.WOOD, amount:10}]));
-                    ecs.addComponent(entity, new ForagableComponent(ResourceType.FOOD, 20, 20, 0.001, 0.02));
+                    ecs.addComponent(entity, new ForagableComponent(ResourceType.FOOD, 20, 20, 0.001));
                     ecs.addComponent(entity, new InteractionSlots({
                         [SlotType.WORK]: { layout: SlotLayout.RADIAL, radius: 120, count: 2 },
                         [SlotType.FORAGE]: { layout: SlotLayout.RADIAL, radius: 120, count: 4 }
@@ -7080,6 +7430,8 @@ import { FoodNeedSystem } from "../needs/FoodNeedSystem.ts";
 import { getWorldEntity } from "./getWorldEntity.ts";
 import { ForagingSystem } from "../foraging/ForagingSystem.ts";
 import { HarvestingComponentRemovalSystem } from "../trees/HarvestingComponentRemovalSystem.tsx";
+import { ForageRegenerationSystem } from "../foraging/ForageRegenerationSystem.ts";
+import { ForagerComponent } from "../foraging/ForagerComponent.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -7140,6 +7492,7 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new DormitorySystem());
     game.ecs.addSystem(new ForagingSystem());
     game.ecs.addSystem(new HarvestingComponentRemovalSystem());
+    game.ecs.addSystem(new ForageRegenerationSystem());
     
     initInput(game);
     initStory(game);
@@ -7219,9 +7572,12 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, w
     ecs.addComponent(booker, new HomeComponent(homeEntity));
     ecs.addComponent(booker, new ActionIntentComponent());
     ecs.addComponent(booker, new LocomotionComponent());
-    ecs.addComponent(booker, new HarvesterComponent());
-    ecs.addComponent(booker, new BuffsComponent());
+    
     ecs.addComponent(booker, new WorkerComponent());
+    ecs.addComponent(booker, new HarvesterComponent());
+    ecs.addComponent(booker, new ForagerComponent());
+
+    ecs.addComponent(booker, new BuffsComponent());
     ecs.addComponent(
         booker,
         new NeedsComponent(
@@ -7540,7 +7896,7 @@ export class HarvesterComponent extends Component {
 // ---
 
 import { System } from "../../ECS";
-import { abortHarvesting } from "../intent/intent-to-action/intent-handlers/abortHarvesting";
+import { abortHarvesting } from "../intent/intent-to-action/intent-abort/abortHarvesting";
 import { HarvestableComponent } from "./HarvestableComponent";
 import { HarvestingState } from "../intent/character-states/HarvestingState";
 
@@ -8011,6 +8367,9 @@ export class Preloader extends Scene
         this.load.spritesheet('cave', 'cave.png', caveFrameConfig);
         this.load.spritesheet('wood_dojo', 'wood_dojo.png', caveFrameConfig);
 
+        this.load.setPath('assets/icons');
+        this.load.spritesheet('food', 'food_icon.png', caveFrameConfig);
+
 
         this.load.setPath('assets/maps');
         this.load.json('forestMap', 'forestMap.json');
@@ -8462,7 +8821,7 @@ export const ResourceDisplay: React.FC = () => {
                 return (
                     <div className="resource-row" key={type} title={description}>
                         <img src={icon} alt={type} className="resource-icon" />
-                        <span className="resource-value">{formatResourceNumber(value)}</span>
+                        <span className="resource-value">{formatResourceNumber(Math.round(value))}</span>
                     </div>
                 );
             })}
@@ -9763,6 +10122,7 @@ const scheduleIconMap: Partial<Record<ScheduleActivityType, string>> = {
   [CharacterIntent.SLEEP]: 'assets/icons/sleep_icon.png',
   [CharacterIntent.REST]: 'assets/icons/relax_icon.png',
   [CharacterIntent.STUDY]: 'assets/icons/book_icon.png',
+  [CharacterIntent.FORAGE]: 'assets/icons/forage_icon.png',
 };
 
 interface ScheduleIconProps {
@@ -9834,6 +10194,7 @@ export const actionIconMap: Partial<Record<CharacterAction, string>> = {
     [CharacterAction.BUILDING]: 'assets/icons/build_icon.png',
     [CharacterAction.STROLLING]: 'assets/icons/relax_icon.png',
     [CharacterAction.EATING]: 'assets/icons/eat_icon.png',
+    [CharacterAction.FORAGING]: 'assets/icons/forage_icon.png',
 };
 
 

@@ -4,6 +4,7 @@ import { LocomotionComponent } from "../locomotion/LocomotionComponent"; // Adju
 import { HarvesterComponent as HarvesterComponent } from "../trees/HarvesterComponent"; // Adjust path, aliased to avoid name clash
 import { BuffsComponent } from "./BuffsComponent";
 import { WorkerComponent } from "../characters/WorkerComponent";
+import { ForagerComponent } from "../foraging/ForagerComponent";
 
 export class StatCalculator {
 
@@ -21,6 +22,13 @@ export class StatCalculator {
                 const effectiveWorkSpeed = StatCalculator.getEffectiveStat(ecs, entity, AffectedStat.WORK_SPEED);
                 const harvesterForHS = ecs.getComponent(entity, HarvesterComponent);
                 const baseHarvestSpeedAdditive = harvesterForHS?.harvestPerMinute ?? 0;
+                return effectiveWorkSpeed + baseHarvestSpeedAdditive;
+            }       
+            case AffectedStat.FORAGING_SPEED:{
+                // Scale it down to foraging numbers
+                const effectiveWorkSpeed = StatCalculator.getEffectiveStat(ecs, entity, AffectedStat.WORK_SPEED) * 0.01;
+                const forager = ecs.getComponent(entity, ForagerComponent);
+                const baseHarvestSpeedAdditive = forager?.foragePerMinute ?? 0;
                 return effectiveWorkSpeed + baseHarvestSpeedAdditive;
             }       
             case AffectedStat.SLEEP_MODIFICATION_RATE:{

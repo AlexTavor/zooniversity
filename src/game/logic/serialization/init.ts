@@ -58,6 +58,8 @@ import { FoodNeedSystem } from "../needs/FoodNeedSystem.ts";
 import { getWorldEntity } from "./getWorldEntity.ts";
 import { ForagingSystem } from "../foraging/ForagingSystem.ts";
 import { HarvestingComponentRemovalSystem } from "../trees/HarvestingComponentRemovalSystem.tsx";
+import { ForageRegenerationSystem } from "../foraging/ForageRegenerationSystem.ts";
+import { ForagerComponent } from "../foraging/ForagerComponent.ts";
 
 export const init = (game:Game) => {
     initData(game);
@@ -118,6 +120,7 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new DormitorySystem());
     game.ecs.addSystem(new ForagingSystem());
     game.ecs.addSystem(new HarvestingComponentRemovalSystem());
+    game.ecs.addSystem(new ForageRegenerationSystem());
     
     initInput(game);
     initStory(game);
@@ -197,9 +200,12 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, w
     ecs.addComponent(booker, new HomeComponent(homeEntity));
     ecs.addComponent(booker, new ActionIntentComponent());
     ecs.addComponent(booker, new LocomotionComponent());
-    ecs.addComponent(booker, new HarvesterComponent());
-    ecs.addComponent(booker, new BuffsComponent());
+    
     ecs.addComponent(booker, new WorkerComponent());
+    ecs.addComponent(booker, new HarvesterComponent());
+    ecs.addComponent(booker, new ForagerComponent());
+
+    ecs.addComponent(booker, new BuffsComponent());
     ecs.addComponent(
         booker,
         new NeedsComponent(

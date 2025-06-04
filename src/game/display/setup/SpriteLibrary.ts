@@ -1,8 +1,10 @@
 import {Pos} from "../../../utils/Math.ts";
 import {Config} from "../../config/Config.ts";
 
-export const PlantSpriteKeys = ['tree0', 'tree1', 'tree2', 'tree3', 'tree4', 'tree5', 'bush0', 'bush1'] as const;
+export const TreeSpriteKeys = ['tree0', 'tree1', 'tree2', 'tree3', 'tree4', 'tree5'] as const;
+export const PlantSpriteKeys = [...TreeSpriteKeys, 'bush0', 'bush1'] as const;
 export type PlantSpriteKey = typeof PlantSpriteKeys[number];
+export type TreeSpriteKey = typeof TreeSpriteKeys[number];
 export type HillSpriteKey = 'hill';
 export const CaveSpriteKeys = ['cave', 'wood_dojo'] as const;
 export type CaveSpriteKey = typeof CaveSpriteKeys[number];
@@ -10,10 +12,29 @@ export const CharacterKeys = ['booker_char'] as const;
 export type CharacterKey = typeof CharacterKeys[number];
 export type SpriteKey = PlantSpriteKey | HillSpriteKey | CaveSpriteKey | CharacterKey;
 
+
+export const TreeAtlasKeys = ['fir0', 'fir1', 'linden0', 'linden1', 'beech0', 'beech1', 'oak0', 'oak1', 'rowan0', 'rowan1', 'birch0', 'birch1', 'cedar0', 'cedar1'] as const;
+export type TreeAtlasKey = typeof TreeAtlasKeys[number];
+
+export type TreeSpriteAtlasMap = {
+    [key in TreeSpriteKey]: [TreeAtlasKey, TreeAtlasKey];
+};
+
+export const treeSpriteToAtlasMap: TreeSpriteAtlasMap = {
+    tree0: [TreeAtlasKeys[0], TreeAtlasKeys[1]],   // fir0, fir1
+    // tree1: [TreeAtlasKeys[2], TreeAtlasKeys[3]],   // linden0, linden1
+    tree2: [TreeAtlasKeys[4], TreeAtlasKeys[5]],   // beech0, beech1
+    tree3: [TreeAtlasKeys[6], TreeAtlasKeys[7]],   // oak0, oak1
+    tree4: [TreeAtlasKeys[8], TreeAtlasKeys[9]],   // rowan0, rowan1
+    tree5: [TreeAtlasKeys[10], TreeAtlasKeys[11]], // birch0, birch1
+    tree1: [TreeAtlasKeys[12], TreeAtlasKeys[13]], // cedar0, cedar1
+};
+
 interface SpriteDefinition {
     key: SpriteKey;
     defaultSize: Pos;
     path?: string;
+    atlas?:string;
 }
 
 const defaultTreeSize = {x:2, y:2};

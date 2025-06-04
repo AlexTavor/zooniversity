@@ -4,7 +4,6 @@ import { Layers } from "./setup/Layers.ts";
 import {Config} from "../config/Config.ts";
 import {createView} from "./setup/ViewStore.ts";
 import {View} from "./setup/View.ts";
-import { EffectType } from "./setup/ViewEffectController.ts";
 
 export interface GameDisplayContext {
     scene: Phaser.Scene;
@@ -25,6 +24,8 @@ export class GameDisplay implements GameDisplayContext {
     
     viewsByEntity:Map<Entity, View> = new Map();
     iconsByEntity:Map<Entity, View> = new Map();
+    tintTexture: Phaser.GameObjects.RenderTexture;
+    uiCamera: Phaser.Cameras.Scene2D.Camera;
 
     init(
         scene: Phaser.Scene, 
@@ -41,8 +42,41 @@ export class GameDisplay implements GameDisplayContext {
         }
         
         this.setHill();
+
+        this.uiCamera = scene.cameras.add(0, 0, Config.Display.Width, Config.Display.Height);
+        this.uiCamera.ignore(this.layers.Sky);
+        this.uiCamera.setBounds(0, 0, Config.GameWidth, Config.GameHeight);
+
+        this.initRt(scene);
+    
     }
     
+    private initRt(scene: Phaser.Scene) {
+        this.initDisplaySizeRt(scene);
+
+        this.tintTexture.setPipeline('TimeTint');
+        this.layers.Tintable.setVisible(false);
+    }
+
+    private initDisplaySizeRt(scene: Phaser.Scene) {
+        this.tintTexture = scene.add.renderTexture(0, 0, Config.Display.Width, Config.Display.Height);
+        this.tintTexture.setScrollFactor(0);
+        this.tintTexture.setOrigin(0, 0);
+        this.tintTexture.setScale(1, 1);
+
+        const mainCamera = scene.cameras.main;
+        this.tintTexture.camera.setOrigin(mainCamera.originX, mainCamera.originY);
+        mainCamera.ignore(this.tintTexture);
+    }
+
+    private updateRt() {
+        const mainCamera = this.scene.cameras.main;
+        this.tintTexture.clear();
+        this.tintTexture.camera.setScroll(mainCamera.scrollX, mainCamera.scrollY);
+        this.tintTexture.camera.setZoom(mainCamera.zoom);
+        this.tintTexture.draw(this.layers.Tintable);
+    }
+
     public setHill(): void {
         // Why offset?
         const hOffset = 100;
@@ -61,7 +95,7 @@ export class GameDisplay implements GameDisplayContext {
         });
         
         this.hill = new View(0, {}, hillDef, this.layers.Ground, this.scene);
-        this.hill.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+        // this.hill.applyEffect(EffectType.Shader, { shader: "TimeTint" });
     }
 
     public destroy() {
@@ -70,6 +104,8 @@ export class GameDisplay implements GameDisplayContext {
     }
 
     public update(delta: number) {
+        this.updateRt();
+
         this.modules.forEach(module => module.update(delta));
         this.viewsByEntity.forEach(view => view.update(delta));
         this.iconsByEntity.forEach(view => view.update(delta));

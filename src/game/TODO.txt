@@ -33,20 +33,10 @@
 
 
 TODO:
-    Foraging
-        * ForagableComponent
-        * handleForageIntentLogic
-        * Forage intent
-        * Foraging action
-        * ForagingSystem (when foraging and arrived at forage target, do change values in ForagableComponent and resources)
-        Tree panel
-            wood yield
-            hitpoints current/max
-            food current/max
-            food regen rate
-            reducer from ecs
-        ForageRegenerationSystem
     Display
+        Forage item positions per tree type
+        Not all trees have to be foragable
+        Icons for regenerating and selected for cutting
         Game
             Highlight
                 Whatever's under pointer is highlighted
@@ -57,3 +47,6 @@ TODO:
             Char action
                 Each action generates particles
                 Each action has its own particles behavior - sleep floats away, wood chop arches away spinning like wood chips, etc
+    Foraging
+        Siwtch to foraging if wanna eat and have no food
+

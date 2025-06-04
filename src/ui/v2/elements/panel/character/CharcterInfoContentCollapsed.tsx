@@ -38,6 +38,7 @@ const CollapsedSection = styled.div`
   gap: 4px; /* Gap within a section (e.g., between icons in schedule or buffs) */
   /* flex-shrink: 0; // Prevent sections from shrinking too much if space is tight */
   min-width: 0; /* Allows flex items to shrink below their content size */
+  height: 24px;
 `;
 
 const ActionSection = styled(CollapsedSection)`

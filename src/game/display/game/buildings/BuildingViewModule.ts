@@ -72,7 +72,7 @@ export class BuildingViewModule extends ViewDisplayModule {
 
   createView(ecs: ECS, entity: number, views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition): View {
     const view = new View(viewDefinition.id, views, viewDefinition, this.context.layers.Surface, this.context.scene);
-    view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+    // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
 
     return view;
 }

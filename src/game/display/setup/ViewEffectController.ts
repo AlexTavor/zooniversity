@@ -1,22 +1,26 @@
+import { View } from "./View";
 import { ProgressBar, ProgressBarConfig } from "../game/effects/ProgressBar";
 import { ShudderEffect, ShudderEffectConfig } from "../game/effects/ShudderEffect";
-import { View } from "./View";
+import { ForagableEffect, ForagableEffectConfig } from "../game/effects/ForagableEffect";
 
 export interface EffectInstance {
   start(): void;
   stop(): void;
   update?(delta: number): void;
+  destroy?(): void; // Optional destroy method for effects that create persistent objects
 }
 
 export enum EffectType {
   Red = "red",
-  Highlight = "highlight",
+  Highlight = "highlight", // Currently same as Red
   Shader = "shader",
   Shake = "shake",
   Progress = "progress",
   Shudder = "shudder",
+  FORAGABLE = "foragable", 
 }
 
+// Ensure ProgressBarOptions matches if it was defined elsewhere, or use ProgressBarConfig directly
 export type ProgressBarOptions = ProgressBarConfig & { container: Phaser.GameObjects.Container };
 
 export class ViewEffectController {
@@ -27,8 +31,10 @@ export class ViewEffectController {
     this.view = view;
   }
 
-  apply(type: EffectType, opts?: Record<string, any>): void {
-    if (this.active.has(type)) return;
+  public apply(type: EffectType, opts?: any): void {
+    if (this.active.has(type)) {
+        return; 
+    }
 
     let instance: EffectInstance | undefined;
 
@@ -37,7 +43,7 @@ export class ViewEffectController {
         instance = this.makeRed(opts);
         break;
       case EffectType.Highlight:
-        instance = this.makeRed(opts);
+        instance = this.makeRed(opts); // Highlight currently uses makeRed
         break;
       case EffectType.Shader:
         instance = this.makeShader(opts);
@@ -51,6 +57,9 @@ export class ViewEffectController {
       case EffectType.Shudder:
         instance = new ShudderEffect(this.view, opts as ShudderEffectConfig);
         break;
+      case EffectType.FORAGABLE:
+        instance = this.makeForagableDisplay(opts as ForagableEffectConfig);
+        break;
     }
 
     if (instance) {
@@ -59,22 +68,24 @@ export class ViewEffectController {
     }
   }
 
-  clear(type: EffectType): void {
+  public clear(type: EffectType): void {
     const effect = this.active.get(type);
     if (effect) {
       effect.stop();
+      effect.destroy?.(); // Call destroy if it exists
       this.active.delete(type);
     }
   }
 
-  clearAll(): void {
+  public clearAll(): void {
     for (const effect of this.active.values()) {
       effect.stop();
+      effect.destroy?.();
     }
     this.active.clear();
   }
 
-  update(delta: number): void {
+  public update(delta: number): void {
     for (const effect of this.active.values()) {
       effect.update?.(delta);
     }
@@ -83,52 +94,77 @@ export class ViewEffectController {
   private makeShake(opts?: Record<string, any>): EffectInstance {
     const sprite = this.view.getSprite?.();
     if (!sprite) return { start: () => {}, stop: () => {} };
-
     const tween = sprite.scene.tweens.add({
       targets: sprite,
-      scale: { from: 1, to: opts?.scale ?? 1.15 },
+      scale: { from: sprite.scale, to: sprite.scale * (opts?.scaleFactor ?? 1.15) }, // Use scaleFactor
       yoyo: true,
       duration: opts?.duration ?? 200,
       repeat: opts?.repeat ?? 0,
     });
-
     return {
-      start: () => {},
+      start: () => { if(sprite.active) tween.play(); },
       stop: () => tween.stop(),
+      destroy: () => tween.remove(),
     };
   }
 
   private makeRed(opts?: Record<string, any>): EffectInstance {
     const sprite = this.view.getSprite?.();
     if (!sprite) return { start: () => {}, stop: () => {} };
-
     const tint = opts?.color ?? 0xff0000;
+    let originalTint: number | undefined;
+    let isTinted: boolean = false;
 
     return {
-      start: () => sprite.setTint(tint),
-      stop: () => sprite.clearTint(),
+      start: () => {
+        if (sprite.isTinted) {
+            originalTint = sprite.tintTopLeft; // Assuming uniform tint
+        } else {
+            originalTint = undefined;
+        }
+        sprite.setTint(tint);
+        isTinted = true;
+      },
+      stop: () => {
+        if(isTinted){
+            if(originalTint !== undefined){
+                sprite.setTint(originalTint);
+            } else {
+                sprite.clearTint();
+            }
+            isTinted = false;
+        }
+      },
     };
   }
 
   private makeShader(opts?: Record<string, any>): EffectInstance {
     const sprite = this.view.getSprite?.();
     if (!sprite) return { start: () => {}, stop: () => {} };
-
-    const shader = opts?.shader ?? "TimeTint";
-
+    const shaderName = opts?.shader ?? "TimeTint";
     return {
-      start: () => sprite.setPipeline(shader),
-      stop: () => sprite.resetPipeline(),
+      start: () => sprite.setPipeline(shaderName),
+      stop: () => sprite.resetPipeline(), // Or setPipeline() to remove custom one
     };
   }
 
   private makeProgress(config: ProgressBarOptions): EffectInstance {
     const bar = new ProgressBar(config.container, config);
-  
     return {
       start: bar.show.bind(bar),
       stop: bar.hide.bind(bar),
-      update: (delta: number) => bar.update(delta, this.view.viewDefinition.position)
+      update: (delta: number) => bar.update(delta, this.view.viewDefinition.position),
+      destroy: bar.destroy.bind(bar),
+    };
+  }
+
+  private makeForagableDisplay(config: ForagableEffectConfig): EffectInstance {
+    const foragableEffect = new ForagableEffect(this.view, config);
+    return {
+        start: foragableEffect.start.bind(foragableEffect),
+        stop: foragableEffect.stop.bind(foragableEffect),
+        update: foragableEffect.update.bind(foragableEffect),
+        destroy: foragableEffect.destroy.bind(foragableEffect),
     };
   }
 }

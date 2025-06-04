@@ -30,6 +30,8 @@ export class Preloader extends Scene
     {
         this.load.json("panelRegistry", "assets/data/panels.json");
 
+        this.load.atlas('plants', 'assets/trees/plants.png', 'assets/trees/plants.json');
+
         this.load.setPath('assets/plants');
 
         const animFrameConfig =                 {
@@ -75,6 +77,9 @@ export class Preloader extends Scene
         this.load.spritesheet('kitchen-lvl-1-inside', 'kitchen-lvl-1-inside.png', staticFrameConfig);
         this.load.spritesheet('cave', 'cave.png', caveFrameConfig);
         this.load.spritesheet('wood_dojo', 'wood_dojo.png', caveFrameConfig);
+
+        this.load.setPath('assets/icons');
+        this.load.spritesheet('food', 'food_icon.png', caveFrameConfig);
 
 
         this.load.setPath('assets/maps');

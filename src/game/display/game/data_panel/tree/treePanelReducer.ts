@@ -20,7 +20,6 @@ export interface TreeForagableUIData {
   currentAmount: number;
   maxAmount: number;
   regenRatePerMinute: number;
-  yieldPerMinute: number;
 }
 
 export interface TreePanelUIData {
@@ -75,8 +74,7 @@ export function treePanelReducer(entity: Entity, ecs: ECS): TreePanelUIData | nu
             resourceType: foragable.resourceType,
             currentAmount: foragable.currentAmount,
             maxAmount: foragable.maxAmount,
-            regenRatePerMinute: foragable.regenRatePerMinute,
-            yieldPerMinute: foragable.yieldPerMinute,
+            regenRatePerMinute: foragable.regenRatePerMinute
         };
     }
     

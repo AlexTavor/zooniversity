@@ -6,12 +6,21 @@ export class Layers {
     public Caves :Phaser.GameObjects.Container;
     public Surface :Phaser.GameObjects.Container;
     public Icons :Phaser.GameObjects.Container;
+    public Tintable :Phaser.GameObjects.Container;
     
     constructor(scene:Scene) {
         this.Sky = scene.add.container();
+        
+        this.Tintable = scene.add.container();
+
         this.Ground = scene.add.container();
         this.Caves = scene.add.container();
         this.Surface = scene.add.container();
+        
+        this.Tintable.add(this.Ground);
+        this.Tintable.add(this.Caves);
+        this.Tintable.add(this.Surface);
+
         this.Icons = scene.add.container();
     }
     

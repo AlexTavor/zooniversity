@@ -17,6 +17,7 @@ import { WoodDojo } from "../../../buildings/wood_dojo/WoodDojo"; // Placeholder
 import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
 import { ForagingState } from "../../character-states/ForagingState";
 import { abortForaging } from "../intent-abort/abortForaging";
+import { ForageRegenComponent } from "../../../foraging/ForageRegenComponent";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.NONE;
@@ -82,7 +83,7 @@ export function canForage(ecs: ECS, characterEntity: Entity): boolean {
             const foragableComponent = ecs.getComponent(entityId, ForagableComponent);
             const slots = ecs.getComponent(entityId, InteractionSlots);
 
-            if (foragableComponent && foragableComponent.currentAmount > 0 && slots) {
+            if (foragableComponent && foragableComponent.currentAmount == foragableComponent.maxAmount && slots) {
                 // Check if ANY forage slot is available or already occupied by this character
                 if (slots.getSlotsArray(SlotType.FORAGE).some(slot => slot.occupiedBy === null || slot.occupiedBy === characterEntity)) {
                     return true; // Found a valid, available foragable entity with a free slot
@@ -107,12 +108,15 @@ function findAndAssignForageTarget(ecs: ECS, characterEntity: Entity): boolean {
     if (nearbyEntityIds && nearbyEntityIds.length > 0) {
         for (const entityId of nearbyEntityIds) {
             if (!ecs.hasEntity(entityId)) continue;
+            if (ecs.hasComponent(entityId, ForageRegenComponent)){
+                continue;
+            }
 
             const foragableComp = ecs.getComponent(entityId, ForagableComponent);
             const targetTransform = ecs.getComponent(entityId, Transform);
             const slots = ecs.getComponent(entityId, InteractionSlots);
 
-            if (foragableComp && foragableComp.currentAmount > 0 && targetTransform && slots) {
+            if (foragableComp && foragableComp.currentAmount > 0.2 && targetTransform && slots) {
                 const offset = slots.reserve(characterEntity, SlotType.FORAGE);
                 if (offset) {
                     const targetPosition = {
@@ -189,6 +193,12 @@ export function handleForageIntentLogic(
         if (newlyAssignedState && newlyAssignedState.targetForagableEntityId !== -1) {
             updateForageActions(ecs, entity, actionIntent, newlyAssignedState);
         }
+        return;
+    }
+
+    const forageableComponent = ecs.getComponent(foragingState.targetForagableEntityId, ForagableComponent);
+    if (!forageableComponent || forageableComponent.currentAmount <= 0) {
+        abortForaging(ecs, entity);
         return;
     }
 

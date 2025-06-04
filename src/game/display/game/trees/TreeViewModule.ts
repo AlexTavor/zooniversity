@@ -13,8 +13,12 @@ import { GameDisplayContext } from "../../GameDisplay";
 import { ProgressBarConfig, ValueRef } from "../effects/ProgressBar";
 import { ShudderEffectConfig } from "../effects/ShudderEffect";
 import { TreeFallAnimation } from "./TreeFallAnimation";
-import { TimeComponent, getTime } from "../../../logic/time/TimeComponent";
+import { getTime } from "../../../logic/time/TimeComponent";
 import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
+import { ForagableComponent } from "../../../logic/foraging/ForagableComponent";
+import { generateUniqueApplePositions } from "./generateUniqueApplePositions";
+
+const MAX_APPLE_SPRITES = 20;
 
 const harvestBarConfig: ProgressBarConfig = {
   position: "left",
@@ -38,9 +42,10 @@ const harvestBarConfig: ProgressBarConfig = {
 
 export class TreeViewModule extends ViewDisplayModule {
   private harvestRefs: Map<number, ValueRef> = new Map();
+  private forageRefs: Map<number, ValueRef> = new Map();
   private fallAnimations: Map<number, TreeFallAnimation> = new Map();
   private harvested: Map<number, boolean> = new Map();
-
+  
   init(context: GameDisplayContext): void {
     registerViewDisplayModule(this, context, context.viewsByEntity);
   }
@@ -69,6 +74,7 @@ export class TreeViewModule extends ViewDisplayModule {
 
     return createViewDefinition({
       spriteName: tree.type,
+      atlasName: tree.atlasKey,
       position: {
         x: Math.round(transform.x),
         y: Math.round(transform.y),
@@ -93,6 +99,7 @@ export class TreeViewModule extends ViewDisplayModule {
 
     const slots = ecs.getComponent(entity, InteractionSlots);
 
+    this.updateForagableView(ecs, entity, view);
     this.updateHarvestProgress(entity, harvestable, view);
     this.updateShudderEffect(!!(slots?.inUse(SlotType.WORK)), view);
     this.spawnFallAnimation(entity, tree, view, posX, posY, isFallen, () => {
@@ -106,6 +113,33 @@ export class TreeViewModule extends ViewDisplayModule {
       anim.setSpeed(speed);
     });
     return false;
+  }
+
+  updateForagableView(ecs:ECS, entity: number, view: View) {
+    const foragable = ecs.getComponent(entity, ForagableComponent);
+    if (!foragable) return;
+
+    const c = Math.floor(foragable.currentAmount);
+    const m = Math.floor(foragable.maxAmount);
+
+    this.showForagable(entity, c, m, view, foragable);
+  }
+
+  private showForagable(entity: number, c: number, m: number, view: View, foragable: ForagableComponent) {
+    const valueRef = this.forageRefs.get(entity) || { current: c, max: m };
+    valueRef.current = c;
+    if (!this.forageRefs.has(entity)) {
+      this.forageRefs.set(entity, valueRef);
+      view.applyEffect(EffectType.FORAGABLE, {
+        valueRef,
+        spriteKey: "food",
+        maxSprites: MAX_APPLE_SPRITES,
+        unitsPerSprite: Math.max(1, foragable.maxAmount / MAX_APPLE_SPRITES),
+        fixedRelativePositions: generateUniqueApplePositions(entity, MAX_APPLE_SPRITES),
+        initialVisible: false,
+        spriteScale: 0.2
+      });
+    }
   }
 
   private updateHarvestProgress(entity: number, harvestable: HarvestableComponent, view: View): void {
@@ -166,7 +200,7 @@ export class TreeViewModule extends ViewDisplayModule {
 
   createView(ecs: ECS, entity: number, views: { [key: number]: ViewDefinition }, viewDefinition: ViewDefinition): View {
     const view = new View(viewDefinition.id, views, viewDefinition, this.context.layers.Surface, this.context.scene);
-    view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+    // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
     return view;
   }
 }

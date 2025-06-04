@@ -21,7 +21,7 @@ const DisplayWrapper = styled.div<{ maxHeight?: string }>`
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 0 4px; /* Horizontal padding for the list */
+  height: 100%;
   box-sizing: border-box;
   overflow-y: ${props => (props.maxHeight ? 'auto' : 'visible')};
   max-height: ${props => props.maxHeight || 'none'};

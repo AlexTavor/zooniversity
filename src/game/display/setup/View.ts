@@ -59,15 +59,16 @@ export class View {
   }
 
   private initSprite(scene: Phaser.Scene): void {
-    const { spriteName, frame, size, type } = this.viewDefinition;
-    if (!spriteName) return;
+    const { spriteName, atlasName, frame, size, type } = this.viewDefinition;
+    if (!spriteName && !atlasName) return;
 
-    const sprite = scene.add.sprite(0, 0, spriteName);
+    const sprite = atlasName? scene.add.sprite(0, 0, "plants", atlasName) : scene.add.sprite(0, 0, spriteName);
+
     sprite.name = `${Naming.SPRITE}${this.id}`;
     this.viewContainer.add(sprite);
 
     sprite.setOrigin(0.5, type === ViewType.TREE ? 1 : 0.5);
-    sprite.setFrame(frame);
+    // sprite.setFrame(frame);
     sprite.setInteractive({ useHandCursor: false });
 
     const defaultSize = SpriteLibrary[spriteName as SpriteKey]?.defaultSize ?? { x: 1, y: 1 };

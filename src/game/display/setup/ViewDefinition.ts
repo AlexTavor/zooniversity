@@ -43,6 +43,7 @@ export interface PanelActionDefinition {
 export class ViewDefinition {
     public readonly id: number;
     public spriteName: string;
+    public atlasName: string;
     public readonly position: Pos;
     public readonly size: Pos;
     public frame: number;
