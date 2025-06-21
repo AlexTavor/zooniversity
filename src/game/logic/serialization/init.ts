@@ -2,13 +2,13 @@ import { EventBus } from "../../EventBus.ts";
 import { GameEvent } from "../../consts/GameEvent.ts";
 import { GameDisplay } from "../../display/GameDisplay.ts";
 import { CameraModule } from "../../display/camera/CameraModule.ts";
-import { SelectionHighlightModule } from "../../display/game/tools/selection/SelectionHighlightModule.ts";
-import { DataPanelModule } from "../../display/game/data_panel/DataPanelModule.ts";
-import { CloudsModule } from "../../display/game/sky/CloudsModule.ts";
-import { SkyDisplayModule } from "../../display/game/sky/SkyDisplayModule.ts";
-import { StarfieldModule } from "../../display/game/sky/StarfieldModule.ts";
-import { TinterModule } from "../../display/game/time_tint/TinterModule.ts";
-import { TreeSwayModule } from "../../display/game/trees/TreeSwayModule.ts";
+import { SelectionHighlightModule } from "../../display/tools/selection/SelectionHighlightModule.ts";
+import { DataPanelModule } from "../../display/data_panel/DataPanelModule.ts";
+import { CloudsModule } from "../../display/sky/CloudsModule.ts";
+import { SkyDisplayModule } from "../../display/sky/SkyDisplayModule.ts";
+import { StarfieldModule } from "../../display/sky/StarfieldModule.ts";
+import { TinterModule } from "../../display/time_tint/TinterModule.ts";
+import { TreeSwayModule } from "../../display/trees/TreeSwayModule.ts";
 import { Game } from "../../scenes/Game.ts";
 import { InputSystem } from "../input/InputSystem.ts";
 import { CaveExploreStory } from "../story/CaveExploreStory.ts";
@@ -18,15 +18,15 @@ import { TimeSystem } from "../time/TimeSystem.ts";
 import { WeatherSystem } from "../weather/WeatherSystem.ts";
 import {CaveTreeLUTComponent} from "../lut/CaveTreeLUTComponent.ts";
 import {buildCaveTreeLUTFromViews} from "../lut/buildCaveTreeLUTFromViews.ts";
-import { GameTools } from "../../display/game/tools/GameTools.ts";
+import { GameTools } from "../../display/tools/GameTools.ts";
 import { WoodDojoSystem } from "../buildings/wood_dojo/WoodDojoSystem.ts";
 import { LocomotionSystem } from "../locomotion/LocomotionSystem.ts";
 import { TreeHarvestingSystem } from "../trees/TreeHarvestingSystem.ts";
-import { CaveViewModule } from "../../display/game/buildings/CaveViewModule.ts";
-import { BuildingViewModule } from "../../display/game/buildings/BuildingViewModule.ts";
-import { TreeViewModule } from "../../display/game/trees/TreeViewModule.ts";
-import { TreeCutIconViewModule } from "../../display/game/trees/TreeCutIconViewModule.ts";
-import { CharacterViewModule } from "../../display/game/characters/CharacterViewModule.ts";
+import { CaveViewModule } from "../../display/buildings/CaveViewModule.ts";
+import { BuildingViewModule } from "../../display/buildings/BuildingViewModule.ts";
+import { TreeViewModule } from "../../display/trees/TreeViewModule.ts";
+import { TreeCutIconViewModule } from "../../display/trees/TreeCutIconViewModule.ts";
+import { CharacterViewModule } from "../../display/characters/CharacterViewModule.ts";
 import { ResourceSystem } from "../resources/ResourceSystem.ts";
 import { ECS, Entity } from "../../ECS.ts";
 import { Character, CharacterType } from "../characters/Character.ts";
@@ -39,7 +39,7 @@ import { createStandardSchedule } from "../characters/ScheduleComponent.ts";
 import { TimeComponent } from "../time/TimeComponent.ts";
 import { WeatherComponent } from "../weather/WeatherComponent.ts";
 import { HarvesterComponent } from "../trees/HarvesterComponent.ts";
-import { loadPanelRegistry } from "../../display/game/data_panel/PanelRegistry.ts";
+import { loadPanelRegistry } from "../../display/data_panel/PanelRegistry.ts";
 import { DormitorySystem } from "../buildings/dormitory/DormitorySystem.ts";
 import { DormitoryComponent } from "../buildings/dormitory/DormitoryComponent.ts";
 import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent.ts";
@@ -148,7 +148,6 @@ export const initDisplay = (game:Game)=>{
     game.gameDisplay = new GameDisplay();
     
     const modules = [
-        new CameraModule(),
         new SkyDisplayModule(),
         new StarfieldModule(),
         new CloudsModule(),
@@ -162,6 +161,7 @@ export const initDisplay = (game:Game)=>{
         new TreeViewModule(),
         new TreeCutIconViewModule(),
         new CharacterViewModule(),
+        new CameraModule(),
     ];
     
     game.gameDisplay.init(game, game.ecs, modules);

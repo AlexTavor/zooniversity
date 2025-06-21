@@ -13,11 +13,10 @@ export function setSceneType(type: SceneType) {
 export function useActiveSceneType(): SceneType {
     const [sceneType, setSceneTypeState] = React.useState(currentSceneType);
 
-    // @ts-ignore
     React.useEffect(() => {
         const fn = (type: SceneType) => setSceneTypeState(type);
         listeners.add(fn);
-        return () => listeners.delete(fn);
+        return () => {listeners.delete(fn)};
     }, []);
 
     return sceneType;

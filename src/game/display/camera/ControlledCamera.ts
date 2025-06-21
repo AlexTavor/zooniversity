@@ -157,6 +157,8 @@ export class ControlledCamera {
         const dx = pointer.x - pointer.prevPosition.x;
         const dy = pointer.y - pointer.prevPosition.y;
         this.lastDragDelta.set(dx, dy);
+
+        // TODO - clamp so that camera does not go out of bounds
         this.camera.scrollX -= (dx / this.camera.zoom);
         this.camera.scrollY -= (dy / this.camera.zoom);
     }

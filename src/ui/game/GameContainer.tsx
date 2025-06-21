@@ -2,13 +2,13 @@ import React, { useEffect, useState } from "react";
 import {GameEvent} from "../../game/consts/GameEvent.ts";
 import {EventBus} from "../../game/EventBus.ts";
 import {MainMenu} from "./main_menu/MainMenu.tsx";
-import {TimeControls} from "../v2/elements/time/TimeControls.tsx";
+import {TimeControls} from "./elements/time/TimeControls.tsx";
 import {WeatherPanel} from "./weather/WeatherPanel.tsx";
 import { ResourceDisplay } from "./resources/ResourceDisplay.tsx";
-import { TopCharacterBar } from "../v2/elements/top-char-bar/TopCharactersBar.tsx";
-import { BottomBar } from "../v2/elements/bottom-bar/BottomBar.tsx";
+import { TopCharacterBar } from "./elements/top-char-bar/TopCharactersBar.tsx";
+import { BottomBar } from "./elements/bottom-bar/BottomBar.tsx";
 import { CharacterPortraitsLayer } from "./character_portaits/CharacterPortraitsLayer.tsx";
-import { useToolCursor } from "../v2/hooks/useToolCursor.tsx";
+import { useToolCursor } from "./hooks/useToolCursor.tsx";
 
 export const GameContainer: React.FC = () => {
     const [gameLoaded, setGameLoaded] = useState(false);

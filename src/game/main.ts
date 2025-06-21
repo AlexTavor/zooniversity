@@ -2,8 +2,8 @@ import { Boot } from './scenes/Boot';
 import { Game } from './scenes/Game';
 import { AUTO, Game as PhaserGame } from 'phaser';
 import { Preloader } from './scenes/Preloader';
-import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin.js';
 import {Config} from "./config/Config.ts";
+import OutlinePipelinePlugin from '../render/pipelines/OutlinePipelinePlugin.ts';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -24,7 +24,7 @@ const config: Phaser.Types.Core.GameConfig = {
     ],
     plugins: {
         global: [
-            { key: 'rexOutlinePipeline', plugin: OutlinePipelinePlugin, start: true}
+            { key: 'OutlinePlugin', plugin: OutlinePipelinePlugin, start: true}
         ]
     },
     render: {
@@ -36,7 +36,7 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: true
         }
     },
-    disableContextMenu: true
+    disableContextMenu: false
 };
 
 const StartGame = (parent: string) => {

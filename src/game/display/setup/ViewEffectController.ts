@@ -1,7 +1,8 @@
 import { View } from "./View";
-import { ProgressBar, ProgressBarConfig } from "../game/effects/ProgressBar";
-import { ShudderEffect, ShudderEffectConfig } from "../game/effects/ShudderEffect";
-import { ForagableEffect, ForagableEffectConfig } from "../game/effects/ForagableEffect";
+import { ProgressBarEffect, ProgressBarConfig } from "../effects/ProgressBarEffect";
+import { ShudderEffect, ShudderEffectConfig } from "../effects/ShudderEffect";
+import { ForagableEffect, ForagableEffectConfig } from "../effects/ForagableEffect";
+import { SelectionOutlineEffect, SelectionOutlineEffectOptions } from "../effects/SelectionOutlineEffect";
 
 export interface EffectInstance {
   start(): void;
@@ -17,7 +18,7 @@ export enum EffectType {
   Shake = "shake",
   Progress = "progress",
   Shudder = "shudder",
-  FORAGABLE = "foragable", 
+  FORAGABLE = "foragable",
 }
 
 // Ensure ProgressBarOptions matches if it was defined elsewhere, or use ProgressBarConfig directly
@@ -43,7 +44,7 @@ export class ViewEffectController {
         instance = this.makeRed(opts);
         break;
       case EffectType.Highlight:
-        instance = this.makeRed(opts); // Highlight currently uses makeRed
+        instance = this.makeHighlight(opts); // Assuming Highlight is same as Red for now
         break;
       case EffectType.Shader:
         instance = this.makeShader(opts);
@@ -66,6 +67,11 @@ export class ViewEffectController {
       this.active.set(type, instance);
       instance.start();
     }
+  }
+
+  private makeHighlight(opts: SelectionOutlineEffectOptions): EffectInstance | undefined {
+    if (!this.view) return undefined;
+    return new SelectionOutlineEffect(this.view, opts);
   }
 
   public clear(type: EffectType): void {
@@ -149,7 +155,7 @@ export class ViewEffectController {
   }
 
   private makeProgress(config: ProgressBarOptions): EffectInstance {
-    const bar = new ProgressBar(config.container, config);
+    const bar = new ProgressBarEffect(config.container, config);
     return {
       start: bar.show.bind(bar),
       stop: bar.hide.bind(bar),

@@ -14,13 +14,13 @@ export class ScheduleComponent extends Component {
 export function createStandardSchedule(): ScheduleComponent {
   return new ScheduleComponent([
     CharacterIntent.SLEEP,
+    CharacterIntent.FORAGE,
     CharacterIntent.HARVEST,
-    CharacterIntent.FORAGE,
-    CharacterIntent.FORAGE,
+    CharacterIntent.HARVEST,
     CharacterIntent.REST,
-    CharacterIntent.FORAGE,
-    CharacterIntent.FORAGE,
-    CharacterIntent.FORAGE,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
     CharacterIntent.SLEEP
   ]);
 }

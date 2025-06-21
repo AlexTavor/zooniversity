@@ -11,6 +11,6 @@ export const UISwitcher: React.FC = () => {
         case 'game':
             return <GameContainer />;
         default:
-            return null; // or a <LoadingScreen /> or <ErrorFallback />
+            return null;
     }
 };

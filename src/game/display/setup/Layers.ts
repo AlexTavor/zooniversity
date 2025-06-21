@@ -5,8 +5,9 @@ export class Layers {
     public Ground :Phaser.GameObjects.Container;
     public Caves :Phaser.GameObjects.Container;
     public Surface :Phaser.GameObjects.Container;
-    public Icons :Phaser.GameObjects.Container;
     public Tintable :Phaser.GameObjects.Container;
+    public TintedRenderTextureLayer :Phaser.GameObjects.Container;
+    public Icons :Phaser.GameObjects.Container;
     
     constructor(scene:Scene) {
         this.Sky = scene.add.container();
@@ -21,7 +22,14 @@ export class Layers {
         this.Tintable.add(this.Caves);
         this.Tintable.add(this.Surface);
 
+        // in Layers.ts constructor
+        this.TintedRenderTextureLayer = scene.add.container();
         this.Icons = scene.add.container();
+
+        this.TintedRenderTextureLayer.setDepth(10); // Renders behind icons
+        this.Icons.setDepth(20);                   // Renders on top
+
+        this.Icons.setScrollFactor(0); // Pin to camera
     }
     
     public destroy() {
@@ -30,5 +38,7 @@ export class Layers {
         this.Caves.destroy();
         this.Surface.destroy();
         this.Icons.destroy();
+        this.Tintable.destroy();
+        this.TintedRenderTextureLayer?.destroy();
     }
 }

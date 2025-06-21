@@ -48,7 +48,8 @@ export class GameDisplay implements GameDisplayContext {
         this.uiCamera.setBounds(0, 0, Config.GameWidth, Config.GameHeight);
 
         this.initRt(scene);
-    
+
+        this.layers.Tintable.setVisible(false);
     }
     
     private initRt(scene: Phaser.Scene) {
@@ -60,6 +61,7 @@ export class GameDisplay implements GameDisplayContext {
 
     private initDisplaySizeRt(scene: Phaser.Scene) {
         this.tintTexture = scene.add.renderTexture(0, 0, Config.Display.Width, Config.Display.Height);
+        this.layers.TintedRenderTextureLayer.add(this.tintTexture);
         this.tintTexture.setScrollFactor(0);
         this.tintTexture.setOrigin(0, 0);
         this.tintTexture.setScale(1, 1);
@@ -104,10 +106,23 @@ export class GameDisplay implements GameDisplayContext {
     }
 
     public update(delta: number) {
-        this.updateRt();
-
         this.modules.forEach(module => module.update(delta));
         this.viewsByEntity.forEach(view => view.update(delta));
         this.iconsByEntity.forEach(view => view.update(delta));
+
+        this.updateIcons();
+
+        this.updateRt();
+    }
+
+    private updateIcons() {
+    const camera = this.scene.cameras.main;
+    const zoom = camera.zoom;
+
+    const x = -camera.scrollX * zoom + camera.width * 0.5 * (1 - zoom);
+    const y = -camera.scrollY * zoom + camera.height * 0.5 * (1 - zoom);
+
+    this.layers.Icons.setPosition(x, y);
+    this.layers.Icons.setScale(zoom);
     }
 }

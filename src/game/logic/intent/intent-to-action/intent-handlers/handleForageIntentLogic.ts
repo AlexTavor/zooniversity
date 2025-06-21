@@ -18,6 +18,7 @@ import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
 import { ForagingState } from "../../character-states/ForagingState";
 import { abortForaging } from "../intent-abort/abortForaging";
 import { ForageRegenComponent } from "../../../foraging/ForageRegenComponent";
+import { turnToTarget } from "../../../locomotion/turnToTarget";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.NONE;
@@ -192,6 +193,7 @@ export function handleForageIntentLogic(
         const newlyAssignedState = ecs.getComponent(entity, ForagingState);
         if (newlyAssignedState && newlyAssignedState.targetForagableEntityId !== -1) {
             updateForageActions(ecs, entity, actionIntent, newlyAssignedState);
+            turnToTarget(ecs, entity, newlyAssignedState.targetForagableEntityId);
         }
         return;
     }
@@ -203,4 +205,5 @@ export function handleForageIntentLogic(
     }
 
     updateForageActions(ecs, entity, actionIntent, foragingState);
+    turnToTarget(ecs, entity, foragingState.targetForagableEntityId);
 }

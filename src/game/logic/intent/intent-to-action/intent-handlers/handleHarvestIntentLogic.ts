@@ -17,6 +17,7 @@ import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
 import { HarvestingState } from "../../character-states/HarvestingState";
 import { abortHarvesting } from "../intent-abort/abortHarvesting";
 import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
+import { turnToTarget } from "../../../locomotion/turnToTarget";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.NONE;
@@ -155,8 +156,11 @@ function updateActions(ecs: ECS, entity:number, actionIntent: ActionIntentCompon
 
     if (!locomotion.arrived) {
         setWalkingToSlot(actionIntent, targetPos, treeId);
-    } else {
+    } else if (actionIntent.currentPerformedAction !== CharacterAction.CHOPPING && actionIntent.actionData?.targetTreeEntityId !== treeId) {
         // Arrived at the designated WORK slot for the target tree.
         setChopping(actionIntent, treeId);
+        turnToTarget(ecs, entity, treeId);
     }
 }
+
+

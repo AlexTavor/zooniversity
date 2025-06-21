@@ -748,7 +748,6 @@ import { Layers } from "./setup/Layers.ts";
 import {Config} from "../config/Config.ts";
 import {createView} from "./setup/ViewStore.ts";
 import {View} from "./setup/View.ts";
-import { EffectType } from "./setup/ViewEffectController.ts";
 
 export interface GameDisplayContext {
     scene: Phaser.Scene;
@@ -769,6 +768,8 @@ export class GameDisplay implements GameDisplayContext {
     
     viewsByEntity:Map<Entity, View> = new Map();
     iconsByEntity:Map<Entity, View> = new Map();
+    tintTexture: Phaser.GameObjects.RenderTexture;
+    uiCamera: Phaser.Cameras.Scene2D.Camera;
 
     init(
         scene: Phaser.Scene, 
@@ -785,8 +786,43 @@ export class GameDisplay implements GameDisplayContext {
         }
         
         this.setHill();
+
+        this.uiCamera = scene.cameras.add(0, 0, Config.Display.Width, Config.Display.Height);
+        this.uiCamera.ignore(this.layers.Sky);
+        this.uiCamera.setBounds(0, 0, Config.GameWidth, Config.GameHeight);
+
+        this.initRt(scene);
+
+        this.layers.Tintable.setVisible(false);
     }
     
+    private initRt(scene: Phaser.Scene) {
+        this.initDisplaySizeRt(scene);
+
+        this.tintTexture.setPipeline('TimeTint');
+        this.layers.Tintable.setVisible(false);
+    }
+
+    private initDisplaySizeRt(scene: Phaser.Scene) {
+        this.tintTexture = scene.add.renderTexture(0, 0, Config.Display.Width, Config.Display.Height);
+        this.layers.TintedRenderTextureLayer.add(this.tintTexture);
+        this.tintTexture.setScrollFactor(0);
+        this.tintTexture.setOrigin(0, 0);
+        this.tintTexture.setScale(1, 1);
+
+        const mainCamera = scene.cameras.main;
+        this.tintTexture.camera.setOrigin(mainCamera.originX, mainCamera.originY);
+        mainCamera.ignore(this.tintTexture);
+    }
+
+    private updateRt() {
+        const mainCamera = this.scene.cameras.main;
+        this.tintTexture.clear();
+        this.tintTexture.camera.setScroll(mainCamera.scrollX, mainCamera.scrollY);
+        this.tintTexture.camera.setZoom(mainCamera.zoom);
+        this.tintTexture.draw(this.layers.Tintable);
+    }
+
     public setHill(): void {
         // Why offset?
         const hOffset = 100;
@@ -805,7 +841,7 @@ export class GameDisplay implements GameDisplayContext {
         });
         
         this.hill = new View(0, {}, hillDef, this.layers.Ground, this.scene);
-        this.hill.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+        // this.hill.applyEffect(EffectType.Shader, { shader: "TimeTint" });
     }
 
     public destroy() {
@@ -817,6 +853,21 @@ export class GameDisplay implements GameDisplayContext {
         this.modules.forEach(module => module.update(delta));
         this.viewsByEntity.forEach(view => view.update(delta));
         this.iconsByEntity.forEach(view => view.update(delta));
+
+        this.updateIcons();
+
+        this.updateRt();
+    }
+
+    private updateIcons() {
+    const camera = this.scene.cameras.main;
+    const zoom = camera.zoom;
+
+    const x = -camera.scrollX * zoom + camera.width * 0.5 * (1 - zoom);
+    const y = -camera.scrollY * zoom + camera.height * 0.5 * (1 - zoom);
+
+    this.layers.Icons.setPosition(x, y);
+    this.layers.Icons.setScale(zoom);
     }
 }
 
@@ -1016,6 +1067,8 @@ export class ControlledCamera {
         const dx = pointer.x - pointer.prevPosition.x;
         const dy = pointer.y - pointer.prevPosition.y;
         this.lastDragDelta.set(dx, dy);
+
+        // TODO - clamp so that camera does not go out of bounds
         this.camera.scrollX -= (dx / this.camera.zoom);
         this.camera.scrollY -= (dy / this.camera.zoom);
     }
@@ -1119,7 +1172,7 @@ export class BuildingViewModule extends ViewDisplayModule {
 
   createView(ecs: ECS, entity: number, views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition): View {
     const view = new View(viewDefinition.id, views, viewDefinition, this.context.layers.Surface, this.context.scene);
-    view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+    // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
 
     return view;
 }
@@ -1184,7 +1237,7 @@ export class CaveViewModule extends ViewDisplayModule {
 
   createView(ecs: ECS, entity: number, views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition): View {
     const view = new View(viewDefinition.id, views, viewDefinition, this.context.layers.Caves, this.context.scene);
-    view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+    // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
     return view;
 }
 }
@@ -1202,7 +1255,6 @@ import { LocationState, Transform } from "../../../components/Transform";
 import { View } from "../../setup/View";
 import { ViewDefinition, PanelDefinition, ViewType, PanelType } from "../../setup/ViewDefinition";
 import { ViewDisplayModule, registerViewDisplayModule } from "../../setup/ViewDisplayModule";
-import { EffectType } from "../../setup/ViewEffectController";
 import { createView } from "../../setup/ViewStore";
 import { ViewTracker } from "../../setup/ViewTracker";
 import { GameDisplayContext } from "../../GameDisplay";
@@ -1241,6 +1293,7 @@ export class CharacterViewModule extends ViewDisplayModule {
 
         return createView({
             spriteName: "booker_char",
+            atlasName: "booker_char",
             position: {
                 x: Math.round(transform.x),
                 y: Math.round(transform.y),
@@ -1282,7 +1335,7 @@ export class CharacterViewModule extends ViewDisplayModule {
 
     createView(ecs: ECS, entity: number, views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition): View {
         const view = new View(viewDefinition.id, views, viewDefinition, this.context.layers.Surface, this.context.scene);
-        view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+        // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
         return view;
     }
 }
@@ -1378,13 +1431,13 @@ export class DataPanelModule extends DisplayModule<GameDisplayContext> {
 
     const typeReducer: PanelTypeReducer | undefined = baseDef.panelType ? PanelTypeReducers[baseDef.panelType] : undefined;
     const panelTypeData = typeReducer ? typeReducer(this.activeEntity, this.display.ecs) : undefined;
-
     const fullDef: PanelData = {
             ...baseDef,
             ...reduced,
             actionsImpl: createPanelActions({...baseDef, actions:[findActionDefinition, ...(baseDef.actions || [])]}, this.activeEntity, view),
             panelTypeData,
-            findAction:()=>{EventBus.emit(UIEvent.FindViewRequested, view.viewContainer);}
+            findAction:()=>{EventBus.emit(UIEvent.FindViewRequested, view.viewContainer);},
+            title: (panelTypeData as any).displayName ?? view.viewDefinition.spriteName,
         };
 
         const payload = JSON.stringify(fullDef);
@@ -1746,93 +1799,13 @@ export function deriveBuffs(ecs: ECS, entity: Entity, currentTimeMinutes: number
 
 // ---
 
-import { Pos } from "../../../../../utils/Math";
-import { Entity } from "../../../../ECS";
-
-function mulberry32(seed: number) {
-    return function() {
-        let t = seed += 0x6D2B79F5;
-        t = Math.imul(t ^ (t >>> 15), t | 1);
-        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-    }
-}
-
-export function generateUniqueApplePositions(
-    treeEntityId: Entity,
-    maxApplesToDisplay: number,
-    treeAppleClusterCenter: Pos = { x: 0, y: 200 }, 
-    baseSpreadRadius: number = 200, 
-    numInitialPointsToGenerate: number = 15, 
-    minShiftFactor: number = 0,  // Min factor (0-1) to shift towards the calculated center
-    maxShiftFactor: number = 0.6   // Max factor (0-1) to shift towards the calculated center
-): Pos[] {
-    if (maxApplesToDisplay === 0) {
-        return [];
-    }
-
-    const random = mulberry32(treeEntityId);
-    const generatedBasePoints: Pos[] = [];
-
-    const actualNumInitialPoints = Math.max(maxApplesToDisplay, numInitialPointsToGenerate);
-
-    for (let i = 0; i < actualNumInitialPoints; i++) {
-        const angle = random() * 2 * Math.PI;
-        const distance = random() * baseSpreadRadius;
-        generatedBasePoints.push({
-            x: treeAppleClusterCenter.x + Math.cos(angle) * distance,
-            y: treeAppleClusterCenter.y + Math.sin(angle) * distance,
-        });
-    }
-
-    if (generatedBasePoints.length === 0) return [];
-
-    let sumX = 0;
-    let sumY = 0;
-    for (const p of generatedBasePoints) {
-        sumX += p.x;
-        sumY += p.y;
-    }
-    const calculatedCenterOfGeneratedPoints: Pos = {
-        x: sumX / generatedBasePoints.length,
-        y: sumY / generatedBasePoints.length,
-    };
-
-    // Shuffle the generated base points to pick from for the final display count
-    const shuffledPoints = [...generatedBasePoints];
-    for (let i = shuffledPoints.length - 1; i > 0; i--) {
-        const j = Math.floor(random() * (i + 1));
-        [shuffledPoints[i], shuffledPoints[j]] = [shuffledPoints[j], shuffledPoints[i]];
-    }
-
-    const finalPositions: Pos[] = [];
-    const pointsToProcess = Math.min(shuffledPoints.length, maxApplesToDisplay);
-
-    for (let i = 0; i < pointsToProcess; i++) {
-        const basePosition = shuffledPoints[i];
-        const deltaX = calculatedCenterOfGeneratedPoints.x - basePosition.x;
-        const deltaY = calculatedCenterOfGeneratedPoints.y - basePosition.y;
-
-        const shiftFactor = minShiftFactor + random() * (maxShiftFactor - minShiftFactor);
-
-        const newX = basePosition.x + deltaX * shiftFactor;
-        const newY = basePosition.y + deltaY * shiftFactor;
-
-        finalPositions.push({ x: Math.round(newX), y: Math.round(newY) });
-    }
-
-    return finalPositions;
-}
-
-// ---
-
 // src/game/display/game/data_panel/tree/treePanelReducer.ts
 import { ECS, Entity } from "../../../../ECS";
 import { Tree } from "../../../../logic/trees/Tree";
 import { HarvestableComponent, ResourceDrop } from "../../../../logic/trees/HarvestableComponent";
 import { ForagableComponent } from "../../../../logic/foraging/ForagableComponent";
 import { ResourceType } from "../../../../logic/resources/ResourceType";
-import { PlantSpriteKey } from "../../../setup/SpriteLibrary";
+import { PlantSpriteKey, plantSpriteToNameAndDescription } from "../../../setup/SpriteLibrary";
 import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
 
 export interface TreeHarvestableUIData {
@@ -1854,15 +1827,12 @@ export interface TreePanelUIData {
   id: Entity;
   treeType: PlantSpriteKey | string;
   displayName: string;
-
+  description: string;
+    
   harvestableInfo?: TreeHarvestableUIData;
   foragableInfo?: TreeForagableUIData;
 }
 
-function deriveDisplayName(treeType: PlantSpriteKey | string): string {
-    const name = treeType.toString().replace(/([A-Z0-9])/g, ' $1').replace(/^./, str => str.toUpperCase()).replace(/ (Tree|Bush)/g, '$1').trim();
-    return name.includes("Tree") || name.includes("Bush") ? name : `Tree (${name})`;
-}
 
 export function treePanelReducer(entity: Entity, ecs: ECS): TreePanelUIData | null {
     if (!ecs.hasEntity(entity)) return null;
@@ -1872,11 +1842,13 @@ export function treePanelReducer(entity: Entity, ecs: ECS): TreePanelUIData | nu
         return null;
     }
 
-    const displayName = deriveDisplayName(tree.type);
+    const displayData = plantSpriteToNameAndDescription[tree.type];
+    
     const baseData: TreePanelUIData = {
         id: entity,
         treeType: tree.type,
-        displayName: displayName,
+        displayName: displayData.name,
+        description: displayData.description
     };
 
     const harvestable = ecs.getComponent(entity, HarvestableComponent);
@@ -1918,25 +1890,23 @@ import { EffectInstance } from '../../setup/ViewEffectController'; // Adjust pat
 import { Pos } from '../../../../utils/Math'; // Adjust path
 import { ValueRef } from './ProgressBar'; // Assuming ValueRef is in ProgressBar.ts or a common types file
 
-export interface AppleQuantityEffectConfig {
+export interface ForagableEffectConfig {
   valueRef: ValueRef; // Holds current and max foragable amount
   spriteKey: string;  // Sprite key for the apple/fruit
   maxSprites: number; // Max number of apple sprites to display
   unitsPerSprite: number; // How many 'currentAmount' units one visual apple represents
   fixedRelativePositions: Pos[]; // Pre-calculated positions for each of the maxSprites
-  container: Phaser.GameObjects.Container; // Container to add apple sprites to (usually view.viewContainer)
-  // Optional: initial visibility, scale for apples, etc.
   initialVisible?: boolean;
   spriteScale?: number;
 }
 
-export class AppleQuantityEffect implements EffectInstance {
+export class ForagableEffect implements EffectInstance {
   private view: View;
-  private config: Required<AppleQuantityEffectConfig>; // Use Required to ensure all defaults are handled
-  private appleSprites: Phaser.GameObjects.Sprite[] = [];
+  private config: Required<ForagableEffectConfig>; // Use Required to ensure all defaults are handled
+  private sprites: Phaser.GameObjects.Sprite[] = [];
   private lastVisibleCount: number = -1;
 
-  constructor(view: View, config: AppleQuantityEffectConfig) {
+  constructor(view: View, config: ForagableEffectConfig) {
     this.view = view;
     // Apply defaults to the configuration
     this.config = {
@@ -1947,31 +1917,31 @@ export class AppleQuantityEffect implements EffectInstance {
   }
 
   public start(): void {
-    if (this.appleSprites.length > 0) { // Already initialized
+    if (this.sprites.length > 0) { // Already initialized
         this.updateVisibility();
         return;
     }
 
-    const scene = this.config.container.scene;
+    const container = this.view.viewContainer;
+    const scene = container.scene;
     for (let i = 0; i < this.config.maxSprites; i++) {
         const pos = this.config.fixedRelativePositions[i] || { x: 0, y: 0 }; // Fallback position
-        const appleSprite = scene.add.sprite(pos.x, pos.y, this.config.spriteKey);
+        const appleSprite = scene.add.sprite(pos.x, pos.y, "plants", "foragable_item");
         appleSprite.setScale(this.config.spriteScale);
         appleSprite.setOrigin(0.5, 0.5); // Or adjust as needed
         appleSprite.setVisible(false); // Initially hide all
-        this.config.container.add(appleSprite); // Add to the specified container
-        this.appleSprites.push(appleSprite);
+        container.add(appleSprite); // Add to the specified container
+        this.sprites.push(appleSprite);
     }
     this.updateVisibility(); // Set initial visibility based on current value
   }
 
   public stop(): void {
-    this.appleSprites.forEach(sprite => sprite.setVisible(false)); // Hide on stop
+    this.sprites.forEach(sprite => sprite.setVisible(false)); // Hide on stop
     this.lastVisibleCount = -1; // Reset last count
   }
 
   public update(delta: number): void {
-    // valueRef is updated externally (e.g., by TreeViewModule)
     this.updateVisibility();
   }
 
@@ -1990,16 +1960,16 @@ export class AppleQuantityEffect implements EffectInstance {
 
     if (numApplesToShow === this.lastVisibleCount) return; // No change in visibility
 
-    for (let i = 0; i < this.appleSprites.length; i++) {
-        this.appleSprites[i].setVisible(i < numApplesToShow);
+    for (let i = 0; i < this.sprites.length; i++) {
+        this.sprites[i].setVisible(i < numApplesToShow);
     }
     this.lastVisibleCount = numApplesToShow;
   }
 
   // Call this if the effect instance is being permanently removed
   public destroy(): void {
-    this.appleSprites.forEach(sprite => sprite.destroy());
-    this.appleSprites = [];
+    this.sprites.forEach(sprite => sprite.destroy());
+    this.sprites = [];
   }
 }
 
@@ -2042,16 +2012,17 @@ export interface ProgressBarConfig {
   border?: BorderConfig;
 }
 
+const MIN_EFFECTIVE_SCALE = 0.4;
+const MAX_EFFECTIVE_SCALE = 0.5;
+
 export class ProgressBar {
   private container: Container;
   private graphics: Graphics;
   private config: Required<Omit<ProgressBarConfig, 'border'>> & { border?: BorderConfig };
-
   private isVisible: boolean = true;
   private anchorPos = { x: 0, y: 0 };
   private displayWidth: number = 32;
   private displayHeight: number = 32;
-
   private lastValue: number = -1;
   private lastMax: number = -1;
   private lastVisible: boolean = true;
@@ -2059,15 +2030,14 @@ export class ProgressBar {
   constructor(container: Container, config: ProgressBarConfig) {
     this.container = container;
     const direction: Direction =
-      config.direction ?? (config.position === "left" || config.position === "right" ? "vertical" : "horizontal");
-
+      config.direction ??
+      (config.position === "left" || config.position === "right" ? "vertical" : "horizontal");
     this.config = {
       direction,
       fillColor: 0x00ff00,
       backgroundColor: 0x000000,
       ...config
     };
-
     this.graphics = container.scene.add.graphics();
     this.container.add(this.graphics);
     
@@ -2092,70 +2062,89 @@ export class ProgressBar {
     this.graphics.setVisible(true);
   }
 
-  update(delta: number, position:Pos): void {
-    if (!this.isVisible || !this.config.valueRef) return;
+  private calculateCurrentScale(): number {
+    const camera = this.container.scene.cameras.main;
+    const desiredScale = Phaser.Math.Clamp(camera.zoom, MIN_EFFECTIVE_SCALE, MAX_EFFECTIVE_SCALE);
+    return desiredScale / camera.zoom;
+  }
 
-    const { current, max } = this.config.valueRef;
-    if (current === this.lastValue && max === this.lastMax && this.isVisible === this.lastVisible) return;
-
-    this.lastValue = current;
-    this.lastMax = max;
-    this.lastVisible = this.isVisible;
-
-    const { minWidth, maxWidth, minWidthValue, maxWidthValue } = this.config.size;
-    const { fillColor, backgroundColor, direction, border } = this.config;
-
-    const thickness = 6;
-    const barLength = this.calculateWidth(max, minWidthValue, maxWidthValue, minWidth, maxWidth);
-    const progress = Phaser.Math.Clamp(current / (max || 1), 0, 1);
-
-    this.updateDisplaySize();
-    this.getAnchorPosition(barLength, thickness);
-    this.anchorPos.x += position.x;
-    this.anchorPos.y += position.y;
-    
-    this.graphics.clear();
-
-    // Border
-    if (border) {
-      this.graphics.fillStyle(border.color, border.opacity ?? 1);
-      const radius = border.radius ?? 0;
-      if (direction === "horizontal") {
-        this.drawRoundedRect(
-            this.anchorPos.x - border.thickness,
-            this.anchorPos.y - border.thickness,
-            barLength + 2 * border.thickness,
-            thickness + 2 * border.thickness,
-            radius
-        );
-      } else {
-        this.drawRoundedRect(
-            this.anchorPos.x - border.thickness,
-            this.anchorPos.y - border.thickness,
-            thickness + 2 * border.thickness,
-            barLength + 2 * border.thickness,
-            radius
-        );
-      }
-    }
-
-    // Background
-    this.graphics.fillStyle(backgroundColor, 0.5);
-    if (direction === "horizontal") {
+  private drawBackground(barLength: number, thickness: number): void {
+    this.graphics.fillStyle(this.config.backgroundColor, 0.5);
+    if (this.config.direction === "horizontal") {
       this.drawRoundedRect(this.anchorPos.x, this.anchorPos.y, barLength, thickness, 0);
     } else {
       this.drawRoundedRect(this.anchorPos.x, this.anchorPos.y, thickness, barLength, 0);
     }
+  }
 
-    // Foreground
-    this.graphics.fillStyle(fillColor, 1);
-    if (direction === "horizontal") {
+  private drawForeground(barLength: number, thickness: number, progress: number): void {
+    this.graphics.fillStyle(this.config.fillColor, 1);
+    if (this.config.direction === "horizontal") {
       this.drawRoundedRect(this.anchorPos.x, this.anchorPos.y, barLength * progress, thickness, 0);
     } else {
       const filled = barLength * progress;
       this.drawRoundedRect(this.anchorPos.x, this.anchorPos.y + (barLength - filled), thickness, filled, 0);
     }
   }
+
+public update(delta: number, position: Pos): void {
+    if (!this.isVisible || !this.config.valueRef) return;
+
+    this.graphics.setPosition(position.x, position.y);
+
+    const { current, max } = this.config.valueRef;
+//    if (current === this.lastValue && max === this.lastMax && this.isVisible === this.lastVisible) return;
+    this.lastValue = current;
+    this.lastMax = max;
+    this.lastVisible = this.isVisible;
+
+    const localScale = this.calculateCurrentScale();
+    this.graphics.setScale(localScale);
+    
+    const { minWidth, maxWidth, minWidthValue, maxWidthValue } = this.config.size;
+    
+    // REMOVED localScale multiplication from these lines:
+    const thickness = 6; 
+    const barLength = this.calculateWidth(max, minWidthValue, maxWidthValue, minWidth, maxWidth);
+    const progress = Phaser.Math.Clamp(current / (max || 1), 0, 1);
+
+    this.updateDisplaySize();
+    this.getAnchorPosition(barLength, thickness);
+    
+    this.graphics.clear();
+
+    // Pass base values to drawing functions; they will be scaled by the graphics object's transform.
+    this.drawBorder(barLength, thickness, this.config.border);
+    this.drawBackground(barLength, thickness);
+    this.drawForeground(barLength, thickness, progress);
+}
+
+// And the drawBorder method needs to be adjusted to not expect a scale parameter
+private drawBorder(barLength: number, thickness: number, border: BorderConfig | undefined): void {
+    if (!border) return;
+
+    this.graphics.fillStyle(border.color, border.opacity ?? 1);
+    const radius = border.radius ?? 0;
+    const borderThickness = border.thickness;
+    
+    if (this.config.direction === "horizontal") {
+      this.drawRoundedRect(
+        this.anchorPos.x - borderThickness,
+        this.anchorPos.y - borderThickness,
+        barLength + 2 * borderThickness,
+        thickness + 2 * borderThickness,
+        radius
+      );
+    } else {
+      this.drawRoundedRect(
+        this.anchorPos.x - borderThickness,
+        this.anchorPos.y - borderThickness,
+        thickness + 2 * borderThickness,
+        barLength + 2 * borderThickness,
+        radius
+      );
+    }
+}
 
   private drawRoundedRect(x: number, y: number, w: number, h: number, r: number) {
     r > 0 ? this.graphics.fillRoundedRect(x, y, w, h, r) : this.graphics.fillRect(x, y, w, h);
@@ -2170,7 +2159,7 @@ export class ProgressBar {
 
   private getAnchorPosition(length: number, thickness: number): void {
     const { position } = this.config;
-    const { x: cx, y: cy } = this.container;
+    const cx = 0, cy = 0;
     const offset = this.config.offset;
     const halfW = this.displayWidth / 2;
     const halfH = this.displayHeight / 2;
@@ -2204,26 +2193,99 @@ export class ProgressBar {
   }
 }
 
-export const harvestBarConfig: ProgressBarConfig = {
-  position: "left",
-  offset: 50,
-  valueRef: { current: 0, max: 1 },
-  size: {
-    minWidth: 20,
-    maxWidth: 120,
-    minWidthValue: 0.1,
-    maxWidthValue: 1
-  },
-  fillColor: 0xffaa00,
-  backgroundColor: 0x111111,
-  border: {
-    color: 0xffffff,
-    thickness: 2,
-    radius: 6,
-    opacity: 0.8
-  }
-};
+// ---
 
+import { View } from "../../setup/View";
+import { EffectInstance } from "../../setup/ViewEffectController";
+
+export interface SelectionOutlineEffectOptions {
+    container: Phaser.GameObjects.Container;
+    outlineConfig?: {
+        thickness?: number;
+        outlineColor?: number;
+        quality?: number;
+    };
+}
+
+
+export class SelectionOutlineEffect implements EffectInstance {
+    private view: View;
+    private options: SelectionOutlineEffectOptions;
+    private originalSprite: Phaser.GameObjects.Sprite | undefined;
+    private duplicateSprite: Phaser.GameObjects.Sprite | undefined;
+    outlinePlugin: any;
+
+    constructor(view: View, options: SelectionOutlineEffectOptions) {
+        this.view = view;
+        this.options = options;
+        this.originalSprite = this.view.getSprite();
+    }
+
+    public start(): void {
+        if (!this.originalSprite) {
+            return;
+        }
+
+        this.duplicateSprite = this.view.viewContainer.scene.add.sprite(
+            this.originalSprite.x,
+            this.originalSprite.y,
+            this.originalSprite.texture.key,
+            this.originalSprite.frame.name
+        );
+        
+        this.duplicateSprite.setInteractive({ useHandCursor: false });
+        this.duplicateSprite.setInteractive(false);
+        this.options.container.add(this.duplicateSprite);
+        this.duplicateSprite.setPipeline('outlineOnly');
+
+        this.sync();
+    }
+
+    public stop(): void {
+        this.destroy();
+    }
+
+    public update(): void {
+        if (!this.originalSprite || !this.duplicateSprite) {
+            this.destroy();
+            return;
+        }
+        this.sync();
+    }
+    
+    public destroy(): void {
+        if (this.duplicateSprite) {
+            this.duplicateSprite.resetPipeline();
+            this.duplicateSprite.destroy();
+            this.duplicateSprite = undefined;
+        }
+    }
+
+    private sync(): void {
+        if (!this.originalSprite || !this.duplicateSprite || !this.originalSprite.active) {
+            this.duplicateSprite?.setVisible(false);
+            return;
+        }
+
+        // Set visibility and frame
+        this.duplicateSprite.setVisible(this.originalSprite.parentContainer.visible);
+        this.duplicateSprite.setFrame(this.originalSprite.frame.name);
+
+        this.duplicateSprite.x = this.view.viewContainer.x;
+        this.duplicateSprite.y = this.view.viewContainer.y;
+        
+        // Sync all other visual properties for a perfect match.
+        this.duplicateSprite.rotation = this.originalSprite.parentContainer.rotation;
+        this.duplicateSprite.setOrigin(this.originalSprite.originX, this.originalSprite.originY);
+
+        this.duplicateSprite.scaleX = this.originalSprite.scaleX * (this.originalSprite.parentContainer.scaleX > 0 ? 1 : -1);
+        this.duplicateSprite.scaleY = this.originalSprite.scaleY;
+        
+        this.duplicateSprite.alpha = this.originalSprite.alpha;
+
+        
+    }
+}
 
 // ---
 
@@ -2982,23 +3044,20 @@ import { DisplayModule } from "../../../setup/DisplayModule.ts";
 import { GameDisplayContext } from "../../../GameDisplay.ts";
 import { GameEvent } from "../../../../consts/GameEvent.ts";
 import { EventBus } from "../../../../EventBus.ts";
-import OutlinePipelinePlugin from "phaser3-rex-plugins/plugins/outlinepipeline-plugin.js";
+import { EffectType } from "../../../setup/ViewEffectController.ts";
 
 const OUTLINE_CONFIG = {
-    thickness: 2,
+    thickness: 3,
     outlineColor: 0xd4a857,
-    quality: 0.2,
+    quality: 0.1,
 };
 
 export class SelectionHighlightModule extends DisplayModule<GameDisplayContext> {
     private context!: GameDisplayContext;
-    private selected: number = -1;
-    private outlinePlugin!: OutlinePipelinePlugin;
+    private selectedEntity: number = -1;
 
     init(context: GameDisplayContext): void {
         this.context = context;
-        this.outlinePlugin = context.scene.plugins.get('rexOutlinePipeline') as OutlinePipelinePlugin;
-
         EventBus.on(GameEvent.SelectionChanged, this.handleSelectionChanged, this);
     }
 
@@ -3009,34 +3068,40 @@ export class SelectionHighlightModule extends DisplayModule<GameDisplayContext> 
 
     update(): void {}
 
-    private handleSelectionChanged(entity: number): void {
-        if (entity === this.selected) return;
+    private handleSelectionChanged(newlySelectedEntity: number): void {
+        if (this.selectedEntity === newlySelectedEntity) return;
 
         this.clearOutline();
-        this.selected = entity;
 
-        if (entity === -1) return;
+        this.selectedEntity = newlySelectedEntity;
 
-        const view = this.context.viewsByEntity.get(entity);
+        if (this.selectedEntity === -1) {
+            EventBus.emit(GameEvent.ViewSelected, null);
+            return;
+        }
+
+        const view = this.context.viewsByEntity.get(this.selectedEntity);
         if (!view) return;
 
-        this.outlinePlugin.add(view.viewContainer, OUTLINE_CONFIG);
+        view.applyEffect(EffectType.Highlight, { 
+            container: this.context.layers.Icons,
+            outlineConfig: OUTLINE_CONFIG 
+        });
 
         EventBus.emit(GameEvent.ViewSelected, view.viewContainer);
     }
 
     private clearOutline(): void {
-        if (this.selected === -1) return;
-
-        const prev = this.context.viewsByEntity.get(this.selected);
-        if (prev) {
-            this.outlinePlugin.remove(prev.viewContainer);
+        if (this.selectedEntity === -1) return;
+        
+        const previousView = this.context.viewsByEntity.get(this.selectedEntity);
+        if (previousView) {
+            previousView.clearEffect(EffectType.Highlight);
         }
-
-        this.selected = -1;
+        
+        this.selectedEntity = -1;
     }
 }
-
 
 // ---
 
@@ -3239,6 +3304,9 @@ import { ViewDisplayModule, registerViewDisplayModule } from "../../setup/ViewDi
 import { EffectType } from "../../setup/ViewEffectController";
 import { createView } from "../../setup/ViewStore";
 
+const MIN_EFFECTIVE_SCALE = 0.3; // The minimum apparent size on screen.
+const MAX_EFFECTIVE_SCALE = 1; // The maximum apparent size on screen.
+
 export class TreeCutIconViewModule extends ViewDisplayModule {
   init(context: GameDisplayContext): void {
     registerViewDisplayModule(this, context, context.iconsByEntity);
@@ -3286,8 +3354,22 @@ export class TreeCutIconViewModule extends ViewDisplayModule {
     view.viewContainer.x = Math.round(transform.x);
     view.viewContainer.y = Math.round(transform.y);
 
+    const camera = this.context.scene.cameras.main;
+
+    // Clamp the desired final scale of the icon.
+    const desiredScale = Phaser.Math.Clamp(camera.zoom, MIN_EFFECTIVE_SCALE, MAX_EFFECTIVE_SCALE);
+
+    // Calculate the local scale needed to achieve the desiredScale,
+    // by counteracting the parent container's scale (which is camera.zoom).
+    const localScale = desiredScale / camera.zoom;
+
+    view.viewContainer.setScale(localScale);
+
     const sprite = view.getSprite();
-    if (sprite) sprite.visible = tree.selectedForCutting;
+    if (sprite) {
+      sprite.setInteractive(false);
+      sprite.visible = tree.selectedForCutting;
+    }
 
     return false;
   }
@@ -3324,11 +3406,10 @@ export class TreeFallAnimation {
     const { container, scene, spriteKey, position, size, duration, direction = Math.random() < 0.5 ? -1 : 1, onComplete } = config;
 
     this.scene = scene;
-    this.sprite = scene.add.sprite(position.x, position.y, spriteKey);
+    this.sprite = scene.add.sprite(position.x, position.y, "plants", spriteKey);
     container?.add(this.sprite);
     this.sprite.setDisplaySize(size.x, size.y);
     this.sprite.setOrigin(0.5, 1);
-    this.sprite.setPipeline("TimeTint");
 
     const offsetX = direction * 20;
     const rotation = direction * Phaser.Math.DegToRad(90);
@@ -3408,7 +3489,7 @@ export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
         for (const [entity, view] of viewsByEntity) {
             if (view.type !== ViewType.TREE) continue;
 
-            const sprite = view.getSprite() as Phaser.GameObjects.Sprite;
+            const sprite = view.viewContainer;
 
             const sway = this.simplex.noise3D(
                 sprite.x * freq,
@@ -3447,6 +3528,10 @@ import { ShudderEffectConfig } from "../effects/ShudderEffect";
 import { TreeFallAnimation } from "./TreeFallAnimation";
 import { getTime } from "../../../logic/time/TimeComponent";
 import { InteractionSlots, SlotType } from "../../../components/InteractionSlots";
+import { ForagableComponent } from "../../../logic/foraging/ForagableComponent";
+import { generateUniqueApplePositions } from "./generateUniqueApplePositions";
+
+const MAX_APPLE_SPRITES = 20;
 
 const harvestBarConfig: ProgressBarConfig = {
   position: "left",
@@ -3470,6 +3555,7 @@ const harvestBarConfig: ProgressBarConfig = {
 
 export class TreeViewModule extends ViewDisplayModule {
   private harvestRefs: Map<number, ValueRef> = new Map();
+  private forageRefs: Map<number, ValueRef> = new Map();
   private fallAnimations: Map<number, TreeFallAnimation> = new Map();
   private harvested: Map<number, boolean> = new Map();
   
@@ -3501,6 +3587,7 @@ export class TreeViewModule extends ViewDisplayModule {
 
     return createViewDefinition({
       spriteName: tree.type,
+      atlasName: tree.atlasKey,
       position: {
         x: Math.round(transform.x),
         y: Math.round(transform.y),
@@ -3525,6 +3612,7 @@ export class TreeViewModule extends ViewDisplayModule {
 
     const slots = ecs.getComponent(entity, InteractionSlots);
 
+    this.updateForagableView(ecs, entity, view);
     this.updateHarvestProgress(entity, harvestable, view);
     this.updateShudderEffect(!!(slots?.inUse(SlotType.WORK)), view);
     this.spawnFallAnimation(entity, tree, view, posX, posY, isFallen, () => {
@@ -3538,6 +3626,33 @@ export class TreeViewModule extends ViewDisplayModule {
       anim.setSpeed(speed);
     });
     return false;
+  }
+
+  updateForagableView(ecs:ECS, entity: number, view: View) {
+    const foragable = ecs.getComponent(entity, ForagableComponent);
+    if (!foragable) return;
+
+    const c = Math.floor(foragable.currentAmount);
+    const m = Math.floor(foragable.maxAmount);
+
+    this.showForagable(entity, c, m, view, foragable);
+  }
+
+  private showForagable(entity: number, c: number, m: number, view: View, foragable: ForagableComponent) {
+    const valueRef = this.forageRefs.get(entity) || { current: c, max: m };
+    valueRef.current = c;
+    if (!this.forageRefs.has(entity)) {
+      this.forageRefs.set(entity, valueRef);
+      view.applyEffect(EffectType.FORAGABLE, {
+        valueRef,
+        spriteKey: "food",
+        maxSprites: MAX_APPLE_SPRITES,
+        unitsPerSprite: Math.max(1, foragable.maxAmount / MAX_APPLE_SPRITES),
+        fixedRelativePositions: generateUniqueApplePositions(entity, MAX_APPLE_SPRITES),
+        initialVisible: false,
+        spriteScale: 0.2
+      });
+    }
   }
 
   private updateHarvestProgress(entity: number, harvestable: HarvestableComponent, view: View): void {
@@ -3575,7 +3690,7 @@ export class TreeViewModule extends ViewDisplayModule {
   private spawnFallAnimation(entity: number, tree: Tree, view: View, x: number, y: number, isFallen: boolean, onComplete:()=>void): void {
     if (!isFallen || this.fallAnimations.has(entity) || this.harvested.has(entity)) return;
 
-    const spriteKey = tree.type;
+    const spriteKey = tree.atlasKey || tree.type;
     const anim = new TreeFallAnimation({
       container: this.context.layers.Surface,
       scene: this.context.scene,
@@ -3598,11 +3713,91 @@ export class TreeViewModule extends ViewDisplayModule {
 
   createView(ecs: ECS, entity: number, views: { [key: number]: ViewDefinition }, viewDefinition: ViewDefinition): View {
     const view = new View(viewDefinition.id, views, viewDefinition, this.context.layers.Surface, this.context.scene);
-    view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+    // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
     return view;
   }
 }
 
+
+// ---
+
+import { Pos } from "../../../../utils/Math";
+import { Entity } from "../../../ECS";
+
+function mulberry32(seed: number) {
+    return function() {
+        let t = seed += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+}
+
+export function generateUniqueApplePositions(
+    treeEntityId: Entity,
+    maxApplesToDisplay: number,
+    treeAppleClusterCenter: Pos = { x: 0, y: -130 }, 
+    baseSpreadRadius: number = 100, 
+    numInitialPointsToGenerate: number = 20, 
+    minShiftFactor: number = 0,  // Min factor (0-1) to shift towards the calculated center
+    maxShiftFactor: number = 0.4   // Max factor (0-1) to shift towards the calculated center
+): Pos[] {
+    if (maxApplesToDisplay === 0) {
+        return [];
+    }
+
+    const random = mulberry32(treeEntityId);
+    const generatedBasePoints: Pos[] = [];
+
+    const actualNumInitialPoints = Math.max(maxApplesToDisplay, numInitialPointsToGenerate);
+
+    for (let i = 0; i < actualNumInitialPoints; i++) {
+        const angle = random() * 2 * Math.PI;
+        const distance = random() * baseSpreadRadius;
+        generatedBasePoints.push({
+            x: treeAppleClusterCenter.x + Math.cos(angle) * distance,
+            y: treeAppleClusterCenter.y + Math.sin(angle) * distance,
+        });
+    }
+
+    if (generatedBasePoints.length === 0) return [];
+
+    let sumX = 0;
+    let sumY = 0;
+    for (const p of generatedBasePoints) {
+        sumX += p.x;
+        sumY += p.y;
+    }
+    const calculatedCenterOfGeneratedPoints: Pos = {
+        x: sumX / generatedBasePoints.length,
+        y: sumY / generatedBasePoints.length,
+    };
+
+    // Shuffle the generated base points to pick from for the final display count
+    const shuffledPoints = [...generatedBasePoints];
+    for (let i = shuffledPoints.length - 1; i > 0; i--) {
+        const j = Math.floor(random() * (i + 1));
+        [shuffledPoints[i], shuffledPoints[j]] = [shuffledPoints[j], shuffledPoints[i]];
+    }
+
+    const finalPositions: Pos[] = [];
+    const pointsToProcess = Math.min(shuffledPoints.length, maxApplesToDisplay);
+
+    for (let i = 0; i < pointsToProcess; i++) {
+        const basePosition = shuffledPoints[i];
+        const deltaX = calculatedCenterOfGeneratedPoints.x - basePosition.x;
+        const deltaY = calculatedCenterOfGeneratedPoints.y - basePosition.y;
+
+        const shiftFactor = minShiftFactor + random() * (maxShiftFactor - minShiftFactor);
+
+        const newX = basePosition.x + deltaX * shiftFactor;
+        const newY = basePosition.y + deltaY * shiftFactor;
+
+        finalPositions.push({ x: Math.round(newX), y: Math.round(newY) });
+    }
+
+    return finalPositions;
+}
 
 // ---
 
@@ -3624,14 +3819,31 @@ export class Layers {
     public Ground :Phaser.GameObjects.Container;
     public Caves :Phaser.GameObjects.Container;
     public Surface :Phaser.GameObjects.Container;
+    public Tintable :Phaser.GameObjects.Container;
+    public TintedRenderTextureLayer :Phaser.GameObjects.Container;
     public Icons :Phaser.GameObjects.Container;
     
     constructor(scene:Scene) {
         this.Sky = scene.add.container();
+        
+        this.Tintable = scene.add.container();
+
         this.Ground = scene.add.container();
         this.Caves = scene.add.container();
         this.Surface = scene.add.container();
+        
+        this.Tintable.add(this.Ground);
+        this.Tintable.add(this.Caves);
+        this.Tintable.add(this.Surface);
+
+        // in Layers.ts constructor
+        this.TintedRenderTextureLayer = scene.add.container();
         this.Icons = scene.add.container();
+
+        this.TintedRenderTextureLayer.setDepth(10); // Renders behind icons
+        this.Icons.setDepth(20);                   // Renders on top
+
+        this.Icons.setScrollFactor(0); // Pin to camera
     }
     
     public destroy() {
@@ -3640,6 +3852,8 @@ export class Layers {
         this.Caves.destroy();
         this.Surface.destroy();
         this.Icons.destroy();
+        this.Tintable.destroy();
+        this.TintedRenderTextureLayer?.destroy();
     }
 }
 
@@ -3648,19 +3862,52 @@ export class Layers {
 import {Pos} from "../../../utils/Math.ts";
 import {Config} from "../../config/Config.ts";
 
-export const PlantSpriteKeys = ['tree0', 'tree1', 'tree2', 'tree3', 'tree4', 'tree5', 'bush0', 'bush1'] as const;
+export const TreeSpriteKeys = ['tree0', 'tree1', 'tree2', 'tree3', 'tree4', 'tree5'] as const;
+export const PlantSpriteKeys = [...TreeSpriteKeys, 'bush0', 'bush1'] as const;
 export type PlantSpriteKey = typeof PlantSpriteKeys[number];
+export type TreeSpriteKey = typeof TreeSpriteKeys[number];
 export type HillSpriteKey = 'hill';
 export const CaveSpriteKeys = ['cave', 'wood_dojo'] as const;
 export type CaveSpriteKey = typeof CaveSpriteKeys[number];
 export const CharacterKeys = ['booker_char'] as const;
 export type CharacterKey = typeof CharacterKeys[number];
-export type SpriteKey = PlantSpriteKey | HillSpriteKey | CaveSpriteKey | CharacterKey;
+export type SpriteKey = PlantSpriteKey | HillSpriteKey | CaveSpriteKey;// | CharacterKey;
+
+
+export const TreeAtlasKeys = ['fir0', 'fir1', 'linden0', 'linden1', 'beech0', 'beech1', 'oak0', 'oak1', 'rowan0', 'rowan1', 'birch0', 'birch1', 'cedar0', 'cedar1', 'maple0', 'maple1'] as const;
+export type TreeAtlasKey = typeof TreeAtlasKeys[number];
+
+export type TreeSpriteAtlasMap = {
+    [key in TreeSpriteKey]: [TreeAtlasKey, TreeAtlasKey];
+};
+
+export const treeSpriteToAtlasMap: TreeSpriteAtlasMap = {
+    tree0: [TreeAtlasKeys[0], TreeAtlasKeys[1]],   // fir0, fir1
+    // tree1: [TreeAtlasKeys[2], TreeAtlasKeys[3]],   // linden0, linden1
+    tree2: [TreeAtlasKeys[4], TreeAtlasKeys[5]],   // beech0, beech1
+    tree3: [TreeAtlasKeys[6], TreeAtlasKeys[7]],   // oak0, oak1
+    tree4: [TreeAtlasKeys[8], TreeAtlasKeys[9]],   // rowan0, rowan1
+    tree5: [TreeAtlasKeys[10], TreeAtlasKeys[11]], // birch0, birch1
+    //tree1: [TreeAtlasKeys[12], TreeAtlasKeys[13]], // cedar0, cedar1
+    tree1: [TreeAtlasKeys[14], TreeAtlasKeys[15]], // maple0, maple1
+};
+
+export const plantSpriteToNameAndDescription = {
+    tree0: { name: 'Fir Tree', description: 'A tall, evergreen fir tree with dense, dark green needles.' },
+    tree1: { name: 'Maple Tree', description: 'A broadleaf maple tree with a bifurcated trunk and vibrant green leaves.' },
+    tree2: { name: 'Beech Tree', description: 'A stately beech tree with smooth bark and a full leafy canopy.' },
+    tree3: { name: 'Oak Tree', description: 'An ancient oak tree with a sturdy trunk and sprawling branches.' },
+    tree4: { name: 'Rowan Tree', description: 'A slender rowan tree with delicate compound leaves.' },
+    tree5: { name: 'Birch Tree', description: 'A graceful birch tree with white bark and light, airy foliage.' },
+    bush1: { name: 'Natal Plum Bush', description: 'Beauty and bountiful foraging in one lovely shrub' },
+    bush0: { name: 'Blueberry Bush', description: 'Lovely shrubberry, much fruit!.' },
+} as const;
 
 interface SpriteDefinition {
     key: SpriteKey;
     defaultSize: Pos;
     path?: string;
+    atlas?:string;
 }
 
 const defaultTreeSize = {x:2, y:2};
@@ -3680,7 +3927,7 @@ export const SpriteLibrary: Record<SpriteKey, SpriteDefinition> = {
     hill: {key: 'hill', defaultSize: defaultHillSize, path: 'assets/hill/hill.png'},
     cave: {key: 'cave', defaultSize: defaultCaveSize, path: 'assets/hill/cave.png'},
     wood_dojo: {key: 'wood_dojo', defaultSize: defaultCaveSize, path: 'assets/hill/wood_dojo.png'},
-    booker_char: {key: 'booker_char', defaultSize: {x: 0.5, y: 0.75}, path: 'assets/characters/booker_char.png'},
+    // booker_char: {key: 'booker_char', defaultSize: {x: 0.5, y: 0.75}, path: 'assets/characters/booker_char.png'},
 };
 
 // ---
@@ -3746,15 +3993,16 @@ export class View {
   }
 
   private initSprite(scene: Phaser.Scene): void {
-    const { spriteName, frame, size, type } = this.viewDefinition;
-    if (!spriteName) return;
+    const { spriteName, atlasName, frame, size, type } = this.viewDefinition;
+    if (!spriteName && !atlasName) return;
 
-    const sprite = scene.add.sprite(0, 0, spriteName);
+    const sprite = atlasName? scene.add.sprite(0, 0, "plants", atlasName) : scene.add.sprite(0, 0, spriteName);
+
     sprite.name = `${Naming.SPRITE}${this.id}`;
     this.viewContainer.add(sprite);
 
     sprite.setOrigin(0.5, type === ViewType.TREE ? 1 : 0.5);
-    sprite.setFrame(frame);
+    // sprite.setFrame(frame);
     sprite.setInteractive({ useHandCursor: false });
 
     const defaultSize = SpriteLibrary[spriteName as SpriteKey]?.defaultSize ?? { x: 1, y: 1 };
@@ -3862,6 +4110,7 @@ export interface PanelActionDefinition {
 export class ViewDefinition {
     public readonly id: number;
     public spriteName: string;
+    public atlasName: string;
     public readonly position: Pos;
     public readonly size: Pos;
     public frame: number;
@@ -3944,7 +4193,8 @@ export function registerViewDisplayModule(
 import { View } from "./View";
 import { ProgressBar, ProgressBarConfig } from "../game/effects/ProgressBar";
 import { ShudderEffect, ShudderEffectConfig } from "../game/effects/ShudderEffect";
-import { AppleQuantityEffect, AppleQuantityEffectConfig } from "../game/effects/AppleQuantityEffect";
+import { ForagableEffect, ForagableEffectConfig } from "../game/effects/ForagableEffect";
+import { SelectionOutlineEffect, SelectionOutlineEffectOptions } from "../game/effects/SelectionOutlineEffect";
 
 export interface EffectInstance {
   start(): void;
@@ -3960,7 +4210,7 @@ export enum EffectType {
   Shake = "shake",
   Progress = "progress",
   Shudder = "shudder",
-  APPLE_QUANTITY_DISPLAY = "apple_quantity_display", // New effect type
+  FORAGABLE = "foragable",
 }
 
 // Ensure ProgressBarOptions matches if it was defined elsewhere, or use ProgressBarConfig directly
@@ -3986,7 +4236,7 @@ export class ViewEffectController {
         instance = this.makeRed(opts);
         break;
       case EffectType.Highlight:
-        instance = this.makeRed(opts); // Highlight currently uses makeRed
+        instance = this.makeHighlight(opts); // Assuming Highlight is same as Red for now
         break;
       case EffectType.Shader:
         instance = this.makeShader(opts);
@@ -4000,8 +4250,8 @@ export class ViewEffectController {
       case EffectType.Shudder:
         instance = new ShudderEffect(this.view, opts as ShudderEffectConfig);
         break;
-      case EffectType.APPLE_QUANTITY_DISPLAY:
-        instance = this.makeAppleQuantityDisplay(opts as AppleQuantityEffectConfig);
+      case EffectType.FORAGABLE:
+        instance = this.makeForagableDisplay(opts as ForagableEffectConfig);
         break;
     }
 
@@ -4009,6 +4259,11 @@ export class ViewEffectController {
       this.active.set(type, instance);
       instance.start();
     }
+  }
+
+  private makeHighlight(opts: SelectionOutlineEffectOptions): EffectInstance | undefined {
+    if (!this.view) return undefined;
+    return new SelectionOutlineEffect(this.view, opts);
   }
 
   public clear(type: EffectType): void {
@@ -4101,13 +4356,13 @@ export class ViewEffectController {
     };
   }
 
-  private makeAppleQuantityDisplay(config: AppleQuantityEffectConfig): EffectInstance {
-    const appleEffect = new AppleQuantityEffect(this.view, config);
+  private makeForagableDisplay(config: ForagableEffectConfig): EffectInstance {
+    const foragableEffect = new ForagableEffect(this.view, config);
     return {
-        start: appleEffect.start.bind(appleEffect),
-        stop: appleEffect.stop.bind(appleEffect),
-        update: appleEffect.update.bind(appleEffect),
-        destroy: appleEffect.destroy.bind(appleEffect),
+        start: foragableEffect.start.bind(foragableEffect),
+        stop: foragableEffect.stop.bind(foragableEffect),
+        update: foragableEffect.update.bind(foragableEffect),
+        destroy: foragableEffect.destroy.bind(foragableEffect),
     };
   }
 }
@@ -5091,13 +5346,13 @@ export class ScheduleComponent extends Component {
 export function createStandardSchedule(): ScheduleComponent {
   return new ScheduleComponent([
     CharacterIntent.SLEEP,
+    CharacterIntent.FORAGE,
     CharacterIntent.HARVEST,
-    CharacterIntent.FORAGE,
-    CharacterIntent.FORAGE,
+    CharacterIntent.HARVEST,
     CharacterIntent.REST,
-    CharacterIntent.FORAGE,
-    CharacterIntent.FORAGE,
-    CharacterIntent.FORAGE,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
+    CharacterIntent.HARVEST,
     CharacterIntent.SLEEP
   ]);
 }
@@ -5837,6 +6092,7 @@ import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
 import { ForagingState } from "../../character-states/ForagingState";
 import { abortForaging } from "../intent-abort/abortForaging";
 import { ForageRegenComponent } from "../../../foraging/ForageRegenComponent";
+import { turnToTarget } from "../../../locomotion/turnToTarget";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.NONE;
@@ -6011,6 +6267,7 @@ export function handleForageIntentLogic(
         const newlyAssignedState = ecs.getComponent(entity, ForagingState);
         if (newlyAssignedState && newlyAssignedState.targetForagableEntityId !== -1) {
             updateForageActions(ecs, entity, actionIntent, newlyAssignedState);
+            turnToTarget(ecs, entity, newlyAssignedState.targetForagableEntityId);
         }
         return;
     }
@@ -6022,6 +6279,7 @@ export function handleForageIntentLogic(
     }
 
     updateForageActions(ecs, entity, actionIntent, foragingState);
+    turnToTarget(ecs, entity, foragingState.targetForagableEntityId);
 }
 
 // ---
@@ -6045,6 +6303,7 @@ import { getCaveTreeLUT } from "../../../lut/getCaveTreeLUT";
 import { HarvestingState } from "../../character-states/HarvestingState";
 import { abortHarvesting } from "../intent-abort/abortHarvesting";
 import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
+import { turnToTarget } from "../../../locomotion/turnToTarget";
 
 function setIdle(aic: ActionIntentComponent): void {
     aic.intentType = CharacterIntent.NONE;
@@ -6183,11 +6442,14 @@ function updateActions(ecs: ECS, entity:number, actionIntent: ActionIntentCompon
 
     if (!locomotion.arrived) {
         setWalkingToSlot(actionIntent, targetPos, treeId);
-    } else {
+    } else if (actionIntent.currentPerformedAction !== CharacterAction.CHOPPING && actionIntent.actionData?.targetTreeEntityId !== treeId) {
         // Arrived at the designated WORK slot for the target tree.
         setChopping(actionIntent, treeId);
+        turnToTarget(ecs, entity, treeId);
     }
 }
+
+
 
 
 // ---
@@ -6793,6 +7055,22 @@ export class LocomotionSystem extends System {
 
 // ---
 
+import { ECS, Entity } from "../../ECS";
+import { Transform } from "../../components/Transform";
+
+export function turnToTarget(ecs: ECS, entity: Entity, targetEntity: Entity): void {
+    const transform = ecs.getComponent(entity, Transform);
+    const targetTransform = ecs.getComponent(targetEntity, Transform);
+
+    if (transform && targetTransform) {
+        const deltaX = targetTransform.x - transform.x;
+        transform.direction = deltaX > 0 ? -1 : 1; // Assuming -1 is right, 1 is left
+    }
+}
+
+
+// ---
+
 import { Component } from "../../ECS";
 
 export class CaveTreeLUTComponent extends Component {
@@ -7241,7 +7519,9 @@ function loadMapIntoECS(ecs: ECS, map: MapDefinition): void {
                 if (def.spriteName) {
                     ecs.addComponent(entity, new Tree(def.spriteName as PlantSpriteKey));
                     ecs.addComponent(entity, new HarvestableComponent(1000, [{type:ResourceType.WOOD, amount:10}]));
-                    ecs.addComponent(entity, new ForagableComponent(ResourceType.FOOD, 20, 20, 0.001));
+                    if (def.spriteName.startsWith("bush")) {
+                        ecs.addComponent(entity, new ForagableComponent(ResourceType.FOOD, 20, 20, 0.001));
+                    }
                     ecs.addComponent(entity, new InteractionSlots({
                         [SlotType.WORK]: { layout: SlotLayout.RADIAL, radius: 120, count: 2 },
                         [SlotType.FORAGE]: { layout: SlotLayout.RADIAL, radius: 120, count: 4 }
@@ -7520,7 +7800,6 @@ export const initDisplay = (game:Game)=>{
     game.gameDisplay = new GameDisplay();
     
     const modules = [
-        new CameraModule(),
         new SkyDisplayModule(),
         new StarfieldModule(),
         new CloudsModule(),
@@ -7534,6 +7813,7 @@ export const initDisplay = (game:Game)=>{
         new TreeViewModule(),
         new TreeCutIconViewModule(),
         new CharacterViewModule(),
+        new CameraModule(),
     ];
     
     game.gameDisplay.init(game, game.ecs, modules);
@@ -7917,15 +8197,26 @@ export class HarvestingComponentRemovalSystem extends System {
 // ---
 
 import {Component} from "../../ECS.ts";
-import {PlantSpriteKey} from "../../display/setup/SpriteLibrary.ts";
+import {PlantSpriteKey, TreeSpriteKey, TreeSpriteKeys, treeSpriteToAtlasMap} from "../../display/setup/SpriteLibrary.ts";
 
 export class Tree extends Component {
     public selectedForCutting = false;
-    
+    public atlasKey = '';
+
     constructor(
         public type: PlantSpriteKey
     ) {
         super();
+
+        if (!TreeSpriteKeys.includes(type as TreeSpriteKey)){
+            // It's a bush
+            this.atlasKey = type;
+            return;
+        }
+
+        const subType = Math.random() >= 0.5 ? 0 : 1;
+        const treeTypeArray = treeSpriteToAtlasMap[type as TreeSpriteKey];
+        this.atlasKey = treeTypeArray[subType];
     }
 }
 
@@ -8118,8 +8409,8 @@ import { Boot } from './scenes/Boot';
 import { Game } from './scenes/Game';
 import { AUTO, Game as PhaserGame } from 'phaser';
 import { Preloader } from './scenes/Preloader';
-import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin.js';
 import {Config} from "./config/Config.ts";
+import OutlinePipelinePlugin from '../render/pipelines/OutlinePipelinePlugin.ts';
 
 //  Find out more information about the Game Config at:
 //  https://newdocs.phaser.io/docs/3.70.0/Phaser.Types.Core.GameConfig
@@ -8140,7 +8431,7 @@ const config: Phaser.Types.Core.GameConfig = {
     ],
     plugins: {
         global: [
-            { key: 'rexOutlinePipeline', plugin: OutlinePipelinePlugin, start: true}
+            { key: 'OutlinePlugin', plugin: OutlinePipelinePlugin, start: true}
         ]
     },
     render: {
@@ -8152,7 +8443,7 @@ const config: Phaser.Types.Core.GameConfig = {
             debug: true
         }
     },
-    disableContextMenu: true
+    disableContextMenu: false
 };
 
 const StartGame = (parent: string) => {
@@ -8226,6 +8517,7 @@ import {loadFromState} from "../logic/serialization/GameStateSerializer.ts";
 import {loadNewGame} from "../logic/serialization/MapSerializer.ts";
 import {TimeTintPipeline} from "../../render/pipelines/TimeTintPipeline.ts";
 import { init} from '../logic/serialization/init.ts';
+import { OutlineOnlyPipeline } from '../../render/pipelines/OutlinePipelineSingle.ts';
 
 export class Game extends Scene
 {
@@ -8251,11 +8543,8 @@ export class Game extends Scene
         EventBus.emit('current-scene-ready', this);
         setSceneType('game');
 
-        const pipeline = new TimeTintPipeline(this.game);
-        (this.renderer as Phaser.Renderer.WebGL.WebGLRenderer)
-            .pipelines
-            .add('TimeTint', pipeline);
- 
+        this.SetupShaders();
+  
         this.ecs = new ECS();
         
         EventBus.on(GameEvent.NewGame, () => {
@@ -8269,6 +8558,18 @@ export class Game extends Scene
         });
 
         this.events.on('destroy', this.destroy);
+    }
+
+    private SetupShaders() {
+        const renderer = (this.renderer as Phaser.Renderer.WebGL.WebGLRenderer);
+
+        renderer.pipelines
+            .add('TimeTint', new TimeTintPipeline(this.game));
+
+        const outlinePipeline = new OutlineOnlyPipeline(this.game);
+        renderer
+            .pipelines
+            .add('outlineOnly', outlinePipeline);
     }
 
     private destroy() {
@@ -8320,6 +8621,8 @@ export class Preloader extends Scene
     preload ()
     {
         this.load.json("panelRegistry", "assets/data/panels.json");
+
+        this.load.atlas('plants', 'assets/trees/plants.png', 'assets/trees/plants.json');
 
         this.load.setPath('assets/plants');
 
@@ -8422,6 +8725,196 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </React.StrictMode>,
 )
 
+
+// ---
+
+// FILE: src/plugins/OutlinePlugin.ts
+
+import Phaser from 'phaser';
+
+const GetValue = Phaser.Utils.Objects.GetValue;
+
+// ===================================================================
+//  1. THE PIPELINE CLASS (THE EFFECT)
+//  This class is a blueprint for the outline effect.
+// ===================================================================
+const PostFXPipeline = Phaser.Renderer.WebGL.Pipelines.PostFXPipeline;
+const fragTemplate = `
+#ifdef GL_FRAGMENT_PRECISION_HIGH
+#define highmedp highp
+#else
+#define highmedp mediump
+#endif
+precision highmedp float;
+uniform sampler2D uMainSampler; 
+varying vec2 outTexCoord;
+uniform vec2 texSize;
+uniform float thickness;
+uniform vec3 outlineColor;
+const float DOUBLE_PI = 3.14159265358979323846264 * 2.;
+void main() {
+  vec4 front = texture2D(uMainSampler, outTexCoord);
+  if (thickness > 0.0) {
+    vec2 mag = vec2(thickness/texSize.x, thickness/texSize.y);
+    vec4 curColor;
+    float maxAlpha = front.a;
+    vec2 offset;
+    for (float angle = 0.; angle < DOUBLE_PI; angle += #{angleStep}) {
+        offset = vec2(mag.x * cos(angle), mag.y * sin(angle));        
+        curColor = texture2D(uMainSampler, outTexCoord + offset);
+        maxAlpha = max(maxAlpha, curColor.a);
+    }
+    vec3 resultColor = front.rgb + (outlineColor.rgb * (1. - front.a)) * maxAlpha;
+    gl_FragColor = vec4(resultColor, maxAlpha);
+  } else {
+    gl_FragColor = front;
+  }
+}
+`;
+const GetFrag = (quality: number = 0.1): string => {
+    const samples = Math.max((quality * 100), 1);
+    const angleStep = (Math.PI * 2 / samples).toFixed(7);
+    return fragTemplate.replace(/#\{angleStep\}/g, angleStep);
+};
+class OutlinePostFxPipeline extends PostFXPipeline {
+    public thickness: number;
+    public outlineColor: Phaser.Display.Color;
+
+    constructor(game: Phaser.Game) {
+        super({
+            game,
+            fragShader: GetFrag(0.1),
+        });
+        this.thickness = 0;
+        this.outlineColor = new Phaser.Display.Color();
+    }
+    onPreRender() {
+        this.set1f('thickness', this.thickness);
+        this.set3f('outlineColor', this.outlineColor.redGL, this.outlineColor.greenGL, this.outlineColor.blueGL);
+        this.set2f('texSize', this.width, this.height);
+    }
+}
+
+
+// ===================================================================
+//  2. THE PLUGIN CLASS (THE MANAGER)
+//  This class adds and removes the effect from sprites.
+// ===================================================================
+export default class OutlinePipelinePlugin extends Phaser.Plugins.BasePlugin {
+    // A map to keep track of which sprite has which pipeline instance.
+    private pipelines: Map<Phaser.GameObjects.GameObject, OutlinePostFxPipeline>;
+
+    constructor(pluginManager: Phaser.Plugins.PluginManager) {
+        super(pluginManager);
+        this.pipelines = new Map();
+        // The constructor is now clean. No more registration attempts.
+    }
+
+    /**
+     * Creates and adds a new outline pipeline instance to a game object.
+     */
+    add(gameObject: Phaser.GameObjects.GameObject, config?: { thickness?: number, outlineColor?: number }): OutlinePostFxPipeline {
+        this.remove(gameObject); // Remove previous instances to be safe.
+
+        // Manually create a new instance of our pipeline.
+        const pipelineInstance = new OutlinePostFxPipeline(this.game);
+        
+        (gameObject as any).setPostPipeline(OutlinePostFxPipeline);
+
+
+        // Configure the new instance from the config object.
+        pipelineInstance.thickness = GetValue(config!, 'thickness', 3);
+        const color = GetValue(config!, 'outlineColor', 0xffffff);
+        if (typeof color === 'number') {
+            pipelineInstance.outlineColor.setFromRGB(Phaser.Display.Color.IntegerToRGB(color));
+        }
+
+        // Store and return the instance.
+        this.pipelines.set(gameObject, pipelineInstance);
+        return pipelineInstance;
+    }
+
+    /**
+     * Removes the outline pipeline from a game object.
+     */
+    remove(gameObject: Phaser.GameObjects.GameObject): this {
+        // Check if we have a stored pipeline for this object.
+        if (this.pipelines.has(gameObject)) {
+            const pipelineInstance = this.pipelines.get(gameObject);
+            const pipelineController = (gameObject as any).post;
+
+            if (pipelineController && pipelineInstance) {
+                // Remove the specific instance.
+                pipelineController.remove(pipelineInstance);
+            }
+
+            this.pipelines.delete(gameObject);
+        }
+        return this;
+    }
+}
+
+// ---
+
+export class OutlineOnlyPipeline extends Phaser.Renderer.WebGL.Pipelines.SinglePipeline {
+    constructor(game: Phaser.Game) {
+      super({
+        game,
+        fragShader: `
+          precision mediump float;
+  
+          uniform sampler2D uMainSampler;
+          varying vec2 outTexCoord;
+          uniform vec2 texSize;
+          uniform vec4 outlineColor;
+          uniform float thickness;
+  
+          void main() {
+            float threshold = 0.1;
+            float pixelAlpha = texture2D(uMainSampler, outTexCoord).a;
+  
+            if (pixelAlpha >= threshold) {
+              discard;
+            }
+  
+            vec2 offset = 1.0 / texSize;
+            bool outline = false;
+  
+            // Hardcoded max loop range (e.g. -5 to 5)
+            for (int x = -5; x <= 5; x++) {
+              for (int y = -5; y <= 5; y++) {
+                // convert to float
+                vec2 delta = vec2(float(x), float(y));
+  
+                // circular mask
+                if (length(delta) > thickness) continue;
+  
+                vec2 sampleUV = outTexCoord + delta * offset;
+                float sampleAlpha = texture2D(uMainSampler, sampleUV).a;
+  
+                if (sampleAlpha > threshold) {
+                  outline = true;
+                }
+              }
+            }
+  
+            if (outline) {
+              gl_FragColor = outlineColor;
+            } else {
+              discard;
+            }
+          }
+        `
+      });
+    }
+  
+    onPreRender() {
+      this.set2f('texSize', this.renderer.width, this.renderer.height);
+      this.set4f('outlineColor', 1.0, 1.0, 0.0, 1.0); // yellow
+      this.set1f('thickness', 2.0); // customizable
+    }
+  }
+  
 
 // ---
 
@@ -10462,6 +10955,7 @@ import { CharacterThoughtsContent } from './character/CharacterThoughtsContent';
 import { CharacterInfoContent } from './character/CharacterInfoContent';
 import { CharacterInfoContentCollapsed } from './character/CharcterInfoContentCollapsed';
 import { TreePanelContent } from './tree/TreePanelContent';
+import { TreePanelContentCollapsed } from './tree/TreePanelContentCollapsed';
 
 export interface SelectedEntityPayload {
   id: string | number;
@@ -10486,7 +10980,7 @@ const charContentRegistry: ContentByTab = {
 
 const treeContentRegistry: ContentByTab = {
   "info": ({ data, isContentAreaCollapsed }) => {
-    return <TreePanelContent data={data} />;
+    return isContentAreaCollapsed ? <TreePanelContentCollapsed data={data} />:<TreePanelContent data={data} />;
   }
 };
 
@@ -11018,6 +11512,7 @@ const CollapsedSection = styled.div`
   gap: 4px; /* Gap within a section (e.g., between icons in schedule or buffs) */
   /* flex-shrink: 0; // Prevent sections from shrinking too much if space is tight */
   min-width: 0; /* Allows flex items to shrink below their content size */
+  height: 24px;
 `;
 
 const ActionSection = styled(CollapsedSection)`
@@ -11117,7 +11612,7 @@ const SectionHeader = styled.h4`
 
 const ContentLine = styled.div`
   display: flex;
-  align-items: center;
+  align-items:  baseline; /* Align items to the baseline for better text alignment */
   gap: 6px; /* Reduced gap for tighter layout */
   justify-content: flex-start; /* Align all items to the left */
   font-size: 0.85rem;
@@ -11389,6 +11884,104 @@ export const TreePanelContent: React.FC<TreeInfoContentProps> = ({ data }) => {
 
 // ---
 
+// src/ui/panel/content_views/tree/TreePanelContentCollapsed.tsx
+import React from 'react';
+import styled from '@emotion/styled';
+import { TreePanelUIData } from '../../../../../game/display/game/data_panel/tree/treePanelReducer';
+import { Fillbar } from '../../Fillbar';
+import { Icon } from '../../icons/Icon';
+import { ResourceConfig } from '../../../../../game/logic/resources/ResourceConfig';
+import { ResourceType } from '../../../../../game/logic/resources/ResourceType';
+
+interface TreePanelContentCollapsedProps {
+  data: TreePanelUIData;
+}
+
+const CollapsedWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 4px;
+  height: 24px;
+  width: 100%;
+  overflow: hidden;
+`;
+
+const CollapsedSection = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+  flex: 0.5;
+`;
+
+const StyledFillbar = styled(Fillbar)`
+  flex-shrink: 1;
+  min-width: 50px;
+  max-width: 80px;
+`;
+
+const YieldText = styled.span`
+  font-size: 0.8rem;
+  color: #c0c0c0;
+  white-space: nowrap;
+`;
+
+const markedForCuttingIconSrc = 'assets/icons/axe_icon.png';
+
+export const TreePanelContentCollapsed: React.FC<TreePanelContentCollapsedProps> = ({ data }) => {
+  const { harvestableInfo, foragableInfo } = data;
+
+  const primaryWoodYield = harvestableInfo?.yield.find(drop => drop.type === ResourceType.WOOD);
+  const woodResourceDetails = primaryWoodYield ? ResourceConfig[primaryWoodYield.type as ResourceType] : null;
+  const foodResourceDetails = foragableInfo ? ResourceConfig[foragableInfo.resourceType] : null;
+
+  return (
+    <CollapsedWrapper>
+      {/* --- Timber Section --- */}
+      {harvestableInfo && (
+        <CollapsedSection title={`Health: ${harvestableInfo.hitpointsCurrent}/${harvestableInfo.hitpointsMax}`}>
+          {harvestableInfo.isSelectedForCutting && (
+            <Icon iconSrc={markedForCuttingIconSrc} shape="square" size="16px" alt="Marked for Cutting" backgroundColor="transparent" borderColor="transparent" />
+          )}
+          <StyledFillbar
+            currentValue={harvestableInfo.hitpointsCurrent}
+            maxValue={harvestableInfo.hitpointsMax}
+            height="6px"
+            width="100%"
+            fillColor="#A0522D"
+            barBackgroundColor="#593622"
+          />
+          {primaryWoodYield && woodResourceDetails && (
+            <>
+              <Icon iconSrc={woodResourceDetails.icon} shape="square" size="16px" alt={primaryWoodYield.type} backgroundColor="transparent" borderColor="transparent" />
+              <YieldText>{primaryWoodYield.amount}</YieldText>
+            </>
+          )}
+        </CollapsedSection>
+      )}
+
+      {/* --- Foraging Section --- */}
+      {foragableInfo && foodResourceDetails && (
+        <CollapsedSection title={`Forageable: ${Math.floor(foragableInfo.currentAmount)}/${foragableInfo.maxAmount}`}>
+          <Icon iconSrc={foodResourceDetails.icon} shape="square" size="16px" alt={foragableInfo.resourceType} backgroundColor="transparent" borderColor="transparent" />
+          <StyledFillbar
+            currentValue={foragableInfo.currentAmount}
+            maxValue={foragableInfo.maxAmount}
+            height="6px"
+            width="100%"
+            fillColor="#2ECC71"
+            barBackgroundColor="#4A2E0D"
+          />
+        </CollapsedSection>
+      )}
+    </CollapsedWrapper>
+  );
+};
+
+// ---
+
 import React from 'react';
 import styled from '@emotion/styled';
 import { ScheduleIcon, ScheduleActivityType } from '../icons/ScheduleIcon'; 
@@ -11474,7 +12067,7 @@ const DisplayWrapper = styled.div<{ maxHeight?: string }>`
   display: flex;
   flex-direction: column;
   width: 100%;
-  padding: 0 4px; /* Horizontal padding for the list */
+  height: 100%;
   box-sizing: border-box;
   overflow-y: ${props => (props.maxHeight ? 'auto' : 'visible')};
   max-height: ${props => props.maxHeight || 'none'};

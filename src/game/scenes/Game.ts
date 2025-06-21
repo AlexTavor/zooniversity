@@ -9,6 +9,7 @@ import {loadFromState} from "../logic/serialization/GameStateSerializer.ts";
 import {loadNewGame} from "../logic/serialization/MapSerializer.ts";
 import {TimeTintPipeline} from "../../render/pipelines/TimeTintPipeline.ts";
 import { init} from '../logic/serialization/init.ts';
+import { OutlineOnlyPipeline } from '../../render/pipelines/OutlinePipelineSingle.ts';
 
 export class Game extends Scene
 {
@@ -34,11 +35,8 @@ export class Game extends Scene
         EventBus.emit('current-scene-ready', this);
         setSceneType('game');
 
-        const pipeline = new TimeTintPipeline(this.game);
-        (this.renderer as Phaser.Renderer.WebGL.WebGLRenderer)
-            .pipelines
-            .add('TimeTint', pipeline);
- 
+        this.SetupShaders();
+  
         this.ecs = new ECS();
         
         EventBus.on(GameEvent.NewGame, () => {
@@ -52,6 +50,18 @@ export class Game extends Scene
         });
 
         this.events.on('destroy', this.destroy);
+    }
+
+    private SetupShaders() {
+        const renderer = (this.renderer as Phaser.Renderer.WebGL.WebGLRenderer);
+
+        renderer.pipelines
+            .add('TimeTint', new TimeTintPipeline(this.game));
+
+        const outlinePipeline = new OutlineOnlyPipeline(this.game);
+        renderer
+            .pipelines
+            .add('outlineOnly', outlinePipeline);
     }
 
     private destroy() {
