@@ -19,6 +19,6 @@ export const BuffDisplayRegistry: Partial<Record<BuffType, BuffDisplayInfo>> = {
         iconAssetKey: "assets/icons/sleep_icon.png",
         description: "Tired! -25%% to walking and work speed.",
         isBuff: false,
-    }
+    },
     // Add display information for other BuffTypes as they are created and need UI representation.
 };

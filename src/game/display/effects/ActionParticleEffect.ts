@@ -8,15 +8,9 @@ export class ActionParticleEffect implements EffectInstance {
         this.view = view;
     }
 
-    public start(): void {
+    public start(): void {}
 
-    }
+    public stop(): void {}
 
-    public stop(): void {
-
-    }
-    
-    public update(delta: number): void {
-
-    }
+    public update(_delta: number): void {}
 }

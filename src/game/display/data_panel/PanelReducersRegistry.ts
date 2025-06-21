@@ -8,8 +8,8 @@ import { woodDojoPanelReducer } from "./buildings/woodDojoPanelReducer";
 export type PanelTypeReducer = (entity: Entity, ecs: ECS) => unknown;
 
 export const PanelTypeReducers: Partial<Record<PanelType, PanelTypeReducer>> = {
-  [PanelType.CHARACTER]: characterPanelReducer,
-  [PanelType.WOOD_DOJO]: woodDojoPanelReducer,
-  [PanelType.CAVE]: cavePanelReducer,
-  [PanelType.TREE]: treePanelReducer
+    [PanelType.CHARACTER]: characterPanelReducer,
+    [PanelType.WOOD_DOJO]: woodDojoPanelReducer,
+    [PanelType.CAVE]: cavePanelReducer,
+    [PanelType.TREE]: treePanelReducer,
 };

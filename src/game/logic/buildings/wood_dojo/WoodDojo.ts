@@ -3,13 +3,20 @@ import { WoodDojoWorker } from "./WoodDojoWorker";
 
 export class WoodDojo extends Component {
     public assignedCharacters: number[] = [];
-    
-    public assignCharacter(ecs: ECS, dojoEntityId: Entity, characterId: Entity): void {
+
+    public assignCharacter(
+        ecs: ECS,
+        dojoEntityId: Entity,
+        characterId: Entity,
+    ): void {
         if (!this.assignedCharacters.includes(characterId)) {
             this.assignedCharacters.push(characterId);
         }
 
-        if (ecs.hasEntity(characterId) && !ecs.hasComponent(characterId, WoodDojoWorker)) {
+        if (
+            ecs.hasEntity(characterId) &&
+            !ecs.hasComponent(characterId, WoodDojoWorker)
+        ) {
             ecs.addComponent(characterId, new WoodDojoWorker(dojoEntityId));
         }
     }
@@ -20,7 +27,10 @@ export class WoodDojo extends Component {
             this.assignedCharacters.splice(index, 1);
         }
 
-        if (ecs.hasEntity(characterId) && ecs.hasComponent(characterId, WoodDojoWorker)) {
+        if (
+            ecs.hasEntity(characterId) &&
+            ecs.hasComponent(characterId, WoodDojoWorker)
+        ) {
             ecs.removeComponent(characterId, WoodDojoWorker);
         }
     }

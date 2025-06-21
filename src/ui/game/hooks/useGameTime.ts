@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import {TimeSpeed} from "../../../game/logic/input/InputComponent.ts";
-import {EventBus} from "../../../game/EventBus.ts";
-import {GameEvent} from "../../../game/consts/GameEvent.ts";
-import {TimeConfig} from "../../../game/config/TimeConfig.ts";
+import { TimeSpeed } from "../../../game/logic/input/InputComponent.ts";
+import { EventBus } from "../../../game/EventBus.ts";
+import { GameEvent } from "../../../game/consts/GameEvent.ts";
+import { TimeConfig } from "../../../game/config/TimeConfig.ts";
 
 export interface GameTime {
     minute: number;
@@ -23,17 +23,16 @@ export function useGameTime(): GameTime {
 
     useEffect(() => {
         EventBus.on(GameEvent.SetTimeSpeed, (speed: TimeSpeed) =>
-            setTime(prev => ({ ...prev, speed }))
+            setTime((prev) => ({ ...prev, speed })),
         );
-        
+
         EventBus.on(GameEvent.SetTime, (time: number) =>
-            setTime(prev => ({ ...prev, ...divideTime(time) }))
+            setTime((prev) => ({ ...prev, ...divideTime(time) })),
         );
     }, []);
 
     return time;
 }
-
 
 export function divideTime(totalMinutes: number): Partial<GameTime> {
     const minutesPerHour = TimeConfig.MinutesPerHour;
@@ -42,7 +41,9 @@ export function divideTime(totalMinutes: number): Partial<GameTime> {
 
     let minutes = totalMinutes;
 
-    const semester = Math.floor(minutes / (daysPerSemester * hoursPerDay * minutesPerHour));
+    const semester = Math.floor(
+        minutes / (daysPerSemester * hoursPerDay * minutesPerHour),
+    );
     minutes %= daysPerSemester * hoursPerDay * minutesPerHour;
 
     const day = Math.floor(minutes / (hoursPerDay * minutesPerHour));
@@ -55,6 +56,6 @@ export function divideTime(totalMinutes: number): Partial<GameTime> {
         semester,
         day,
         hour,
-        minute: minutes
+        minute: minutes,
     };
 }

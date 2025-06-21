@@ -1,13 +1,12 @@
-import Phaser from 'phaser';
-import {CameraConfig} from "../../config/CameraConfig.ts";
-import {PointerEvent} from "../../consts/PointerEvent.ts";
-import { EventBus } from '../../EventBus.ts';
+import Phaser from "phaser";
+import { CameraConfig } from "../../config/CameraConfig.ts";
+import { PointerEvent } from "../../consts/PointerEvent.ts";
+import { EventBus } from "../../EventBus.ts";
 
 export class ControlledCamera {
-
     private readonly scene: Phaser.Scene;
     private readonly camera: Phaser.Cameras.Scene2D.Camera;
-    private readonly config: CameraConfig; 
+    private readonly config: CameraConfig;
 
     private isDown = false;
     private isCountingClicks = false;
@@ -16,18 +15,19 @@ export class ControlledCamera {
     private dragInertia: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
     private lastDragDelta: Phaser.Math.Vector2 = new Phaser.Math.Vector2();
     private readonly inertiaThresholdSq: number;
-    
+
     public draggable: boolean = true;
-    
+
     public constructor(
         scene: Phaser.Scene,
         worldWidth: number,
         worldHeight: number,
-        config: CameraConfig, 
+        config: CameraConfig,
     ) {
         this.scene = scene;
         this.config = config;
-        this.inertiaThresholdSq = this.config.InertiaThreshold * this.config.InertiaThreshold; 
+        this.inertiaThresholdSq =
+            this.config.InertiaThreshold * this.config.InertiaThreshold;
 
         this.camera = this.scene.cameras.main;
         this.setupCamera(worldWidth, worldHeight);
@@ -37,16 +37,9 @@ export class ControlledCamera {
         this.dragInertia.set(0, 0);
 
         const cam = this.camera;
-        cam.pan(x,y,
-          this.config.PanDurationMs,
-          this.config.PanEasing,
-          true
-        );
-      
-        cam.zoomTo(
-          this.config.DefaultZoom,
-          this.config.ZoomDurationMs
-        );
+        cam.pan(x, y, this.config.PanDurationMs, this.config.PanEasing, true);
+
+        cam.zoomTo(this.config.DefaultZoom, this.config.ZoomDurationMs);
     }
 
     public follow(entity: Phaser.GameObjects.GameObject) {
@@ -54,9 +47,21 @@ export class ControlledCamera {
     }
 
     public destroy() {
-        this.scene.input.off(PointerEvent.PointerDown, this.handlePointerDown, this);
-        this.scene.input.off(PointerEvent.PointerUp, this.handlePointerUp, this);
-        this.scene.input.off(PointerEvent.PointerMove, this.handlePointerMove, this);
+        this.scene.input.off(
+            PointerEvent.PointerDown,
+            this.handlePointerDown,
+            this,
+        );
+        this.scene.input.off(
+            PointerEvent.PointerUp,
+            this.handlePointerUp,
+            this,
+        );
+        this.scene.input.off(
+            PointerEvent.PointerMove,
+            this.handlePointerMove,
+            this,
+        );
         this.scene.input.off(PointerEvent.Wheel, this.handleWheel, this);
         clearTimeout(this.timeout);
     }
@@ -68,12 +73,9 @@ export class ControlledCamera {
             this.camera.height / 2,
             this.config.PanDurationMs,
             this.config.PanEasing,
-            true
+            true,
         );
-        this.camera.zoomTo(
-            this.config.MinZoom,
-            this.config.ZoomDurationMs
-        );
+        this.camera.zoomTo(this.config.MinZoom, this.config.ZoomDurationMs);
     }
 
     private handlePointerDown(pointer: Phaser.Input.Pointer) {
@@ -106,7 +108,9 @@ export class ControlledCamera {
             if (this.clickCount === 2) {
                 // TODO - fire event
                 // this.resetZoom();
-                const worldPoint = pointer.positionToCamera(this.camera) as Phaser.Math.Vector2;
+                const worldPoint = pointer.positionToCamera(
+                    this.camera,
+                ) as Phaser.Math.Vector2;
                 EventBus.emit(PointerEvent.DoubleClick, worldPoint);
                 this.isCountingClicks = false;
                 this.clickCount = 0;
@@ -123,13 +127,13 @@ export class ControlledCamera {
             newZoom = Phaser.Math.Clamp(
                 zoom * this.config.WheelZoomFactorIncrement,
                 this.config.MinZoom,
-                this.config.MaxZoom
+                this.config.MaxZoom,
             );
         } else {
             newZoom = Phaser.Math.Clamp(
-                zoom * this.config.WheelZoomFactorDecrement, 
-                this.config.MinZoom, 
-                this.config.MaxZoom
+                zoom * this.config.WheelZoomFactorDecrement,
+                this.config.MinZoom,
+                this.config.MaxZoom,
             );
         }
 
@@ -139,14 +143,16 @@ export class ControlledCamera {
         }
     }
 
-    private adjustCameraToPointer(pointer: Phaser.Input.Pointer, newZoom: number) {
-        const worldPoint = pointer.positionToCamera(this.camera) as Phaser.Math.Vector2;
+    private adjustCameraToPointer(
+        pointer: Phaser.Input.Pointer,
+        newZoom: number,
+    ) {
+        const worldPoint = pointer.positionToCamera(
+            this.camera,
+        ) as Phaser.Math.Vector2;
         const newX = worldPoint.x - (worldPoint.x - this.camera.scrollX);
         const newY = worldPoint.y - (worldPoint.y - this.camera.scrollY);
-        this.camera.zoomTo(
-            newZoom,
-            this.config.ZoomDurationMs
-        );
+        this.camera.zoomTo(newZoom, this.config.ZoomDurationMs);
         this.camera.setScroll(newX, newY);
     }
 
@@ -159,14 +165,17 @@ export class ControlledCamera {
         this.lastDragDelta.set(dx, dy);
 
         // TODO - clamp so that camera does not go out of bounds
-        this.camera.scrollX -= (dx / this.camera.zoom);
-        this.camera.scrollY -= (dy / this.camera.zoom);
+        this.camera.scrollX -= dx / this.camera.zoom;
+        this.camera.scrollY -= dy / this.camera.zoom;
     }
 
-    update(_:number) {
-        if (!this.isDown && this.dragInertia.lengthSq() > this.inertiaThresholdSq) {
-            this.camera.scrollX -= (this.dragInertia.x / this.camera.zoom);
-            this.camera.scrollY -= (this.dragInertia.y / this.camera.zoom);
+    update(_: number) {
+        if (
+            !this.isDown &&
+            this.dragInertia.lengthSq() > this.inertiaThresholdSq
+        ) {
+            this.camera.scrollX -= this.dragInertia.x / this.camera.zoom;
+            this.camera.scrollY -= this.dragInertia.y / this.camera.zoom;
             this.dragInertia.scale(this.config.DragDamping);
         } else if (this.dragInertia.x !== 0 || this.dragInertia.y !== 0) {
             this.dragInertia.set(0, 0);
@@ -177,9 +186,17 @@ export class ControlledCamera {
         this.camera.setBackgroundColor(this.config.BackgroundColor);
         this.camera.setBounds(0, 0, worldWidth, worldHeight);
 
-        this.scene.input.on(PointerEvent.PointerDown, this.handlePointerDown, this);
+        this.scene.input.on(
+            PointerEvent.PointerDown,
+            this.handlePointerDown,
+            this,
+        );
         this.scene.input.on(PointerEvent.PointerUp, this.handlePointerUp, this);
-        this.scene.input.on(PointerEvent.PointerMove, this.handlePointerMove, this);
+        this.scene.input.on(
+            PointerEvent.PointerMove,
+            this.handlePointerMove,
+            this,
+        );
         this.scene.input.on(PointerEvent.Wheel, this.handleWheel, this);
 
         this.resetZoom();

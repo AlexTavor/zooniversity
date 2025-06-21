@@ -1,16 +1,19 @@
-import {Component} from "../../ECS.ts";
-import {PlantSpriteKey, TreeSpriteKey, TreeSpriteKeys, treeSpriteToAtlasMap} from "../../display/setup/SpriteLibrary.ts";
+import { Component } from "../../ECS.ts";
+import {
+    PlantSpriteKey,
+    TreeSpriteKey,
+    TreeSpriteKeys,
+    treeSpriteToAtlasMap,
+} from "../../display/setup/SpriteLibrary.ts";
 
 export class Tree extends Component {
     public selectedForCutting = false;
-    public atlasKey = '';
+    public atlasKey = "";
 
-    constructor(
-        public type: PlantSpriteKey
-    ) {
+    constructor(public type: PlantSpriteKey) {
         super();
 
-        if (!TreeSpriteKeys.includes(type as TreeSpriteKey)){
+        if (!TreeSpriteKeys.includes(type as TreeSpriteKey)) {
             // It's a bush
             this.atlasKey = type;
             return;

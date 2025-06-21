@@ -12,11 +12,14 @@ import { abortForaging } from "./intent-abort/abortForaging";
 
 export class ActionIntentSystem extends System {
     public componentsRequired = new Set<Function>([ActionIntentComponent]);
-    public lastIntent:CharacterIntent;
+    public lastIntent: CharacterIntent;
 
-    public update(entities: Set<Entity>, delta: number): void {
+    public update(entities: Set<Entity>, _delta: number): void {
         for (const entity of entities) {
-            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
+            const actionIntent = this.ecs.getComponent(
+                entity,
+                ActionIntentComponent,
+            );
             const currentIntent = actionIntent.intentType;
             if (this.lastIntent !== currentIntent) {
                 switch (this.lastIntent) {

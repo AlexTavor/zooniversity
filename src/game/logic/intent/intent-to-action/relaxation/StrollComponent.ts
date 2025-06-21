@@ -7,12 +7,12 @@ export class StrollComponent extends Component {
     public currentTargetTreeId?: Entity;
     public lastTargetTreeId?: Entity;
     public isPausedAtTarget: boolean = false;
-    public pauseUntilTime: number = 0; 
+    public pauseUntilTime: number = 0;
 
     constructor(
         referencePointEntityId: Entity,
         initialTargetTreeId?: Entity,
-        initialPathTargetPos?: Pos
+        initialPathTargetPos?: Pos,
     ) {
         super();
         this.referencePointEntityId = referencePointEntityId;

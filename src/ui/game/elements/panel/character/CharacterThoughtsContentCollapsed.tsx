@@ -1,32 +1,34 @@
-import React from 'react';
-import styled from '@emotion/styled';
+import React from "react";
+import styled from "@emotion/styled";
 
 export interface CharacterThoughtsCollapsedData {
-  currentStatusText: string;
+    currentStatusText: string;
 }
 
 interface CharacterThoughtsContentCollapsedProps {
-  data: CharacterThoughtsCollapsedData;
+    data: CharacterThoughtsCollapsedData;
 }
 
 const CollapsedStatusText = styled.p`
-  margin: 0;
-  font-size: 0.85rem; /* Slightly smaller for collapsed view */
-  line-height: 1.3;
-  color: #b0b0b0; /* Slightly muted color */
-  font-style: italic;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis; /* Truncate if too long */
-  padding: 0px;
+    margin: 0;
+    font-size: 0.85rem; /* Slightly smaller for collapsed view */
+    line-height: 1.3;
+    color: #b0b0b0; /* Slightly muted color */
+    font-style: italic;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Truncate if too long */
+    padding: 0px;
 `;
 
-export const CharacterThoughtsContentCollapsed: React.FC<CharacterThoughtsContentCollapsedProps> = ({ data }) => {
-  const { currentStatusText } = data;
+export const CharacterThoughtsContentCollapsed: React.FC<
+    CharacterThoughtsContentCollapsedProps
+> = ({ data }) => {
+    const { currentStatusText } = data;
 
-  return (
-    <CollapsedStatusText title={currentStatusText}>
-      {currentStatusText}
-    </CollapsedStatusText>
-  );
+    return (
+        <CollapsedStatusText title={currentStatusText}>
+            {currentStatusText}
+        </CollapsedStatusText>
+    );
 };

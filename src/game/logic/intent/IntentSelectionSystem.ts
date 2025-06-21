@@ -1,6 +1,9 @@
 import { Entity, System } from "../../ECS";
 import { ActionIntentComponent } from "./intent-to-action/ActionIntentComponent";
-import { CharacterIntent, CharacterAction } from "./intent-to-action/actionIntentData";
+import {
+    CharacterIntent,
+    CharacterAction,
+} from "./intent-to-action/actionIntentData";
 import { ScheduleComponent } from "../characters/ScheduleComponent";
 import { getTime } from "../time/TimeComponent";
 import { NeedsComponent } from "../needs/NeedsComponent";
@@ -14,25 +17,76 @@ export class IntentSelectionSystem extends System {
     public componentsRequired = new Set<Function>([
         ActionIntentComponent,
         ScheduleComponent,
-        NeedsComponent
+        NeedsComponent,
     ]);
 
-    public update(entities: Set<Entity>, delta: number): void {
+    public update(entities: Set<Entity>, _delta: number): void {
         const currentHour = getTime(this.ecs).hour;
 
         for (const entity of entities) {
-            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
+            const actionIntent = this.ecs.getComponent(
+                entity,
+                ActionIntentComponent,
+            );
             const schedule = this.ecs.getComponent(entity, ScheduleComponent);
             const needs = this.ecs.getComponent(entity, NeedsComponent);
 
-            const intentWeights: { intent: CharacterIntent, weight: number }[] = [];
+            const intentWeights: { intent: CharacterIntent; weight: number }[] =
+                [];
 
             // Calculate weights for all relevant intents
-            intentWeights.push({ intent: CharacterIntent.SLEEP, weight: calculateSleepIntentWeight(this.ecs, entity, actionIntent, schedule, needs, currentHour) });
-            intentWeights.push({ intent: CharacterIntent.EAT, weight: calculateEatIntentWeight(this.ecs, entity, actionIntent, schedule, needs, currentHour) });
-            intentWeights.push({ intent: CharacterIntent.HARVEST, weight: calculateHarvestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
-            intentWeights.push({ intent: CharacterIntent.REST, weight: calculateRestIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
-            intentWeights.push({ intent: CharacterIntent.FORAGE, weight: calculateForagetIntentWeight(this.ecs, entity, schedule, needs, currentHour) });
+            intentWeights.push({
+                intent: CharacterIntent.SLEEP,
+                weight: calculateSleepIntentWeight(
+                    this.ecs,
+                    entity,
+                    actionIntent,
+                    schedule,
+                    needs,
+                    currentHour,
+                ),
+            });
+            intentWeights.push({
+                intent: CharacterIntent.EAT,
+                weight: calculateEatIntentWeight(
+                    this.ecs,
+                    entity,
+                    actionIntent,
+                    schedule,
+                    needs,
+                    currentHour,
+                ),
+            });
+            intentWeights.push({
+                intent: CharacterIntent.HARVEST,
+                weight: calculateHarvestIntentWeight(
+                    this.ecs,
+                    entity,
+                    schedule,
+                    needs,
+                    currentHour,
+                ),
+            });
+            intentWeights.push({
+                intent: CharacterIntent.REST,
+                weight: calculateRestIntentWeight(
+                    this.ecs,
+                    entity,
+                    schedule,
+                    needs,
+                    currentHour,
+                ),
+            });
+            intentWeights.push({
+                intent: CharacterIntent.FORAGE,
+                weight: calculateForagetIntentWeight(
+                    this.ecs,
+                    entity,
+                    schedule,
+                    needs,
+                    currentHour,
+                ),
+            });
 
             // Sort by weight descending
             intentWeights.sort((a, b) => b.weight - a.weight);

@@ -3,9 +3,8 @@ export enum BuffType {
     STROLL_SPEED = "STROLL_SPEED",
     SLEEPING = "SLEEPING",
     TIRED = "TIRED",
-    EATING = "EATING"
+    EATING = "EATING",
 }
-
 
 export enum AffectedStat {
     LOCOMOTION_SPEED = "LOCOMOTION_SPEED",
@@ -14,7 +13,7 @@ export enum AffectedStat {
     SLEEP_MODIFICATION_RATE = "SLEEP_MODIFICATION_RATE",
     HUNGER_MODIFICATION_RATE = "HUNGER_MODIFICATION_RATE",
     FOOD_GATHERING_YIELD_MULTIPLIER = "FOOD_GATHERING_YIELD_MULTIPLIER",
-    FORAGING_SPEED = "FORAGING_SPEED"
+    FORAGING_SPEED = "FORAGING_SPEED",
 }
 
 export enum BuffEffectApplicationType {
@@ -26,14 +25,14 @@ export enum BuffStackingBehavior {
     REFRESH_DURATION = "REFRESH_DURATION", // New instance refreshes duration, effects might update if stronger
     INDEPENDENT_STACKING = "INDEPENDENT_STACKING", // Multiple instances co-exist, StatCalculator sums effects
     NO_STACK = "NO_STACK", // Only one instance allowed; subsequent applications ignored or fail
-    HIGHEST_EFFECT_WINS = "HIGHEST_EFFECT_WINS" // Only the instance with the highest effect value for a given stat applies
+    HIGHEST_EFFECT_WINS = "HIGHEST_EFFECT_WINS", // Only the instance with the highest effect value for a given stat applies
 }
 
 export interface BuffEffect {
     stat: AffectedStat;
     type: BuffEffectApplicationType;
     value: number;
-    order?: number; 
+    order?: number;
 }
 
 export interface ActiveBuff {
@@ -59,8 +58,18 @@ export const BUFF_DEFINITIONS: Readonly<Record<BuffType, BuffDefinition>> = {
         type: BuffType.RESTED,
         defaultDurationMinutes: 60,
         effects: [
-            { stat: AffectedStat.LOCOMOTION_SPEED, type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: 1.10, order: 100 },
-            { stat: AffectedStat.WORK_SPEED,       type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: 1.10, order: 100 },
+            {
+                stat: AffectedStat.LOCOMOTION_SPEED,
+                type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE,
+                value: 1.1,
+                order: 100,
+            },
+            {
+                stat: AffectedStat.WORK_SPEED,
+                type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE,
+                value: 1.1,
+                order: 100,
+            },
         ],
         stackingBehavior: BuffStackingBehavior.REFRESH_DURATION,
     },
@@ -68,33 +77,57 @@ export const BUFF_DEFINITIONS: Readonly<Record<BuffType, BuffDefinition>> = {
         type: BuffType.STROLL_SPEED,
         defaultDurationMinutes: Number.MAX_SAFE_INTEGER, // Effectively indefinite, managed by adding/removing
         effects: [
-            { stat: AffectedStat.LOCOMOTION_SPEED, type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: 0.1, order: 50 }
+            {
+                stat: AffectedStat.LOCOMOTION_SPEED,
+                type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE,
+                value: 0.1,
+                order: 50,
+            },
         ],
         stackingBehavior: BuffStackingBehavior.NO_STACK, // Only one instance of this effect
     },
-    [BuffType.SLEEPING]:{
+    [BuffType.SLEEPING]: {
         type: BuffType.SLEEPING,
-        defaultDurationMinutes:Number.MAX_SAFE_INTEGER,
-        effects:[
-            {stat: AffectedStat.SLEEP_MODIFICATION_RATE, type:BuffEffectApplicationType.FLAT_ADDITIVE, value:0.6}
+        defaultDurationMinutes: Number.MAX_SAFE_INTEGER,
+        effects: [
+            {
+                stat: AffectedStat.SLEEP_MODIFICATION_RATE,
+                type: BuffEffectApplicationType.FLAT_ADDITIVE,
+                value: 0.6,
+            },
         ],
-        stackingBehavior: BuffStackingBehavior.INDEPENDENT_STACKING
+        stackingBehavior: BuffStackingBehavior.INDEPENDENT_STACKING,
     },
-    [BuffType.EATING]:{
+    [BuffType.EATING]: {
         type: BuffType.EATING,
-        defaultDurationMinutes:10,
+        defaultDurationMinutes: 10,
         effects: [
-            { stat: AffectedStat.HUNGER_MODIFICATION_RATE, type: BuffEffectApplicationType.FLAT_ADDITIVE, value: 2.5, order: 100 },
+            {
+                stat: AffectedStat.HUNGER_MODIFICATION_RATE,
+                type: BuffEffectApplicationType.FLAT_ADDITIVE,
+                value: 2.5,
+                order: 100,
+            },
         ],
         stackingBehavior: BuffStackingBehavior.REFRESH_DURATION,
     },
-    [BuffType.TIRED]:{
+    [BuffType.TIRED]: {
         type: BuffType.TIRED,
-        defaultDurationMinutes:Number.MAX_SAFE_INTEGER,
+        defaultDurationMinutes: Number.MAX_SAFE_INTEGER,
         effects: [
-            { stat: AffectedStat.LOCOMOTION_SPEED, type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: 0.75, order: 100 },
-            { stat: AffectedStat.WORK_SPEED,       type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE, value: .75, order: 100 },
+            {
+                stat: AffectedStat.LOCOMOTION_SPEED,
+                type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE,
+                value: 0.75,
+                order: 100,
+            },
+            {
+                stat: AffectedStat.WORK_SPEED,
+                type: BuffEffectApplicationType.PERCENT_MULTIPLICATIVE,
+                value: 0.75,
+                order: 100,
+            },
         ],
         stackingBehavior: BuffStackingBehavior.REFRESH_DURATION,
-    }
+    },
 };

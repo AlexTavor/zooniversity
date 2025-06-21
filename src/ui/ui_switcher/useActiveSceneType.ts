@@ -1,13 +1,13 @@
 import React from "react";
 
-type SceneType = 'editor' | 'game';
+type SceneType = "editor" | "game";
 
 const listeners = new Set<(type: SceneType) => void>();
-let currentSceneType: SceneType = 'game';
+let currentSceneType: SceneType = "game";
 
 export function setSceneType(type: SceneType) {
     currentSceneType = type;
-    listeners.forEach(fn => fn(type));
+    listeners.forEach((fn) => fn(type));
 }
 
 export function useActiveSceneType(): SceneType {
@@ -16,7 +16,9 @@ export function useActiveSceneType(): SceneType {
     React.useEffect(() => {
         const fn = (type: SceneType) => setSceneTypeState(type);
         listeners.add(fn);
-        return () => {listeners.delete(fn)};
+        return () => {
+            listeners.delete(fn);
+        };
     }, []);
 
     return sceneType;

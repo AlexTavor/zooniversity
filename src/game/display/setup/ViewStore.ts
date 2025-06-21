@@ -1,4 +1,10 @@
-import {DisplayTraitType, PanelDefinition, PanelType, ViewDefinition, ViewType} from "./ViewDefinition.ts";
+import {
+    DisplayTraitType,
+    PanelDefinition,
+    PanelType,
+    ViewDefinition,
+    ViewType,
+} from "./ViewDefinition.ts";
 
 export type ViewMap = Record<number, ViewDefinition>;
 
@@ -20,19 +26,19 @@ const panelDefinitions: Record<ViewType, PanelDefinition> = {
         title: "Cave",
         description: "A dark cave entrance. Mysterious and unexplored.",
         imagePath: "assets/panels/cave_panel.png",
-        panelType: PanelType.CAVE
+        panelType: PanelType.CAVE,
     },
     [ViewType.NONE]: {
         title: "",
         description: "",
         imagePath: "",
-    } ,
+    },
     [ViewType.CHARCTER]: {
         title: "Character",
         description: "Some character",
         imagePath: "",
-        panelType: PanelType.CHARACTER
-    } 
+        panelType: PanelType.CHARACTER,
+    },
 } as Record<ViewType, PanelDefinition>;
 
 export function createView(def: Partial<ViewDefinition>): ViewDefinition {

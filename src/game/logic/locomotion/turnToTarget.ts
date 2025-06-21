@@ -1,7 +1,11 @@
 import { ECS, Entity } from "../../ECS";
 import { Transform } from "../../components/Transform";
 
-export function turnToTarget(ecs: ECS, entity: Entity, targetEntity: Entity): void {
+export function turnToTarget(
+    ecs: ECS,
+    entity: Entity,
+    targetEntity: Entity,
+): void {
     const transform = ecs.getComponent(entity, Transform);
     const targetTransform = ecs.getComponent(targetEntity, Transform);
 

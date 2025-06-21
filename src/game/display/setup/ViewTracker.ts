@@ -12,9 +12,12 @@ export interface ViewTrackerOptions {
     layerContainer: Phaser.GameObjects.Container;
     createDefinition: (ecs: ECS, entity: Entity) => ViewDefinition;
     updateView: (ecs: ECS, entity: Entity, view: View) => boolean;
-    createView: (ecs: ECS, entity: Entity,
+    createView: (
+        ecs: ECS,
+        entity: Entity,
         views: { [key: number]: ViewDefinition },
-        viewDefinition: ViewDefinition) => View;
+        viewDefinition: ViewDefinition,
+    ) => View;
     viewsByEntity: Map<Entity, View>; // 👈 Shared view map
 }
 
@@ -28,17 +31,22 @@ export class ViewTracker {
     private layerContainer: Phaser.GameObjects.Container;
     private createDefinition: (ecs: ECS, entity: Entity) => ViewDefinition;
     private updateView: (ecs: ECS, entity: Entity, view: View) => boolean;
-    createView: ((ecs: ECS, entity: Entity,views: { [key: number]: ViewDefinition; }, viewDefinition: ViewDefinition) => View);
+    createView: (
+        ecs: ECS,
+        entity: Entity,
+        views: { [key: number]: ViewDefinition },
+        viewDefinition: ViewDefinition,
+    ) => View;
 
     constructor({
-                    ecs,
-                    componentClasses,
-                    layerContainer,
-                    createDefinition,
-                    updateView,
-                    createView,
-                    viewsByEntity
-                }: ViewTrackerOptions) {
+        ecs,
+        componentClasses,
+        layerContainer,
+        createDefinition,
+        updateView,
+        createView,
+        viewsByEntity,
+    }: ViewTrackerOptions) {
         this.ecs = ecs;
         this.componentClasses = componentClasses;
         this.layerContainer = layerContainer;
@@ -54,7 +62,9 @@ export class ViewTracker {
     }
 
     public update() {
-        const entityList = this.ecs.getEntitiesWithComponents(this.componentClasses);
+        const entityList = this.ecs.getEntitiesWithComponents(
+            this.componentClasses,
+        );
         const currentSet = new Set<Entity>(entityList);
         let changed = this.firstRun;
 
@@ -88,11 +98,11 @@ export class ViewTracker {
 
         if (changed) {
             const sorted = this.layerContainer.list
-                .filter(obj => obj instanceof Phaser.GameObjects.Container)
-                .map(obj => obj as Phaser.GameObjects.Container)
-                .sort((a, b) => (a.y - b.y));
+                .filter((obj) => obj instanceof Phaser.GameObjects.Container)
+                .map((obj) => obj as Phaser.GameObjects.Container)
+                .sort((a, b) => a.y - b.y);
 
-            sorted.forEach(c => this.layerContainer.bringToTop(c));
+            sorted.forEach((c) => this.layerContainer.bringToTop(c));
         }
 
         this.firstRun = false;
@@ -110,18 +120,18 @@ export class ViewTracker {
 
     public static getReactCoordsFromPhaser(
         container: Phaser.GameObjects.Container,
-        camera: Phaser.Cameras.Scene2D.Camera
-      ): Pos {
+        camera: Phaser.Cameras.Scene2D.Camera,
+    ): Pos {
         const x = (container.x - camera.worldView.x) * camera.zoom;
         const y = (container.y - camera.worldView.y) * camera.zoom;
-      
+
         const canvas = camera.scene.sys.game.canvas;
         const maxX = canvas.width;
         const maxY = canvas.height;
-      
+
         return {
-          x: Phaser.Math.Clamp(x, 0, maxX),
-          y: Phaser.Math.Clamp(y, 0, maxY),
+            x: Phaser.Math.Clamp(x, 0, maxX),
+            y: Phaser.Math.Clamp(y, 0, maxY),
         };
     }
 }

@@ -1,4 +1,4 @@
-import {GameState} from "../logic/serialization/GameState.ts";
+import { GameState } from "../logic/serialization/GameState.ts";
 
 const SAVE_KEY = "zooniversity_save";
 

@@ -1,6 +1,5 @@
 import { EventBus } from "../../EventBus";
 import { GameEvent } from "../../consts/GameEvent";
-import { UIEvent } from "../../consts/UIEvent";
 import { GameDisplayContext } from "../GameDisplay";
 import { DisplayModule } from "../setup/DisplayModule";
 import { RightClickHandler } from "../utils/RightClickHandler";
@@ -10,7 +9,7 @@ import { TreeCutSelectionTool } from "./trees/TreeCutSelectionTool";
 export enum ToolType {
     None = "none",
     Selection = "selection",
-    TreeCutting = "tree_cutting"
+    TreeCutting = "tree_cutting",
 }
 
 export interface ITool {
@@ -22,26 +21,26 @@ export interface ITool {
 export type Tool = ITool & DisplayModule<GameDisplayContext>;
 
 export class GameTools extends DisplayModule<GameDisplayContext> {
-    private context!: GameDisplayContext;
     private modules: Tool[] = [new SelectionTool(), new TreeCutSelectionTool()];
     private activeTool: ToolType = ToolType.None;
     private awaitingReset: boolean = false;
     private rClickHandler!: RightClickHandler;
 
     init(context: GameDisplayContext): void {
-        this.context = context;
-        this.modules.forEach(module => {
+        this.modules.forEach((module) => {
             module.init(context);
         });
 
         EventBus.on(GameEvent.ToolSelected, this.handleToolSelected, this);
         EventBus.emit(GameEvent.ToolSelected, ToolType.Selection);
 
-        this.rClickHandler = new RightClickHandler(this.handleRightClick.bind(this));
+        this.rClickHandler = new RightClickHandler(
+            this.handleRightClick.bind(this),
+        );
         this.rClickHandler.start();
     }
 
-    handleRightClick(){
+    handleRightClick() {
         this.awaitingReset = true;
     }
 
@@ -55,7 +54,7 @@ export class GameTools extends DisplayModule<GameDisplayContext> {
 
         this.activeTool = toolType;
 
-        this.modules.forEach(module => {
+        this.modules.forEach((module) => {
             if (module.type === toolType) {
                 module.start();
             } else {
@@ -64,7 +63,7 @@ export class GameTools extends DisplayModule<GameDisplayContext> {
         });
     }
 
-    update(delta: number): void {
+    update(_delta: number): void {
         if (this.awaitingReset) {
             EventBus.emit(GameEvent.ToolSelected, ToolType.Selection);
             this.awaitingReset = false;
@@ -72,9 +71,7 @@ export class GameTools extends DisplayModule<GameDisplayContext> {
     }
 
     destroy(): void {
-        // Clean up if necessary
-        this.context = null!;
-        this.modules.forEach(module => {
+        this.modules.forEach((module) => {
             module.destroy();
         });
         EventBus.off(GameEvent.ToolSelected, this.handleToolSelected, this);

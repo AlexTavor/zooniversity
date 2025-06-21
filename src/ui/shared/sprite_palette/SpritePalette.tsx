@@ -1,7 +1,6 @@
-import React from 'react';
-import './SpritePalette.css';
-import {PaletteEntry} from "./PaletteEntry.tsx";
-import {SpriteKey} from "../../../game/display/setup/SpriteLibrary.ts";
+import "./SpritePalette.css";
+import { PaletteEntry } from "./PaletteEntry.tsx";
+import { SpriteKey } from "../../../game/display/setup/SpriteLibrary.ts";
 
 interface SpritePaletteProps {
     spriteKeys: string[];
@@ -9,7 +8,11 @@ interface SpritePaletteProps {
     selectedKey?: string;
 }
 
-export function SpritePalette({ spriteKeys, onSelect, selectedKey }: SpritePaletteProps) {
+export function SpritePalette({
+    spriteKeys,
+    onSelect,
+    selectedKey,
+}: SpritePaletteProps) {
     return (
         <div className="sprite-palette">
             {spriteKeys.map((key) => (

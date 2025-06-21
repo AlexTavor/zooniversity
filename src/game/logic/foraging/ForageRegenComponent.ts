@@ -1,5 +1,3 @@
 import { Component } from "../../ECS";
 
-export class ForageRegenComponent extends Component {
-    
-}
+export class ForageRegenComponent extends Component {}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import {WeatherComponent} from "../../../game/logic/weather/WeatherComponent.ts";
-import {GameEvent} from "../../../game/consts/GameEvent.ts";
-import {EventBus} from "../../../game/EventBus.ts";
+import { WeatherComponent } from "../../../game/logic/weather/WeatherComponent.ts";
+import { GameEvent } from "../../../game/consts/GameEvent.ts";
+import { EventBus } from "../../../game/EventBus.ts";
 
 export function useWeather(): WeatherComponent | null {
     const [weather, setWeather] = useState<WeatherComponent | null>(null);

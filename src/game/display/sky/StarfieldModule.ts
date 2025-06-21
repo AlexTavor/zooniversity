@@ -1,8 +1,8 @@
-import {GameDisplayContext} from "../GameDisplay.ts";
-import {DisplayModule} from "../setup/DisplayModule.ts";
-import {TimeComponent} from "../../logic/time/TimeComponent.ts";
-import {TimeConfig} from "../../config/TimeConfig.ts";
-import {Config} from "../../config/Config.ts";
+import { GameDisplayContext } from "../GameDisplay.ts";
+import { DisplayModule } from "../setup/DisplayModule.ts";
+import { TimeComponent } from "../../logic/time/TimeComponent.ts";
+import { TimeConfig } from "../../config/TimeConfig.ts";
+import { Config } from "../../config/Config.ts";
 import { getWorldEntity } from "../../logic/serialization/getWorldEntity.ts";
 
 export class StarfieldModule extends DisplayModule<GameDisplayContext> {
@@ -27,7 +27,10 @@ export class StarfieldModule extends DisplayModule<GameDisplayContext> {
         const width = camera.width * Config.Camera.MaxZoom;
         const height = camera.height * Config.Camera.MaxZoom;
 
-        this.center = new Phaser.Math.Vector2(camera.scrollX + width / 2, camera.scrollY + height / 3);
+        this.center = new Phaser.Math.Vector2(
+            camera.scrollX + width / 2,
+            camera.scrollY + height / 3,
+        );
 
         // Main container centered in the sky
         this.starContainer = scene.add.container(this.center.x, this.center.y);
@@ -35,7 +38,7 @@ export class StarfieldModule extends DisplayModule<GameDisplayContext> {
         layers.Sky.add(this.starContainer);
 
         // Milky Way background image (rotates with stars)
-        this.starBackground = scene.add.image(0, 0, 'night_sky');
+        this.starBackground = scene.add.image(0, 0, "night_sky");
         this.starBackground.setOrigin(0.5);
         this.starBackground.setAlpha(0.6);
         this.starBackground.setScale(13); // Adjust scale if needed
@@ -50,7 +53,7 @@ export class StarfieldModule extends DisplayModule<GameDisplayContext> {
             const angle = Math.random() * Math.PI * 2;
             const x = Math.cos(angle) * radius;
             const y = Math.sin(angle) * radius;
-            const r = Math.random() * 2.5 + .5;
+            const r = Math.random() * 2.5 + 0.5;
 
             g.fillCircle(0, 0, r);
             g.x = x;
@@ -63,9 +66,13 @@ export class StarfieldModule extends DisplayModule<GameDisplayContext> {
     }
 
     update(): void {
-        const time = this.context.ecs.getComponent(this.worldEntity, TimeComponent);
+        const time = this.context.ecs.getComponent(
+            this.worldEntity,
+            TimeComponent,
+        );
         const total = TimeConfig.HoursPerDay * TimeConfig.MinutesPerHour;
-        const currentMinute = time.hour * TimeConfig.MinutesPerHour + time.minute;
+        const currentMinute =
+            time.hour * TimeConfig.MinutesPerHour + time.minute;
         const baseAlpha = getNightAlpha(currentMinute, total);
         const zoom = this.scene.cameras.main.zoom;
         const timeSec = this.scene.time.now / 1000;
@@ -77,7 +84,11 @@ export class StarfieldModule extends DisplayModule<GameDisplayContext> {
         for (let i = 0; i < this.stars.length; i++) {
             const star = this.stars[i];
             const offset = this.starOffsets[i];
-            const twinkle = 0.85 + 0.15 * Math.sin(timeSec * 12 + offset) * Math.sin(timeSec * 7 + offset * 1.3);
+            const twinkle =
+                0.85 +
+                0.15 *
+                    Math.sin(timeSec * 12 + offset) *
+                    Math.sin(timeSec * 7 + offset * 1.3);
 
             star.setAlpha(baseAlpha * twinkle);
             star.setScale(1 / zoom); // visual size constant
@@ -104,8 +115,7 @@ function getNightAlpha(minute: number, total: number): number {
 
     if (t < 0.25 || t > 0.875) return 1; // full night
     if (t < 0.375) return 1 - (t - 0.25) * 8; // fade out at dawn
-    if (t > 0.75) return (t - 0.75) * 8;      // fade in at dusk
+    if (t > 0.75) return (t - 0.75) * 8; // fade in at dusk
 
     return 0;
 }
-

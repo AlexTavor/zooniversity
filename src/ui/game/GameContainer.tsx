@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import {GameEvent} from "../../game/consts/GameEvent.ts";
-import {EventBus} from "../../game/EventBus.ts";
-import {MainMenu} from "./main_menu/MainMenu.tsx";
-import {TimeControls} from "./elements/time/TimeControls.tsx";
-import {WeatherPanel} from "./weather/WeatherPanel.tsx";
+import { GameEvent } from "../../game/consts/GameEvent.ts";
+import { EventBus } from "../../game/EventBus.ts";
+import { MainMenu } from "./main_menu/MainMenu.tsx";
+import { TimeControls } from "./elements/time/TimeControls.tsx";
+import { WeatherPanel } from "./weather/WeatherPanel.tsx";
 import { ResourceDisplay } from "./resources/ResourceDisplay.tsx";
 import { TopCharacterBar } from "./elements/top-char-bar/TopCharactersBar.tsx";
 import { BottomBar } from "./elements/bottom-bar/BottomBar.tsx";
@@ -22,14 +22,17 @@ export const GameContainer: React.FC = () => {
     }, []);
 
     useToolCursor();
-    
-    return !gameLoaded ? <MainMenu /> : 
-    <>
-        <TimeControls/>
-        <WeatherPanel/>
-        <BottomBar/>
-        <ResourceDisplay/>
-        <CharacterPortraitsLayer/>
-        <TopCharacterBar/>
-    </>
+
+    return !gameLoaded ? (
+        <MainMenu />
+    ) : (
+        <>
+            <TimeControls />
+            <WeatherPanel />
+            <BottomBar />
+            <ResourceDisplay />
+            <CharacterPortraitsLayer />
+            <TopCharacterBar />
+        </>
+    );
 };

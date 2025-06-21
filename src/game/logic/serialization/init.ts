@@ -16,8 +16,8 @@ import { StoryEventSystem } from "../story/StoryEventSystem.ts";
 import { StoryOption } from "../story/StoryEventTypes.ts";
 import { TimeSystem } from "../time/TimeSystem.ts";
 import { WeatherSystem } from "../weather/WeatherSystem.ts";
-import {CaveTreeLUTComponent} from "../lut/CaveTreeLUTComponent.ts";
-import {buildCaveTreeLUTFromViews} from "../lut/buildCaveTreeLUTFromViews.ts";
+import { CaveTreeLUTComponent } from "../lut/CaveTreeLUTComponent.ts";
+import { buildCaveTreeLUTFromViews } from "../lut/buildCaveTreeLUTFromViews.ts";
 import { GameTools } from "../../display/tools/GameTools.ts";
 import { WoodDojoSystem } from "../buildings/wood_dojo/WoodDojoSystem.ts";
 import { LocomotionSystem } from "../locomotion/LocomotionSystem.ts";
@@ -61,16 +61,16 @@ import { HarvestingComponentRemovalSystem } from "../trees/HarvestingComponentRe
 import { ForageRegenerationSystem } from "../foraging/ForageRegenerationSystem.ts";
 import { ForagerComponent } from "../foraging/ForagerComponent.ts";
 
-export const init = (game:Game) => {
+export const init = (game: Game) => {
     initData(game);
     initDisplay(game);
     initSystems(game);
     EventBus.emit(GameEvent.ViewsInitialized);
-}
+};
 
-export const initStory = (game:Game) => {
+export const initStory = (game: Game) => {
     const story = new StoryEventSystem({
-        "intro": CaveExploreStory
+        intro: CaveExploreStory,
     });
 
     game.ecs.addSystem(story);
@@ -89,16 +89,16 @@ export const initStory = (game:Game) => {
     game.destroyQueue.push(() => {
         EventBus.off(GameEvent.StoryEventOptionChosen, handleStoryEvent);
     });
-}
+};
 
-export const initInput = (game:Game) => {
+export const initInput = (game: Game) => {
     const input = new InputSystem();
     game.ecs.addSystem(input);
     const destroyInput = input.initialize();
     game.destroyQueue.push(destroyInput);
-}
+};
 
-export const initSystems = (game:Game)=>{
+export const initSystems = (game: Game) => {
     game.ecs.addSystem(new TimeSystem());
     game.ecs.addSystem(new WeatherSystem());
     game.ecs.addSystem(new LocomotionSystem());
@@ -111,7 +111,7 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new SleepEffectsSystem());
     game.ecs.addSystem(new TiredEffectSystem());
 
-    game.ecs.addSystem(new TreeHarvestingSystem())
+    game.ecs.addSystem(new TreeHarvestingSystem());
     game.ecs.addSystem(new RelaxBehaviorSystem());
     game.ecs.addSystem(new BuffManagementSystem());
     game.ecs.addSystem(new ResourceSystem());
@@ -121,32 +121,34 @@ export const initSystems = (game:Game)=>{
     game.ecs.addSystem(new ForagingSystem());
     game.ecs.addSystem(new HarvestingComponentRemovalSystem());
     game.ecs.addSystem(new ForageRegenerationSystem());
-    
+
     initInput(game);
     initStory(game);
     initLut(game);
-}
+};
 
-const initLut = (game:Game) => {
-    const handleViewsInitialized = ()=>{
-        const lut = new CaveTreeLUTComponent(buildCaveTreeLUTFromViews(game.gameDisplay.viewsByEntity));
+const initLut = (game: Game) => {
+    const handleViewsInitialized = () => {
+        const lut = new CaveTreeLUTComponent(
+            buildCaveTreeLUTFromViews(game.gameDisplay.viewsByEntity),
+        );
         game.ecs.addComponent(getWorldEntity(game.ecs), lut);
-    }
-    
+    };
+
     EventBus.on(GameEvent.ViewsInitialized, handleViewsInitialized);
 
     game.destroyQueue.push(() => {
         EventBus.off(GameEvent.ViewsInitialized, handleViewsInitialized);
     });
-}
+};
 
-export const initData = (game:Game) => {
+export const initData = (game: Game) => {
     loadPanelRegistry(game);
-}
+};
 
-export const initDisplay = (game:Game)=>{
+export const initDisplay = (game: Game) => {
     game.gameDisplay = new GameDisplay();
-    
+
     const modules = [
         new SkyDisplayModule(),
         new StarfieldModule(),
@@ -163,9 +165,9 @@ export const initDisplay = (game:Game)=>{
         new CharacterViewModule(),
         new CameraModule(),
     ];
-    
+
     game.gameDisplay.init(game, game.ecs, modules);
-}
+};
 
 export function initWorld(ecs: ECS) {
     const world = getWorldEntity(ecs);
@@ -183,24 +185,45 @@ export function createProfessorBooker(ecs: ECS): number {
     const dormEntity = ecs.getEntitiesWithComponent(DormitoryComponent)[0];
     const dorm = ecs.getComponent(dormEntity, DormitoryComponent);
 
-    const booker = addBooker(ecs, woodDojoTransform, woodDojo, woodDojoEntity, dorm, dormEntity);
-    
+    const booker = addBooker(
+        ecs,
+        woodDojoTransform,
+        woodDojo,
+        woodDojoEntity,
+        dorm,
+        dormEntity,
+    );
+
     return booker;
 }
 
-function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, woodDojoEntity:Entity, dorm:DormitoryComponent, homeEntity:Entity) {
+function addBooker(
+    ecs: ECS,
+    woodDojoTransform: Transform,
+    woodDojo: WoodDojo,
+    woodDojoEntity: Entity,
+    dorm: DormitoryComponent,
+    homeEntity: Entity,
+) {
     const booker = ecs.addEntity();
-    
-    ecs.addComponent(booker, new Transform(woodDojoTransform.x - 200, woodDojoTransform.y));
-    ecs.addComponent(booker, new Character({
-        name: "Professor Booker",
-        description: "The professor of the academy. He is a master of the wood element.",
-        type: CharacterType.PROFESSOR,
-    }));
+
+    ecs.addComponent(
+        booker,
+        new Transform(woodDojoTransform.x - 200, woodDojoTransform.y),
+    );
+    ecs.addComponent(
+        booker,
+        new Character({
+            name: "Professor Booker",
+            description:
+                "The professor of the academy. He is a master of the wood element.",
+            type: CharacterType.PROFESSOR,
+        }),
+    );
     ecs.addComponent(booker, new HomeComponent(homeEntity));
     ecs.addComponent(booker, new ActionIntentComponent());
     ecs.addComponent(booker, new LocomotionComponent());
-    
+
     ecs.addComponent(booker, new WorkerComponent());
     ecs.addComponent(booker, new HarvesterComponent());
     ecs.addComponent(booker, new ForagerComponent());
@@ -209,14 +232,14 @@ function addBooker(ecs: ECS, woodDojoTransform: Transform, woodDojo: WoodDojo, w
     ecs.addComponent(
         booker,
         new NeedsComponent(
-          new Map<NeedType, NeedData>([
-            [NeedType.SLEEP, { current: 75, max: 100 }],
-            [NeedType.FOOD, { current: 50, max: 100 }],
-          ])
-        )
+            new Map<NeedType, NeedData>([
+                [NeedType.SLEEP, { current: 75, max: 100 }],
+                [NeedType.FOOD, { current: 50, max: 100 }],
+            ]),
+        ),
     );
-      
-      ecs.addComponent(booker, createStandardSchedule());
+
+    ecs.addComponent(booker, createStandardSchedule());
 
     woodDojo.assignCharacter(ecs, woodDojoEntity, booker);
     dorm.assignedCharacters.push(booker);

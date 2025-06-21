@@ -3,7 +3,9 @@ import { View } from "../../display/setup/View";
 import { ViewType } from "../../display/setup/ViewDefinition";
 
 // Output: caveEntityId → sorted array of nearby tree entityIds
-export function buildCaveTreeLUTFromViews(views: Map<number, View>): Record<number, number[]> {
+export function buildCaveTreeLUTFromViews(
+    views: Map<number, View>,
+): Record<number, number[]> {
     const caves: { id: number; pos: Pos }[] = [];
     const trees: { id: number; pos: Pos }[] = [];
 
@@ -19,12 +21,12 @@ export function buildCaveTreeLUTFromViews(views: Map<number, View>): Record<numb
 
     for (const cave of caves) {
         const sortedTrees = trees
-            .map(tree => ({
+            .map((tree) => ({
                 id: tree.id,
-                distSq: distanceSq(cave.pos, tree.pos)
+                distSq: distanceSq(cave.pos, tree.pos),
             }))
             .sort((a, b) => a.distSq - b.distSq)
-            .map(t => t.id);
+            .map((t) => t.id);
 
         result[cave.id] = sortedTrees;
     }

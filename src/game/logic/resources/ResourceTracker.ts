@@ -2,14 +2,16 @@ import { EventBus } from "../../EventBus";
 import { GameEvent } from "../../consts/GameEvent";
 import { ResourceType } from "./ResourceType";
 
-type ResourceListener = (resources: Partial<Record<ResourceType, number>>) => void;
+type ResourceListener = (
+    resources: Partial<Record<ResourceType, number>>,
+) => void;
 
 export class ResourceTracker {
     private static resources: Record<ResourceType, number> = {
         [ResourceType.MONEY]: 0,
         [ResourceType.WOOD]: 0,
         [ResourceType.FOOD]: 0,
-        [ResourceType.TOOLS]: 0
+        [ResourceType.TOOLS]: 0,
     };
 
     private static listeners: Set<ResourceListener> = new Set();
@@ -53,7 +55,7 @@ export class ResourceTracker {
         for (const type of changed) {
             changedValues[type] = this.resources[type];
         }
-        this.listeners.forEach(fn => fn(changedValues));
+        this.listeners.forEach((fn) => fn(changedValues));
         EventBus.emit(GameEvent.ResourcesUpdated, changedValues);
     }
 }

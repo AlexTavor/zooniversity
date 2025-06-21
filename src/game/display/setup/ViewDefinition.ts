@@ -1,4 +1,4 @@
-import {Pos} from "../../../utils/Math.ts";
+import { Pos } from "../../../utils/Math.ts";
 
 export enum ViewType {
     NONE = 0,
@@ -11,14 +11,14 @@ export enum ViewType {
 export enum DisplayTraitType {
     NONE = 0,
     WOOD = 1,
-    FOOD = 2
+    FOOD = 2,
 }
 
 export enum PanelType {
     CHARACTER = "CHARACTER",
     WOOD_DOJO = "WOOD_DOJO",
     TREE = "TREE",
-    CAVE = "CAVE"
+    CAVE = "CAVE",
 }
 
 export class DisplayTrait {
@@ -27,9 +27,9 @@ export class DisplayTrait {
 }
 
 export class PanelDefinition {
-    public title:string;
-    public description:string;
-    public imagePath:string;
+    public title: string;
+    public description: string;
+    public imagePath: string;
     public traits?: DisplayTrait[];
     actions?: PanelActionDefinition[];
     panelType: PanelType;
@@ -52,4 +52,3 @@ export class ViewDefinition {
     public selectable = true;
     public panelDefinition?: PanelDefinition;
 }
-

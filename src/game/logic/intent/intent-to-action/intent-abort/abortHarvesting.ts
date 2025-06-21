@@ -1,8 +1,10 @@
 import { ECS, Entity } from "../../../../ECS";
-import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
+import {
+    InteractionSlots,
+    SlotType,
+} from "../../../../components/InteractionSlots";
 import { LocomotionComponent } from "../../../locomotion/LocomotionComponent";
 import { HarvestingState } from "../../character-states/HarvestingState";
-
 
 export function abortHarvesting(ecs: ECS, characterEntity: Entity): void {
     const harvesting = ecs.getComponent(characterEntity, HarvestingState);

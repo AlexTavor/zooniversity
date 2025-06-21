@@ -9,28 +9,41 @@ import { ActionIntentComponent } from "../ActionIntentComponent";
 import { StrollComponent } from "./StrollComponent";
 import { CharacterIntent } from "../actionIntentData";
 
-
 export class RelaxBehaviorSystem extends System {
-    public componentsRequired = new Set<Function>([
-        ActionIntentComponent
-    ]);
+    public componentsRequired = new Set<Function>([ActionIntentComponent]);
 
-    public update(entities: Set<Entity>, delta: number): void {
+    public update(entities: Set<Entity>, _: number): void {
         for (const entity of entities) {
-            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
-            const hasStrollComponent = this.ecs.hasComponent(entity, StrollComponent);
+            const actionIntent = this.ecs.getComponent(
+                entity,
+                ActionIntentComponent,
+            );
+            const hasStrollComponent = this.ecs.hasComponent(
+                entity,
+                StrollComponent,
+            );
 
             if (actionIntent.intentType === CharacterIntent.REST) {
                 if (!hasStrollComponent) {
                     // Intent is REST, but not yet strolling. Initiate stroll.
-                    const referencePointEntityId: Entity | null = this.getStrollRefPointEntityId(entity);
+                    const referencePointEntityId: Entity | null =
+                        this.getStrollRefPointEntityId(entity);
 
                     if (referencePointEntityId !== null) {
-                        this.ecs.addComponent(entity, new StrollComponent(referencePointEntityId));
-                        const buffs = this.ecs.getComponent(entity, BuffsComponent);
+                        this.ecs.addComponent(
+                            entity,
+                            new StrollComponent(referencePointEntityId),
+                        );
+                        const buffs = this.ecs.getComponent(
+                            entity,
+                            BuffsComponent,
+                        );
                         const time = getTime(this.ecs);
-                        
-                        buffs?.addBuff(BuffType.STROLL_SPEED, time.minutesElapsed);
+
+                        buffs?.addBuff(
+                            BuffType.STROLL_SPEED,
+                            time.minutesElapsed,
+                        );
                     }
                 }
                 // If already has StrollComponent and intent is REST, StrollSystem/handleRestIntentLogic manages it.
@@ -47,7 +60,11 @@ export class RelaxBehaviorSystem extends System {
 
     private getStrollRefPointEntityId(entity: number) {
         const home = this.ecs.getComponent(entity, HomeComponent);
-        if (home && home.homeEntityId !== null && this.ecs.hasEntity(home.homeEntityId)) {
+        if (
+            home &&
+            home.homeEntityId !== null &&
+            this.ecs.hasEntity(home.homeEntityId)
+        ) {
             return home.homeEntityId;
         } else {
             const dorms = this.ecs.getEntitiesWithComponent(DormitoryComponent);

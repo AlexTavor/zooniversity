@@ -1,10 +1,10 @@
-import {DisplayModule} from "../setup/DisplayModule.ts";
-import {GameDisplayContext} from "../GameDisplay.ts";
-import {Entity} from "../../ECS.ts";
-import {WeatherComponent} from "../../logic/weather/WeatherComponent.ts";
-import {TimeComponent} from "../../logic/time/TimeComponent.ts";
-import {SimplexNoise} from "../../../utils/SimplexNoise.ts";
-import {ViewType} from "../setup/ViewDefinition.ts";
+import { DisplayModule } from "../setup/DisplayModule.ts";
+import { GameDisplayContext } from "../GameDisplay.ts";
+import { Entity } from "../../ECS.ts";
+import { WeatherComponent } from "../../logic/weather/WeatherComponent.ts";
+import { TimeComponent } from "../../logic/time/TimeComponent.ts";
+import { SimplexNoise } from "../../../utils/SimplexNoise.ts";
+import { ViewType } from "../setup/ViewDefinition.ts";
 import { getWorldEntity } from "../../logic/serialization/getWorldEntity.ts";
 
 export class TreeSwayConfig {
@@ -31,11 +31,13 @@ export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
         const timeComp = ecs.getComponent(this.worldEntity, TimeComponent);
         const weather = ecs.getComponent(this.worldEntity, WeatherComponent);
 
-        const windStrength = Phaser.Math.Clamp(weather.windStrength ?? 0, 0, 1000) / 1000;
+        const windStrength =
+            Phaser.Math.Clamp(weather.windStrength ?? 0, 0, 1000) / 1000;
         const speedFactor = timeComp.speedFactor ?? 1;
 
         const t = this.time * TreeSwayConfig.TimeSpeed * speedFactor;
-        const { SpatialFrequency: freq, MaxRotation: maxAngle } = TreeSwayConfig;
+        const { SpatialFrequency: freq, MaxRotation: maxAngle } =
+            TreeSwayConfig;
 
         for (const [entity, view] of viewsByEntity) {
             if (view.type !== ViewType.TREE) continue;
@@ -45,13 +47,12 @@ export class TreeSwayModule extends DisplayModule<GameDisplayContext> {
             const sway = this.simplex.noise3D(
                 sprite.x * freq,
                 sprite.y * freq,
-                t + entity * 1000 // phase offset by entity ID
+                t + entity * 1000, // phase offset by entity ID
             );
 
             sprite.rotation = sway * maxAngle * windStrength;
         }
     }
-
 
     destroy(): void {
         // Clean up if necessary

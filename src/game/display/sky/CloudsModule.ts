@@ -32,7 +32,9 @@ export const CLOUD_TINT_GRADIENT: [number, number][] = [
     [1.0, 0x445566],
 ];
 
-function createCloudLayer(overrides: Partial<CloudLayerConfig>): CloudLayerConfig {
+function createCloudLayer(
+    overrides: Partial<CloudLayerConfig>,
+): CloudLayerConfig {
     return {
         speed: 0.5,
         preferredSprites: [{ key: "cloud0", weight: 1 }],
@@ -50,13 +52,19 @@ function createCloudLayer(overrides: Partial<CloudLayerConfig>): CloudLayerConfi
 const CLOUD_LAYERS: CloudLayerConfig[] = [
     createCloudLayer({
         speed: 0.2,
-        preferredSprites: [{ key: "cloud1", weight: 3 }, { key: "cloud0", weight: 1 }],
+        preferredSprites: [
+            { key: "cloud1", weight: 3 },
+            { key: "cloud0", weight: 1 },
+        ],
         tintOffset: 0,
         yOffset: 300,
     }),
     createCloudLayer({
         speed: 0.4,
-        preferredSprites: [{ key: "cloud3", weight: 2 }, { key: "cloud0", weight: 2 }],
+        preferredSprites: [
+            { key: "cloud3", weight: 2 },
+            { key: "cloud0", weight: 2 },
+        ],
         tintOffset: 0.05,
         yOffset: 1200,
     }),
@@ -97,11 +105,11 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
                 // Phase offset prevents same x positions between layers
                 sprite.x = (i * spacing + phaseOffset) % this.sceneWidth;
 
-                sprite.y = layer.yOffset + (Math.random() - 0.5) * layer.ySpread;
+                sprite.y =
+                    layer.yOffset + (Math.random() - 0.5) * layer.ySpread;
                 container.add(sprite);
-                clouds.push({ sprite, layerIndex:index });
+                clouds.push({ sprite, layerIndex: index });
             }
-
 
             this.containers.push(container);
             this.cloudsByLayer.push(clouds);
@@ -118,10 +126,23 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
         const speedFactor = time.speedFactor ?? 1;
         const cloudCover = weather.cloudCover ?? 1;
         const windDir = weather.windDirection ?? 1;
-        const effectiveSpeed = (weather.windStrength / TimeConfig.MinutesPerHour) * speedFactor * windDir;
+        const effectiveSpeed =
+            (weather.windStrength / TimeConfig.MinutesPerHour) *
+            speedFactor *
+            windDir;
 
         CLOUD_LAYERS.forEach((layer, layerIndex) => {
-            this.updateLayer(layer, layerIndex, cloudCover, effectiveSpeed, windDir, minute, total, delta, speedFactor);
+            this.updateLayer(
+                layer,
+                layerIndex,
+                cloudCover,
+                effectiveSpeed,
+                windDir,
+                minute,
+                total,
+                delta,
+                speedFactor,
+            );
         });
     }
 
@@ -134,7 +155,7 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
         minute: number,
         total: number,
         delta: number,
-        speedFactor: number
+        speedFactor: number,
     ) {
         const clouds = this.cloudsByLayer[layerIndex];
         const targetCount = Math.floor(layer.baseDensity * cloudCover);
@@ -154,7 +175,7 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
                 minute,
                 total,
                 delta,
-                speedFactor
+                speedFactor,
             );
 
             if (becameVisible) {
@@ -173,15 +194,16 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
         minute: number,
         total: number,
         delta: number,
-        speedFactor: number
+        speedFactor: number,
     ): boolean {
         let becameVisible = false;
 
         // Move always
-        sprite.x += (delta * 0.01 * effectiveSpeed);
+        sprite.x += delta * 0.01 * effectiveSpeed;
 
         // Drift
-        const drift = Math.sin(sprite.x * 0.00025 + layerIndex) * 0.05 * speedFactor;
+        const drift =
+            Math.sin(sprite.x * 0.00025 + layerIndex) * 0.05 * speedFactor;
         sprite.y -= drift;
 
         const outLeft = sprite.x < -this.outThreshold;
@@ -195,11 +217,13 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
                 const jitter = (Math.random() - 0.5) * 30;
                 const offset = baseOffset + jitter;
 
-                sprite.x = windDir === 1
-                    ? -this.outThreshold + offset
-                    : this.sceneWidth + this.outThreshold - offset;
+                sprite.x =
+                    windDir === 1
+                        ? -this.outThreshold + offset
+                        : this.sceneWidth + this.outThreshold - offset;
 
-                sprite.y = layer.yOffset + (Math.random() - 0.5) * layer.ySpread;
+                sprite.y =
+                    layer.yOffset + (Math.random() - 0.5) * layer.ySpread;
 
                 if (!sprite.visible) {
                     sprite.setVisible(true);
@@ -208,7 +232,11 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
             } else {
                 sprite.setVisible(false);
             }
-        } else if (!sprite.visible && canBeActive && this.shouldReenter(sprite, windDir)) {
+        } else if (
+            !sprite.visible &&
+            canBeActive &&
+            this.shouldReenter(sprite, windDir)
+        ) {
             sprite.setVisible(true);
             becameVisible = true;
         }
@@ -220,8 +248,10 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
         return sprite.visible && becameVisible;
     }
 
-
-    private shouldReenter(sprite: Phaser.GameObjects.Image, windDir: 1 | -1): boolean {
+    private shouldReenter(
+        sprite: Phaser.GameObjects.Image,
+        windDir: 1 | -1,
+    ): boolean {
         const halfWidth = sprite.displayWidth / 2;
 
         if (windDir === 1) {
@@ -231,19 +261,24 @@ export class CloudsModule extends DisplayModule<GameDisplayContext> {
         } else {
             // Entering from right → left
             const leftEdge = sprite.x - halfWidth;
-            return leftEdge <= this.sceneWidth && leftEdge >= this.sceneWidth - this.outThreshold;
+            return (
+                leftEdge <= this.sceneWidth &&
+                leftEdge >= this.sceneWidth - this.outThreshold
+            );
         }
     }
 
-
     destroy(): void {
-        this.cloudsByLayer.flat().forEach(c => c.sprite.destroy());
-        this.containers.forEach(c => c.destroy());
+        this.cloudsByLayer.flat().forEach((c) => c.sprite.destroy());
+        this.containers.forEach((c) => c.destroy());
         this.cloudsByLayer = [];
         this.containers = [];
     }
 
-    private spawnCloud(layer: CloudLayerConfig, scene: Phaser.Scene): Phaser.GameObjects.Image {
+    private spawnCloud(
+        layer: CloudLayerConfig,
+        scene: Phaser.Scene,
+    ): Phaser.GameObjects.Image {
         const spriteKey = this.chooseWeighted(layer.preferredSprites);
         const sprite = scene.add.image(0, 0, spriteKey);
         const scale = Phaser.Math.FloatBetween(layer.scaleMin, layer.scaleMax);

@@ -4,7 +4,7 @@ import { WoodDojo } from "./WoodDojo";
 export class WoodDojoSystem extends System {
     public componentsRequired = new Set<Function>([WoodDojo]);
 
-    public update(dojoEntities: Set<Entity>, delta: number): void {
+    public update(dojoEntities: Set<Entity>, _delta: number): void {
         for (const dojoEntity of dojoEntities) {
             const dojo = this.ecs.getComponent(dojoEntity, WoodDojo);
 

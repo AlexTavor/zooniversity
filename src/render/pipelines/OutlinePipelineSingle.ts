@@ -1,8 +1,9 @@
-export class OutlineOnlyPipeline extends Phaser.Renderer.WebGL.Pipelines.SinglePipeline {
+export class OutlineOnlyPipeline extends Phaser.Renderer.WebGL.Pipelines
+    .SinglePipeline {
     constructor(game: Phaser.Game) {
-      super({
-        game,
-        fragShader: `
+        super({
+            game,
+            fragShader: `
           precision mediump float;
   
           uniform sampler2D uMainSampler;
@@ -46,14 +47,13 @@ export class OutlineOnlyPipeline extends Phaser.Renderer.WebGL.Pipelines.SingleP
               discard;
             }
           }
-        `
-      });
+        `,
+        });
     }
-  
+
     onPreRender() {
-      this.set2f('texSize', this.renderer.width, this.renderer.height);
-      this.set4f('outlineColor', 1.0, 1.0, 0.0, 1.0); // yellow
-      this.set1f('thickness', 2.0); // customizable
+        this.set2f("texSize", this.renderer.width, this.renderer.height);
+        this.set4f("outlineColor", 1.0, 1.0, 0.0, 1.0); // yellow
+        this.set1f("thickness", 2.0); // customizable
     }
-  }
-  
+}

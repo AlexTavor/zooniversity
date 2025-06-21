@@ -1,9 +1,7 @@
-import {Component} from "../../ECS.ts";
+import { Component } from "../../ECS.ts";
 
 export class Cave extends Component {
-    constructor(
-        public explored: boolean = false
-    ) {
+    constructor(public explored: boolean = false) {
         super();
     }
 }

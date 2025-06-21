@@ -1,6 +1,6 @@
 import { ECS } from "../../ECS";
 import { getWorldEntity } from "../serialization/getWorldEntity";
-import { CaveTreeLUTComponent } from "./CaveTreeLUTComponent"; 
+import { CaveTreeLUTComponent } from "./CaveTreeLUTComponent";
 
 export function getCaveTreeLUT(ecs: ECS): CaveTreeLUTComponent {
     const worldId = getWorldEntity(ecs); // Ensures world entity exists

@@ -1,6 +1,5 @@
-
 // All components should be serializable to JSON.
-import {Entity} from "../../ECS.ts";
+import { Entity } from "../../ECS.ts";
 
 export interface GameState {
     entities: EntityState[];

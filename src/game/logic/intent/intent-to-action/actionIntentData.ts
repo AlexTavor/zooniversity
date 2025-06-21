@@ -11,7 +11,7 @@ export enum CharacterIntent {
     REST = "REST",
     EAT = "EAT",
     STUDY = "STUDY",
-    FORAGE = "FORAGE"
+    FORAGE = "FORAGE",
 }
 
 /** Defines the concrete, observable, low-level action a character is currently performing. */
@@ -23,11 +23,11 @@ export enum CharacterAction {
     BUILDING = "Building",
     STUDYING = "Studying",
     SLEEPING = "Sleeping",
-    STROLLING = "Strolling",// Covers walking during stroll and pausing at stroll points
+    STROLLING = "Strolling", // Covers walking during stroll and pausing at stroll points
     RELAXING = "Relaxing",
     NONE = "None",
     EATING = "Eating",
-    FORAGING = "Foraging"
+    FORAGING = "Foraging",
 }
 
 /** Enum to discriminate between different actionData payload structures. */
@@ -38,11 +38,11 @@ export enum ActionDataType {
     SleepingData,
     StrollingAtPointData,
     EatingData,
-    ForagingActionData
+    ForagingActionData,
 }
 
 export interface ForagingActionData {
-    readonly type: ActionDataType.ForagingActionData; 
+    readonly type: ActionDataType.ForagingActionData;
     targetForagableEntityId: Entity;
 }
 
@@ -70,13 +70,13 @@ export interface StrollingAtPointData {
 }
 
 export interface EatingData {
-    readonly type: ActionDataType.EatingData; 
+    readonly type: ActionDataType.EatingData;
 }
 
 // --- Type Guards for ActionData Payloads ---
 
 export function isForagingActionData(data: any): data is ForagingActionData {
-   return data?.type === ActionDataType.ForagingActionData;
+    return data?.type === ActionDataType.ForagingActionData;
 }
 
 export function isEatingData(data: any): data is EatingData {
@@ -84,19 +84,25 @@ export function isEatingData(data: any): data is EatingData {
 }
 
 export function isWalkingData(data: any): data is WalkingData {
-    return data?.type === ActionDataType.WalkingData &&
-           data.targetPosition !== undefined;
+    return (
+        data?.type === ActionDataType.WalkingData &&
+        data.targetPosition !== undefined
+    );
 }
 
 export function isChoppingData(data: any): data is ChoppingData {
-    return data?.type === ActionDataType.ChoppingData &&
-           typeof data.targetTreeEntityId === 'number';
+    return (
+        data?.type === ActionDataType.ChoppingData &&
+        typeof data.targetTreeEntityId === "number"
+    );
 }
 
 export function isSleepingData(data: any): data is SleepingData {
     return data?.type === ActionDataType.SleepingData;
 }
 
-export function isStrollingAtPointData(data: any): data is StrollingAtPointData {
+export function isStrollingAtPointData(
+    data: any,
+): data is StrollingAtPointData {
     return data?.type === ActionDataType.StrollingAtPointData;
 }

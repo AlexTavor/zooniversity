@@ -1,6 +1,6 @@
-import {ViewDefinition} from "../../display/setup/ViewDefinition.ts";
+import { ViewDefinition } from "../../display/setup/ViewDefinition.ts";
 
-export type MapObjectType = 'tree' | 'rock' | 'cave'; // extend freely
+export type MapObjectType = "tree" | "rock" | "cave"; // extend freely
 
 export interface MapObject {
     id: number;

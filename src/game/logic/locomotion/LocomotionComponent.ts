@@ -6,8 +6,7 @@ export class LocomotionComponent extends Component {
     public speed: number = 1;
     public arrived: boolean = false;
 
-  constructor(
-  ) {
-    super();
-  }
+    constructor() {
+        super();
+    }
 }

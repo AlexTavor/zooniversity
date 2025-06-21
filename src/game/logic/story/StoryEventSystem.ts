@@ -5,10 +5,8 @@ import { StoryEventStateComponent } from "./StoryEventComponent";
 import { StoryEventDefinition } from "./StoryEventTypes";
 
 export class StoryEventSystem extends System {
-    public update(entities: Set<number>, delta: number): void {
-        
-    }
-    
+    public update(_entities: Set<number>, _delta: number): void {}
+
     componentsRequired = new Set<Function>([StoryEventStateComponent]);
 
     private activeEvent: StoryEventDefinition | null = null;
@@ -25,9 +23,15 @@ export class StoryEventSystem extends System {
         this.activeEvent = event;
 
         const entity = this.ecs.addEntity();
-        this.ecs.addComponent(entity, new StoryEventStateComponent(eventId, event.startPageId));
+        this.ecs.addComponent(
+            entity,
+            new StoryEventStateComponent(eventId, event.startPageId),
+        );
 
-        EventBus.emit(GameEvent.StoryEventStarted, event.pages[event.startPageId]);
+        EventBus.emit(
+            GameEvent.StoryEventStarted,
+            event.pages[event.startPageId],
+        );
     }
 
     public advance(entity: Entity, nextPageId?: string) {
@@ -41,6 +45,9 @@ export class StoryEventSystem extends System {
         }
 
         state.currentPageId = nextPageId;
-        EventBus.emit(GameEvent.StoryEventPageChanged, this.activeEvent.pages[nextPageId]);
+        EventBus.emit(
+            GameEvent.StoryEventPageChanged,
+            this.activeEvent.pages[nextPageId],
+        );
     }
 }

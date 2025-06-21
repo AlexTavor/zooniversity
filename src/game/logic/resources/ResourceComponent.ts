@@ -6,6 +6,6 @@ export class ResourceComponent extends Component {
         [ResourceType.MONEY]: 10,
         [ResourceType.WOOD]: 0,
         [ResourceType.FOOD]: 100,
-        [ResourceType.TOOLS]: 0
+        [ResourceType.TOOLS]: 0,
     };
 }

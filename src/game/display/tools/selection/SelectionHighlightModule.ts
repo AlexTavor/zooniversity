@@ -16,11 +16,19 @@ export class SelectionHighlightModule extends DisplayModule<GameDisplayContext> 
 
     init(context: GameDisplayContext): void {
         this.context = context;
-        EventBus.on(GameEvent.SelectionChanged, this.handleSelectionChanged, this);
+        EventBus.on(
+            GameEvent.SelectionChanged,
+            this.handleSelectionChanged,
+            this,
+        );
     }
 
     destroy(): void {
-        EventBus.off(GameEvent.SelectionChanged, this.handleSelectionChanged, this);
+        EventBus.off(
+            GameEvent.SelectionChanged,
+            this.handleSelectionChanged,
+            this,
+        );
         this.clearOutline();
     }
 
@@ -41,9 +49,9 @@ export class SelectionHighlightModule extends DisplayModule<GameDisplayContext> 
         const view = this.context.viewsByEntity.get(this.selectedEntity);
         if (!view) return;
 
-        view.applyEffect(EffectType.Highlight, { 
+        view.applyEffect(EffectType.Highlight, {
             container: this.context.layers.Icons,
-            outlineConfig: OUTLINE_CONFIG 
+            outlineConfig: OUTLINE_CONFIG,
         });
 
         EventBus.emit(GameEvent.ViewSelected, view.viewContainer);
@@ -51,12 +59,14 @@ export class SelectionHighlightModule extends DisplayModule<GameDisplayContext> 
 
     private clearOutline(): void {
         if (this.selectedEntity === -1) return;
-        
-        const previousView = this.context.viewsByEntity.get(this.selectedEntity);
+
+        const previousView = this.context.viewsByEntity.get(
+            this.selectedEntity,
+        );
         if (previousView) {
             previousView.clearEffect(EffectType.Highlight);
         }
-        
+
         this.selectedEntity = -1;
     }
 }

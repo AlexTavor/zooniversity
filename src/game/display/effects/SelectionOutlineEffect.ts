@@ -10,7 +10,6 @@ export interface SelectionOutlineEffectOptions {
     };
 }
 
-
 export class SelectionOutlineEffect implements EffectInstance {
     private view: View;
     private options: SelectionOutlineEffectOptions;
@@ -33,13 +32,13 @@ export class SelectionOutlineEffect implements EffectInstance {
             this.originalSprite.x,
             this.originalSprite.y,
             this.originalSprite.texture.key,
-            this.originalSprite.frame.name
+            this.originalSprite.frame.name,
         );
-        
+
         this.duplicateSprite.setInteractive({ useHandCursor: false });
         this.duplicateSprite.setInteractive(false);
         this.options.container.add(this.duplicateSprite);
-        this.duplicateSprite.setPipeline('outlineOnly');
+        this.duplicateSprite.setPipeline("outlineOnly");
 
         this.sync();
     }
@@ -55,7 +54,7 @@ export class SelectionOutlineEffect implements EffectInstance {
         }
         this.sync();
     }
-    
+
     public destroy(): void {
         if (this.duplicateSprite) {
             this.duplicateSprite.resetPipeline();
@@ -65,27 +64,37 @@ export class SelectionOutlineEffect implements EffectInstance {
     }
 
     private sync(): void {
-        if (!this.originalSprite || !this.duplicateSprite || !this.originalSprite.active) {
+        if (
+            !this.originalSprite ||
+            !this.duplicateSprite ||
+            !this.originalSprite.active
+        ) {
             this.duplicateSprite?.setVisible(false);
             return;
         }
 
         // Set visibility and frame
-        this.duplicateSprite.setVisible(this.originalSprite.parentContainer.visible);
+        this.duplicateSprite.setVisible(
+            this.originalSprite.parentContainer.visible,
+        );
         this.duplicateSprite.setFrame(this.originalSprite.frame.name);
 
         this.duplicateSprite.x = this.view.viewContainer.x;
         this.duplicateSprite.y = this.view.viewContainer.y;
-        
+
         // Sync all other visual properties for a perfect match.
-        this.duplicateSprite.rotation = this.originalSprite.parentContainer.rotation;
-        this.duplicateSprite.setOrigin(this.originalSprite.originX, this.originalSprite.originY);
+        this.duplicateSprite.rotation =
+            this.originalSprite.parentContainer.rotation;
+        this.duplicateSprite.setOrigin(
+            this.originalSprite.originX,
+            this.originalSprite.originY,
+        );
 
-        this.duplicateSprite.scaleX = this.originalSprite.scaleX * (this.originalSprite.parentContainer.scaleX > 0 ? 1 : -1);
+        this.duplicateSprite.scaleX =
+            this.originalSprite.scaleX *
+            (this.originalSprite.parentContainer.scaleX > 0 ? 1 : -1);
         this.duplicateSprite.scaleY = this.originalSprite.scaleY;
-        
-        this.duplicateSprite.alpha = this.originalSprite.alpha;
 
-        
+        this.duplicateSprite.alpha = this.originalSprite.alpha;
     }
 }

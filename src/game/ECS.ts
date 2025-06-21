@@ -2,7 +2,7 @@
  * An entity is just an ID. This is used to look up its associated
  * Components.
  */
-export type Entity = number
+export type Entity = number;
 
 /**
  * A Component is a bundle of state. Each instance of a Component is
@@ -10,7 +10,7 @@ export type Entity = number
  *
  * Components have no API to fulfill.
  */
-export abstract class Component { }
+export abstract class Component {}
 
 /**
  * A System cares about a set of Components. It will run on every Entity
@@ -26,26 +26,25 @@ export abstract class Component { }
  *  (2) An update() method for what to do every frame (if anything).
  */
 export abstract class System {
-
     /**
      * Set of Component classes, ALL of which are required before the
      * system is run on an entity.
      *
      * This should be defined at compile time and should never change.
      */
-    public abstract componentsRequired: Set<Function>
+    public abstract componentsRequired: Set<Function>;
 
     /**
      * update() is called on the System every frame.
      */
-    public abstract update(entities: Set<Entity>, delta: number): void
+    public abstract update(entities: Set<Entity>, delta: number): void;
 
     /**
      * The ECS is given to all Systems. Systems contain most of the game
      * code, so they need to be able to create, mutate, and destroy
      * Entities and Components.
      */
-    public ecs: ECS
+    public ecs: ECS;
 }
 
 /**
@@ -54,7 +53,7 @@ export abstract class System {
  * other words, we can say get(Position) and TypeScript will know that an
  * instance of Position was returned. This is amazingly helpful.
  */
-type ComponentClass<T extends Component> = new (...args: any[]) => T
+type ComponentClass<T extends Component> = new (...args: any[]) => T;
 
 /**
  * This custom container is so that calling code can provide the
@@ -76,15 +75,13 @@ type ComponentClass<T extends Component> = new (...args: any[]) => T
  * the Components that can't change them.
  */
 class ComponentContainer {
-    private map = new Map<Function, Component>()
+    private map = new Map<Function, Component>();
 
     public add(component: Component): void {
         this.map.set(component.constructor, component);
     }
 
-    public get<T extends Component>(
-        componentClass: ComponentClass<T>
-    ): T {
+    public get<T extends Component>(componentClass: ComponentClass<T>): T {
         return this.map.get(componentClass) as T;
     }
 
@@ -93,7 +90,7 @@ class ComponentContainer {
     }
 
     public hasAll(componentClasses: Iterable<Function>): boolean {
-        for (let cls of componentClasses) {
+        for (const cls of componentClasses) {
             if (!this.map.has(cls)) {
                 return false;
             }
@@ -119,13 +116,13 @@ export class ECS {
     private systems = new Map<System, Set<Entity>>();
 
     // Bookkeeping for entities.
-    private nextEntityID = 1
-    private entitiesToDestroy = new Array<Entity>()
+    private nextEntityID = 1;
+    private entitiesToDestroy = new Array<Entity>();
 
     // API: Entities
 
     public addEntity(): Entity {
-        let entity = this.nextEntityID;
+        const entity = this.nextEntityID;
         this.nextEntityID++;
         this.entities.set(entity, new ComponentContainer());
         return entity;
@@ -144,9 +141,9 @@ export class ECS {
     // API: Components
 
     public addComponent(entity: Entity, component: Component): void {
-        this.components.has(component.constructor) ?
-            this.components.get(component.constructor)!.push(entity) :
-            this.components.set(component.constructor, [entity]);
+        this.components.has(component.constructor)
+            ? this.components.get(component.constructor)!.push(entity)
+            : this.components.set(component.constructor, [entity]);
         this.entities.get(entity)!.add(component);
         this.checkE(entity);
     }
@@ -157,24 +154,29 @@ export class ECS {
 
     public getEntitiesWithComponents(componentClasses: Function[]): Entity[] {
         const entities = this.getEntitiesWithComponent(componentClasses[0]);
-        return entities.filter(entity => componentClasses.every(componentClass => this.entities.get(entity)!.has(componentClass)));
+        return entities.filter((entity) =>
+            componentClasses.every((componentClass) =>
+                this.entities.get(entity)!.has(componentClass),
+            ),
+        );
     }
 
     public getComponents(entity: Entity): ComponentContainer {
         return this.entities.get(entity)!;
     }
 
-    public getComponent<T extends Component>(entity: Entity, componentClass: ComponentClass<T>): T {
+    public getComponent<T extends Component>(
+        entity: Entity,
+        componentClass: ComponentClass<T>,
+    ): T {
         return this.entities.get(entity)?.get(componentClass)!;
     }
 
-    public removeComponent(
-        entity: Entity, componentClass: Function
-    ): void {
+    public removeComponent(entity: Entity, componentClass: Function): void {
         this.entities.get(entity)?.delete(componentClass);
-        this.components.get(componentClass)?.splice(
-            this.components.get(componentClass)!.indexOf(entity), 1
-        );
+        this.components
+            .get(componentClass)
+            ?.splice(this.components.get(componentClass)!.indexOf(entity), 1);
 
         this.checkE(entity);
     }
@@ -198,7 +200,7 @@ export class ECS {
 
         // Save system and set who it should track immediately.
         this.systems.set(system, new Set());
-        for (let entity of this.entities.keys()) {
+        for (const entity of this.entities.keys()) {
             this.checkES(entity, system);
         }
     }
@@ -220,11 +222,11 @@ export class ECS {
      * updates all Systems, then destroys any Entities that were marked
      * for removal.
      */
-    public update(delta:number): void {
+    public update(delta: number): void {
         // Update all systems. (Later, we'll add a way to specify the
         // update order.)
-        for (let [system, entities] of this.systems.entries()) {
-            system.update(entities, delta)
+        for (const [system, entities] of this.systems.entries()) {
+            system.update(entities, delta);
         }
 
         // Remove any entities that were marked for deletion during the
@@ -237,28 +239,27 @@ export class ECS {
     // Private methods for doing internal state checks and mutations.
 
     private destroyEntity(entity: Entity): void {
-        for (let componentClass of this.components.keys()) {
+        for (const componentClass of this.components.keys()) {
             if (this.entities.get(entity)?.has(componentClass)) {
                 this.removeComponent(entity, componentClass);
             }
         }
 
         this.entities.delete(entity);
-        for (let entities of this.systems.values()) {
-            entities.delete(entity);  // no-op if doesn't have it
+        for (const entities of this.systems.values()) {
+            entities.delete(entity); // no-op if doesn't have it
         }
-
     }
 
     private checkE(entity: Entity): void {
-        for (let system of this.systems.keys()) {
+        for (const system of this.systems.keys()) {
             this.checkES(entity, system);
         }
     }
 
     private checkES(entity: Entity, system: System): void {
-        let have = this.entities.get(entity);
-        let need = system.componentsRequired;
+        const have = this.entities.get(entity);
+        const need = system.componentsRequired;
         if (have!.hasAll(need)) {
             // should be in system
             this.systems.get(system)!.add(entity); // no-op if in

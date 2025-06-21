@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import {GameState} from "../../../game/logic/serialization/GameState.ts";
-import {saveManager} from "../../../game/save_manager/SaveManager.ts";
+import { useState, useEffect } from "react";
+import { GameState } from "../../../game/logic/serialization/GameState.ts";
+import { saveManager } from "../../../game/save_manager/SaveManager.ts";
 
 export function useSaveManager() {
     const [current, setCurrent] = useState<GameState | undefined>();

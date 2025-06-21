@@ -10,14 +10,14 @@ export class ResourceSystem extends System {
         [ResourceType.MONEY]: -1,
         [ResourceType.WOOD]: -1,
         [ResourceType.FOOD]: -1,
-        [ResourceType.TOOLS]: -1
+        [ResourceType.TOOLS]: -1,
     };
 
     update(resEntities: Set<Entity>, __: number): void {
-        for (const entity of resEntities){
+        for (const entity of resEntities) {
             const res = this.ecs.getComponent(entity, ResourceComponent);
             const changed: Partial<Record<ResourceType, number>> = {};
-    
+
             for (const type of Object.values(ResourceType)) {
                 const current = Math.max(0, Math.floor(res.amounts[type]));
                 if (current !== this.lastState[type]) {
@@ -25,7 +25,7 @@ export class ResourceSystem extends System {
                     changed[type] = current;
                 }
             }
-    
+
             if (Object.keys(changed).length > 0) {
                 ResourceTracker.bulkSet(changed);
             }

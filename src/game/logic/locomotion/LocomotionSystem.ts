@@ -1,7 +1,10 @@
 import { System, Entity } from "../../ECS";
 import { LocationState, Transform } from "../../components/Transform";
 import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent";
-import { CharacterAction, WalkingData} from "../intent/intent-to-action/actionIntentData";
+import {
+    CharacterAction,
+    WalkingData,
+} from "../intent/intent-to-action/actionIntentData";
 import { getTime } from "../time/TimeComponent";
 import { LocomotionComponent } from "./LocomotionComponent";
 import { Pos } from "../../../utils/Math";
@@ -23,46 +26,84 @@ export class LocomotionSystem extends System {
         const scaledDelta = delta * time.speedFactor;
 
         for (const entity of entities) {
-            const locomotion = this.ecs.getComponent(entity, LocomotionComponent);
+            const locomotion = this.ecs.getComponent(
+                entity,
+                LocomotionComponent,
+            );
             const transform = this.ecs.getComponent(entity, Transform);
-            const actionIntent = this.ecs.getComponent(entity, ActionIntentComponent);
+            const actionIntent = this.ecs.getComponent(
+                entity,
+                ActionIntentComponent,
+            );
 
             if (!this.isEntityActivelyWalking(actionIntent)) {
                 continue;
             }
 
             const walkData = actionIntent.actionData as WalkingData;
-            const targetPosition = { 
-                x: Math.round(walkData.targetPosition.x), 
-                y: Math.round(walkData.targetPosition.y) 
+            const targetPosition = {
+                x: Math.round(walkData.targetPosition.x),
+                y: Math.round(walkData.targetPosition.y),
             };
 
-            const isArrived = this.processArrival(locomotion, transform, targetPosition);
-            
+            const isArrived = this.processArrival(
+                locomotion,
+                transform,
+                targetPosition,
+            );
+
             if (isArrived) {
-                this.updateLocationState(transform, walkData.ultimateTargetEntityId, isArrived);
-                continue; 
+                this.updateLocationState(
+                    transform,
+                    walkData.ultimateTargetEntityId,
+                    isArrived,
+                );
+                continue;
             }
 
             transform.locationState = LocationState.OUTSIDE;
-            
-            const speed = StatCalculator.getEffectiveStat(this.ecs, entity, AffectedStat.LOCOMOTION_SPEED);
-            this.performMovementStep(transform, targetPosition, speed * scaledDelta);
-            this.updateSpriteDirection(transform, targetPosition.x - transform.x);
+
+            const speed = StatCalculator.getEffectiveStat(
+                this.ecs,
+                entity,
+                AffectedStat.LOCOMOTION_SPEED,
+            );
+            this.performMovementStep(
+                transform,
+                targetPosition,
+                speed * scaledDelta,
+            );
+            this.updateSpriteDirection(
+                transform,
+                targetPosition.x - transform.x,
+            );
         }
     }
 
-    private isEntityActivelyWalking(actionIntent: ActionIntentComponent): boolean {
-        return actionIntent.currentPerformedAction == CharacterAction.WALKING && !!(actionIntent?.actionData?.targetPosition);
+    private isEntityActivelyWalking(
+        actionIntent: ActionIntentComponent,
+    ): boolean {
+        return (
+            actionIntent.currentPerformedAction == CharacterAction.WALKING &&
+            !!actionIntent?.actionData?.targetPosition
+        );
     }
 
-    private processArrival(locomotion: LocomotionComponent, transform: Transform, targetPos: Pos): boolean {
+    private processArrival(
+        locomotion: LocomotionComponent,
+        transform: Transform,
+        targetPos: Pos,
+    ): boolean {
         const roundedCurrentX = Math.round(transform.x);
         const roundedCurrentY = Math.round(transform.y);
 
-        if (roundedCurrentX === targetPos.x && roundedCurrentY === targetPos.y) {
-            if (!locomotion.arrived) { // Actions for first arrival at exact spot
-                transform.x = targetPos.x; 
+        if (
+            roundedCurrentX === targetPos.x &&
+            roundedCurrentY === targetPos.y
+        ) {
+            if (!locomotion.arrived) {
+                // Actions for first arrival at exact spot
+                transform.x = targetPos.x;
                 transform.y = targetPos.y;
                 locomotion.arrived = true;
             }
@@ -73,14 +114,31 @@ export class LocomotionSystem extends System {
 
         return false; // Not at target
     }
-    
-    private updateLocationState(transform: Transform, ultimateTargetEntityId: Entity | undefined, isArrivedAtTarget: boolean): void {
-        if (ultimateTargetEntityId && this.ecs.hasEntity(ultimateTargetEntityId) && this.ecs.hasComponent(ultimateTargetEntityId, InsideLocationComponent)) {
-            transform.locationState = isArrivedAtTarget ? LocationState.INSIDE : LocationState.OUTSIDE;
+
+    private updateLocationState(
+        transform: Transform,
+        ultimateTargetEntityId: Entity | undefined,
+        isArrivedAtTarget: boolean,
+    ): void {
+        if (
+            ultimateTargetEntityId &&
+            this.ecs.hasEntity(ultimateTargetEntityId) &&
+            this.ecs.hasComponent(
+                ultimateTargetEntityId,
+                InsideLocationComponent,
+            )
+        ) {
+            transform.locationState = isArrivedAtTarget
+                ? LocationState.INSIDE
+                : LocationState.OUTSIDE;
         }
     }
 
-    private performMovementStep(transform: Transform, targetPos: Pos, stepDistance: number): void {
+    private performMovementStep(
+        transform: Transform,
+        targetPos: Pos,
+        stepDistance: number,
+    ): void {
         const dx = targetPos.x - transform.x;
         const dy = targetPos.y - transform.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
@@ -95,7 +153,10 @@ export class LocomotionSystem extends System {
         }
     }
 
-    private updateSpriteDirection(transform: Transform, dxToTarget: number): void {
+    private updateSpriteDirection(
+        transform: Transform,
+        dxToTarget: number,
+    ): void {
         if (dxToTarget !== 0) {
             transform.direction = dxToTarget > 0 ? -1 : 1; // Assuming -1 is right, 1 is left
         }

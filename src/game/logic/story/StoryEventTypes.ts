@@ -6,7 +6,7 @@ export interface StoryOption {
     condition?: (ecs: ECS) => boolean;
     effect?: (ecs: ECS) => void;
     close?: boolean;
-    entity?:number;
+    entity?: number;
 }
 
 export interface StoryEventPage {
@@ -21,5 +21,5 @@ export interface StoryEventDefinition {
     id: string;
     pages: Record<string, StoryEventPage>;
     startPageId: string;
-    entity?:number;
+    entity?: number;
 }

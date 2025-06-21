@@ -14,8 +14,8 @@ Could someone—or something—be inside? The breeze carries the scent of damp e
             options: [
                 { label: "Leave quietly", close: true },
                 { label: "Sneak in", nextPageId: "sneak" },
-                { label: "Call softly into the cave", nextPageId: "call" }
-            ]
+                { label: "Call softly into the cave", nextPageId: "call" },
+            ],
         },
 
         sneak: {
@@ -25,13 +25,13 @@ Could someone—or something—be inside? The breeze carries the scent of damp e
             options: [
                 {
                     label: "Peek around the rock",
-                    nextPageId: "reveal_sproutling"
+                    nextPageId: "reveal_sproutling",
                 },
                 {
                     label: "Back away politely",
-                    close: true
-                }
-            ]
+                    close: true,
+                },
+            ],
         },
 
         call: {
@@ -41,13 +41,13 @@ Could someone—or something—be inside? The breeze carries the scent of damp e
             options: [
                 {
                     label: "Stand your ground",
-                    nextPageId: "reveal_sproutling"
+                    nextPageId: "reveal_sproutling",
                 },
                 {
                     label: "Hide and watch",
-                    nextPageId: "reveal_sproutling"
-                }
-            ]
+                    nextPageId: "reveal_sproutling",
+                },
+            ],
         },
 
         reveal_sproutling: {
@@ -57,13 +57,13 @@ Could someone—or something—be inside? The breeze carries the scent of damp e
             options: [
                 {
                     label: "Help it up",
-                    nextPageId: "friend"
+                    nextPageId: "friend",
                 },
                 {
                     label: "Offer it a snack",
-                    nextPageId: "friend"
-                }
-            ]
+                    nextPageId: "friend",
+                },
+            ],
         },
 
         friend: {
@@ -74,12 +74,12 @@ Could someone—or something—be inside? The breeze carries the scent of damp e
                 {
                     label: "Wave goodbye",
                     close: true,
-                    effect: (ecs: ECS) => {
+                    effect: (_ecs: ECS) => {
                         console.log("Friendship with sproutling recorded.");
                         // Example: Add friendship component, flag, or item
-                    }
-                }
-            ]
-        }
-    }
+                    },
+                },
+            ],
+        },
+    },
 };

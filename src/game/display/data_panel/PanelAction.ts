@@ -13,7 +13,11 @@ export type PanelActionImplementation = {
     icon?: string;
 };
 
-type PanelActionMaker = (def: PanelDefinition, entity: number, view: View) => () => void;
+type PanelActionMaker = (
+    def: PanelDefinition,
+    entity: number,
+    view: View,
+) => () => void;
 
 const actionFunctions: Record<string, PanelActionMaker> = {
     tree_cutting: (_def, _entity, _view) => () => {
@@ -21,25 +25,25 @@ const actionFunctions: Record<string, PanelActionMaker> = {
     },
     find: (_def, _entity, view) => () => {
         EventBus.emit(UIEvent.FindViewRequested, view.viewContainer);
-    }
+    },
 };
 
 const actionIcons: Record<string, string> = {
     tree_cutting: "assets/icons/axe_icon.png",
-    find: "assets/icons/find_icon.png"
+    find: "assets/icons/find_icon.png",
 };
 
 export function createPanelActions(
     def: PanelDefinition,
     entity: number,
-    view: View
-    ): PanelActionImplementation[] {
+    view: View,
+): PanelActionImplementation[] {
     if (!def.actions) return [];
-    return def.actions.map(action => ({
+    return def.actions.map((action) => ({
         label: action.label,
         type: action.type,
         action: actionFunctions[action.type]?.(def, entity, view) ?? (() => {}),
-        icon: actionIcons[action.type] ?? undefined
+        icon: actionIcons[action.type] ?? undefined,
     }));
 }
 
@@ -48,7 +52,11 @@ export interface SelectionPanelData {
     extraLines?: string[];
 }
 
-export type SelectionPanelReducer = (entity: Entity, ecs: ECS) => Partial<SelectionPanelData>;
+export type SelectionPanelReducer = (
+    entity: Entity,
+    ecs: ECS,
+) => Partial<SelectionPanelData>;
 
-export const SelectionPanelReducers: Partial<Record<number, SelectionPanelReducer>> = {}; // populated elsewhere if needed
-  
+export const SelectionPanelReducers: Partial<
+    Record<number, SelectionPanelReducer>
+> = {}; // populated elsewhere if needed

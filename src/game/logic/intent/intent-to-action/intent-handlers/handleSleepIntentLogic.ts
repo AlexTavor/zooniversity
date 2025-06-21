@@ -6,10 +6,13 @@ import {
     ActionDataType,
     WalkingData,
     SleepingData, // This is for actionIntent.actionData
-    CharacterIntent
+    CharacterIntent,
 } from "../actionIntentData";
 import { Transform } from "../../../../components/Transform";
-import { InteractionSlots, SlotType } from "../../../../components/InteractionSlots";
+import {
+    InteractionSlots,
+    SlotType,
+} from "../../../../components/InteractionSlots";
 import { DormitoryComponent } from "../../../buildings/dormitory/DormitoryComponent";
 import { Pos } from "../../../../../utils/Math";
 import { abortSleeping } from "../intent-abort/abortSleeping"; // New helper
@@ -22,33 +25,45 @@ function setIdle(aic: ActionIntentComponent): void {
     aic.actionData = null;
 }
 
-function setWalkingToSlot(aic: ActionIntentComponent, targetPosition: Pos, ultimateTargetId: Entity): void {
+function setWalkingToSlot(
+    aic: ActionIntentComponent,
+    targetPosition: Pos,
+    ultimateTargetId: Entity,
+): void {
     aic.currentPerformedAction = CharacterAction.WALKING;
     aic.actionData = {
         type: ActionDataType.WalkingData,
         targetPosition,
-        ultimateTargetEntityId: ultimateTargetId
+        ultimateTargetEntityId: ultimateTargetId,
     } as WalkingData;
 }
 
-function setSleepingAction(aic: ActionIntentComponent, bedEntityId: Entity, slotOffset: Pos): void {
+function setSleepingAction(
+    aic: ActionIntentComponent,
+    bedEntityId: Entity,
+    slotOffset: Pos,
+): void {
     aic.currentPerformedAction = CharacterAction.SLEEPING;
     aic.actionData = {
         type: ActionDataType.SleepingData, // Ensure this is defined in ActionDataType
         bedEntityId,
-        slotOffset
+        slotOffset,
     } as SleepingData;
 }
 
-export function canSleep(ecs: ECS, entity: Entity): boolean {
+export function canSleep(_ecs: ECS, _entity: Entity): boolean {
     return true; // Placeholder for any conditions that might prevent sleeping
 }
 
 function findAndAssignBed(ecs: ECS, characterEntity: Entity): boolean {
     abortSleeping(ecs, characterEntity); // Clear previous assignment and release slot
 
-    const allDormitories = ecs.getEntitiesWithComponents([DormitoryComponent, InteractionSlots, Transform]);
-    
+    const allDormitories = ecs.getEntitiesWithComponents([
+        DormitoryComponent,
+        InteractionSlots,
+        Transform,
+    ]);
+
     for (const dormitoryId of allDormitories) {
         const slots = ecs.getComponent(dormitoryId, InteractionSlots);
 
@@ -57,7 +72,7 @@ function findAndAssignBed(ecs: ECS, characterEntity: Entity): boolean {
             const transform = ecs.getComponent(dormitoryId, Transform);
             const targetPosition = {
                 x: transform.x + offset.x,
-                y: transform.y + offset.y
+                y: transform.y + offset.y,
             };
 
             let sleeping = ecs.getComponent(characterEntity, SleepingState);
@@ -74,11 +89,10 @@ function findAndAssignBed(ecs: ECS, characterEntity: Entity): boolean {
     return false; // No bed found or slot reserved
 }
 
-
 export function handleSleepIntentLogic(
     ecs: ECS,
     entity: Entity,
-    actionIntent: ActionIntentComponent
+    actionIntent: ActionIntentComponent,
 ): void {
     const sleeping = ecs.getComponent(entity, SleepingState);
 
@@ -97,8 +111,16 @@ export function handleSleepIntentLogic(
     }
 
     if (!locomotion.arrived) {
-        setWalkingToSlot(actionIntent, sleeping.targetPosition!, sleeping.targetBedEntityId);
+        setWalkingToSlot(
+            actionIntent,
+            sleeping.targetPosition!,
+            sleeping.targetBedEntityId,
+        );
     } else {
-        setSleepingAction(actionIntent, sleeping.targetBedEntityId, sleeping.targetPosition!);
+        setSleepingAction(
+            actionIntent,
+            sleeping.targetBedEntityId,
+            sleeping.targetPosition!,
+        );
     }
 }

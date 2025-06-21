@@ -1,6 +1,6 @@
 // FILE: src/plugins/OutlinePlugin.ts
 
-import Phaser from 'phaser';
+import Phaser from "phaser";
 
 const GetValue = Phaser.Utils.Objects.GetValue;
 
@@ -42,8 +42,8 @@ void main() {
 }
 `;
 const GetFrag = (quality: number = 0.1): string => {
-    const samples = Math.max((quality * 100), 1);
-    const angleStep = (Math.PI * 2 / samples).toFixed(7);
+    const samples = Math.max(quality * 100, 1);
+    const angleStep = ((Math.PI * 2) / samples).toFixed(7);
     return fragTemplate.replace(/#\{angleStep\}/g, angleStep);
 };
 class OutlinePostFxPipeline extends PostFXPipeline {
@@ -59,12 +59,16 @@ class OutlinePostFxPipeline extends PostFXPipeline {
         this.outlineColor = new Phaser.Display.Color();
     }
     onPreRender() {
-        this.set1f('thickness', this.thickness);
-        this.set3f('outlineColor', this.outlineColor.redGL, this.outlineColor.greenGL, this.outlineColor.blueGL);
-        this.set2f('texSize', this.width, this.height);
+        this.set1f("thickness", this.thickness);
+        this.set3f(
+            "outlineColor",
+            this.outlineColor.redGL,
+            this.outlineColor.greenGL,
+            this.outlineColor.blueGL,
+        );
+        this.set2f("texSize", this.width, this.height);
     }
 }
-
 
 // ===================================================================
 //  2. THE PLUGIN CLASS (THE MANAGER)
@@ -72,7 +76,10 @@ class OutlinePostFxPipeline extends PostFXPipeline {
 // ===================================================================
 export default class OutlinePipelinePlugin extends Phaser.Plugins.BasePlugin {
     // A map to keep track of which sprite has which pipeline instance.
-    private pipelines: Map<Phaser.GameObjects.GameObject, OutlinePostFxPipeline>;
+    private pipelines: Map<
+        Phaser.GameObjects.GameObject,
+        OutlinePostFxPipeline
+    >;
 
     constructor(pluginManager: Phaser.Plugins.PluginManager) {
         super(pluginManager);
@@ -83,20 +90,24 @@ export default class OutlinePipelinePlugin extends Phaser.Plugins.BasePlugin {
     /**
      * Creates and adds a new outline pipeline instance to a game object.
      */
-    add(gameObject: Phaser.GameObjects.GameObject, config?: { thickness?: number, outlineColor?: number }): OutlinePostFxPipeline {
+    add(
+        gameObject: Phaser.GameObjects.GameObject,
+        config?: { thickness?: number; outlineColor?: number },
+    ): OutlinePostFxPipeline {
         this.remove(gameObject); // Remove previous instances to be safe.
 
         // Manually create a new instance of our pipeline.
         const pipelineInstance = new OutlinePostFxPipeline(this.game);
-        
+
         (gameObject as any).setPostPipeline(OutlinePostFxPipeline);
 
-
         // Configure the new instance from the config object.
-        pipelineInstance.thickness = GetValue(config!, 'thickness', 3);
-        const color = GetValue(config!, 'outlineColor', 0xffffff);
-        if (typeof color === 'number') {
-            pipelineInstance.outlineColor.setFromRGB(Phaser.Display.Color.IntegerToRGB(color));
+        pipelineInstance.thickness = GetValue(config!, "thickness", 3);
+        const color = GetValue(config!, "outlineColor", 0xffffff);
+        if (typeof color === "number") {
+            pipelineInstance.outlineColor.setFromRGB(
+                Phaser.Display.Color.IntegerToRGB(color),
+            );
         }
 
         // Store and return the instance.

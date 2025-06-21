@@ -8,7 +8,7 @@ export function useSelectedTool(): ToolType | null {
 
     useEffect(() => {
         const handle = (tool: ToolType) => {
-            setSelectedTool(tool)
+            setSelectedTool(tool);
         };
 
         EventBus.on(GameEvent.ToolSelected, handle);

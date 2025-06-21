@@ -11,14 +11,18 @@ export class InputSystem extends System {
     }
 
     handleSetSpeed(speed: TimeSpeed) {
-        for (const entity of this.ecs.getEntitiesWithComponent(InputComponent)) {
+        for (const entity of this.ecs.getEntitiesWithComponent(
+            InputComponent,
+        )) {
             const input = this.ecs.getComponent(entity, InputComponent);
             input.speed = speed;
         }
     }
 
     handleSelectionChange(entityId: number) {
-        for (const entity of this.ecs.getEntitiesWithComponent(InputComponent)) {
+        for (const entity of this.ecs.getEntitiesWithComponent(
+            InputComponent,
+        )) {
             const input = this.ecs.getComponent(entity, InputComponent);
             input.selection = entityId;
         }
@@ -28,19 +32,25 @@ export class InputSystem extends System {
 
     initialize(): () => void {
         const boundHandleSetSpeed = this.handleSetSpeed.bind(this);
-        const boundHandleSelectionChange = this.handleSelectionChange.bind(this);
-        
+        const boundHandleSelectionChange =
+            this.handleSelectionChange.bind(this);
+
         EventBus.on(GameEvent.SetTimeSpeed, boundHandleSetSpeed);
         EventBus.on(GameEvent.SelectionChanged, boundHandleSelectionChange);
 
-        for (const entity of this.ecs.getEntitiesWithComponent(InputComponent)) {
+        for (const entity of this.ecs.getEntitiesWithComponent(
+            InputComponent,
+        )) {
             const input = this.ecs.getComponent(entity, InputComponent);
             EventBus.emit(GameEvent.SetTimeSpeed, input.speed);
         }
 
         return () => {
             EventBus.off(GameEvent.SetTimeSpeed, boundHandleSetSpeed);
-            EventBus.off(GameEvent.SelectionChanged, boundHandleSelectionChange);
+            EventBus.off(
+                GameEvent.SelectionChanged,
+                boundHandleSelectionChange,
+            );
         };
     }
 }

@@ -1,9 +1,12 @@
 import { System, Entity, ECS } from "../../ECS";
 import { ActionIntentComponent } from "../intent/intent-to-action/ActionIntentComponent";
-import { CharacterAction, isChoppingData } from "../intent/intent-to-action/actionIntentData";
+import {
+    CharacterAction,
+    isChoppingData,
+} from "../intent/intent-to-action/actionIntentData";
 import { HarvestableComponent } from "./HarvestableComponent";
 import { HarvesterComponent } from "./HarvesterComponent"; // For harvest speed/ability
-import {  getTime } from "../time/TimeComponent";
+import { getTime } from "../time/TimeComponent";
 import { ResourceComponent } from "../resources/ResourceComponent";
 import { ResourceType } from "../resources/ResourceType";
 import { InteractionSlots } from "../../components/InteractionSlots";
@@ -13,20 +16,26 @@ import { getWorldEntity } from "../serialization/getWorldEntity";
 export class TreeHarvestingSystem extends System {
     public componentsRequired = new Set<Function>([
         ActionIntentComponent,
-        HarvesterComponent
+        HarvesterComponent,
     ]);
 
     public update(entities: Set<Entity>, delta: number): void {
         const time = getTime(this.ecs);
         if (time.speedFactor === 0) return; // Game paused
-        
+
         const scaledDeltaSeconds = (delta / 1000) * time.speedFactor;
 
         for (const characterEntity of entities) {
-            const actionIntent = this.ecs.getComponent(characterEntity, ActionIntentComponent);
+            const actionIntent = this.ecs.getComponent(
+                characterEntity,
+                ActionIntentComponent,
+            );
 
-            if (actionIntent.currentPerformedAction !== CharacterAction.CHOPPING || 
-                !isChoppingData(actionIntent.actionData)) {
+            if (
+                actionIntent.currentPerformedAction !==
+                    CharacterAction.CHOPPING ||
+                !isChoppingData(actionIntent.actionData)
+            ) {
                 continue;
             }
 
@@ -39,8 +48,14 @@ export class TreeHarvestingSystem extends System {
             }
 
             const tree = this.ecs.getComponent(targetTreeId, Tree);
-            const harvestable = this.ecs.getComponent(targetTreeId, HarvestableComponent);
-            const harvester = this.ecs.getComponent(characterEntity, HarvesterComponent);
+            const harvestable = this.ecs.getComponent(
+                targetTreeId,
+                HarvestableComponent,
+            );
+            const harvester = this.ecs.getComponent(
+                characterEntity,
+                HarvesterComponent,
+            );
 
             if (!tree || !harvestable || !harvester) {
                 this.abortHarvest(actionIntent, characterEntity, targetTreeId);
@@ -49,12 +64,17 @@ export class TreeHarvestingSystem extends System {
 
             // Re-validate conditions, though IntentActionSystem's helper should have ensured this.
             // This is a safety check.
-            if (!tree.selectedForCutting || !harvestable.harvestable || harvestable.harvested) {
+            if (
+                !tree.selectedForCutting ||
+                !harvestable.harvestable ||
+                harvestable.harvested
+            ) {
                 this.abortHarvest(actionIntent, characterEntity, targetTreeId);
                 continue;
             }
 
-            const harvestAmountThisFrame = harvester.harvestPerMinute * scaledDeltaSeconds;
+            const harvestAmountThisFrame =
+                harvester.harvestPerMinute * scaledDeltaSeconds;
             harvestable.amount -= harvestAmountThisFrame;
 
             if (harvestable.amount <= 0) {
@@ -64,19 +84,32 @@ export class TreeHarvestingSystem extends System {
         }
     }
 
-    private finalizeHarvest(ecs: ECS, harvestable: HarvestableComponent, tree: Tree): void {
+    private finalizeHarvest(
+        ecs: ECS,
+        harvestable: HarvestableComponent,
+        tree: Tree,
+    ): void {
         harvestable.amount = 0;
         harvestable.harvested = true;
         harvestable.harvestable = false;
         tree.selectedForCutting = false;
 
-        const resources = ecs.getComponent(getWorldEntity(ecs), ResourceComponent);
+        const resources = ecs.getComponent(
+            getWorldEntity(ecs),
+            ResourceComponent,
+        );
         harvestable.drops.forEach((drop) => {
-            resources.amounts[drop.type as ResourceType] = (resources.amounts[drop.type as ResourceType] || 0) + drop.amount;
+            resources.amounts[drop.type as ResourceType] =
+                (resources.amounts[drop.type as ResourceType] || 0) +
+                drop.amount;
         });
     }
 
-    private clearActionState(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity | null,) {
+    private clearActionState(
+        aic: ActionIntentComponent,
+        characterEntity: Entity,
+        treeId: Entity | null,
+    ) {
         if (treeId !== null) {
             const slots = this.ecs.getComponent(treeId, InteractionSlots);
             slots?.releaseAll(characterEntity);
@@ -85,11 +118,19 @@ export class TreeHarvestingSystem extends System {
         aic.actionData = null;
     }
 
-    private abortHarvest(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity | null): void {
+    private abortHarvest(
+        aic: ActionIntentComponent,
+        characterEntity: Entity,
+        treeId: Entity | null,
+    ): void {
         this.clearActionState(aic, characterEntity, treeId);
     }
 
-    private finishHarvest(aic: ActionIntentComponent, characterEntity: Entity, treeId: Entity): void {
+    private finishHarvest(
+        aic: ActionIntentComponent,
+        characterEntity: Entity,
+        treeId: Entity,
+    ): void {
         this.clearActionState(aic, characterEntity, treeId);
     }
 }

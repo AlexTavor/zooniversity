@@ -6,13 +6,18 @@ interface MenuButtonProps {
     enabled?: boolean;
 }
 
-export const MenuButton: React.FC<MenuButtonProps> = ({ title, onClick, enabled = true }) => {
+export const MenuButton: React.FC<MenuButtonProps> = ({
+    title,
+    onClick,
+    enabled = true,
+}) => {
     return (
         <button
             className={`menu-button${enabled ? "" : " disabled"}`}
             onClick={enabled ? onClick : undefined}
-            disabled={!enabled}>
+            disabled={!enabled}
+        >
             {title}
-            </button>
-        );
+        </button>
+    );
 };

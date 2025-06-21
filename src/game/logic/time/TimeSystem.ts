@@ -1,12 +1,15 @@
-import {Entity, System} from "../../ECS";
-import {InputComponent} from "../input/InputComponent.ts";
-import {TimeComponent} from "./TimeComponent.ts";
-import {TimeConfig} from "../../config/TimeConfig.ts";
-import {EventBus} from "../../EventBus.ts";
-import {GameEvent} from "../../consts/GameEvent.ts";
+import { Entity, System } from "../../ECS";
+import { InputComponent } from "../input/InputComponent.ts";
+import { TimeComponent } from "./TimeComponent.ts";
+import { TimeConfig } from "../../config/TimeConfig.ts";
+import { EventBus } from "../../EventBus.ts";
+import { GameEvent } from "../../consts/GameEvent.ts";
 
 export class TimeSystem extends System {
-    public componentsRequired = new Set<Function>([TimeComponent, InputComponent]);
+    public componentsRequired = new Set<Function>([
+        TimeComponent,
+        InputComponent,
+    ]);
 
     update(entities: Set<Entity>, delta: number): void {
         for (const entity of entities) {
@@ -20,7 +23,9 @@ export class TimeSystem extends System {
 
             // Calculate how much real time has passed
             const realSecondsPassed = delta / 1000;
-            const inGameHours = (realSecondsPassed / TimeConfig.RealSecondsPerHour) * speedMultiplier;
+            const inGameHours =
+                (realSecondsPassed / TimeConfig.RealSecondsPerHour) *
+                speedMultiplier;
             const inGameMinutes = inGameHours * TimeConfig.MinutesPerHour;
 
             this.advanceTime(time, inGameMinutes);
@@ -45,7 +50,7 @@ export class TimeSystem extends System {
             time.day -= TimeConfig.DaysPerSemester;
             time.semester += 1;
         }
-        
+
         EventBus.emit(GameEvent.SetTime, time.minutesElapsed);
     }
 }

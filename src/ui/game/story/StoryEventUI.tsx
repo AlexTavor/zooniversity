@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { StoryEventPage, StoryOption } from "../../../game/logic/story/StoryEventTypes";
+import { StoryEventPage } from "../../../game/logic/story/StoryEventTypes";
 import { GameEvent } from "../../../game/consts/GameEvent";
 import { EventBus } from "../../../game/EventBus";
 import "./StoryEventUI.css";
@@ -22,11 +22,19 @@ export const StoryEventUI: React.FC = () => {
     if (!page) return null;
 
     return (
-        <div className="story-event-ui" style={{ backgroundImage: `url(${page.imagePath})` }}>
+        <div
+            className="story-event-ui"
+            style={{ backgroundImage: `url(${page.imagePath})` }}
+        >
             <div className="story-text">{page.text}</div>
             <div className="story-options">
                 {page.options.map((opt, idx) => (
-                    <button key={idx} onClick={() => EventBus.emit(GameEvent.StoryEventOptionChosen, opt)}>
+                    <button
+                        key={idx}
+                        onClick={() =>
+                            EventBus.emit(GameEvent.StoryEventOptionChosen, opt)
+                        }
+                    >
                         {opt.label}
                     </button>
                 ))}

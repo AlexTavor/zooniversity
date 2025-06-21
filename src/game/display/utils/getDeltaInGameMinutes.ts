@@ -7,6 +7,9 @@ export function getDeltaInGameMinutes(ecs: ECS, deltaMs: number): number {
     if (!time || time.speedFactor === 0) return 0;
 
     const realSecondsPassed = deltaMs / 1000;
-    const gameMinutesPassed = (realSecondsPassed / TimeConfig.RealSecondsPerHour) * TimeConfig.MinutesPerHour * time.speedFactor;
+    const gameMinutesPassed =
+        (realSecondsPassed / TimeConfig.RealSecondsPerHour) *
+        TimeConfig.MinutesPerHour *
+        time.speedFactor;
     return gameMinutesPassed;
 }

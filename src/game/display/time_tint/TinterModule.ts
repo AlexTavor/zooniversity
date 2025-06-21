@@ -1,14 +1,14 @@
-import {GameDisplayContext} from "../GameDisplay.ts";
-import {DisplayModule} from "../setup/DisplayModule.ts";
-import {TimeComponent} from "../../logic/time/TimeComponent.ts";
-import {WeatherComponent} from "../../logic/weather/WeatherComponent.ts";
-import {updateTimeTintPipeline} from "./updateTimeTintPineline.ts";
+import { GameDisplayContext } from "../GameDisplay.ts";
+import { DisplayModule } from "../setup/DisplayModule.ts";
+import { TimeComponent } from "../../logic/time/TimeComponent.ts";
+import { WeatherComponent } from "../../logic/weather/WeatherComponent.ts";
+import { updateTimeTintPipeline } from "./updateTimeTintPineline.ts";
 import { getWorldEntity } from "../../logic/serialization/getWorldEntity.ts";
 
 export class TinterModule extends DisplayModule<GameDisplayContext> {
     private worldEntity!: number;
     private context!: GameDisplayContext;
-    
+
     init(context: GameDisplayContext): void {
         this.context = context;
         const { ecs } = context;
@@ -23,6 +23,5 @@ export class TinterModule extends DisplayModule<GameDisplayContext> {
         updateTimeTintPipeline(scene, time, weather);
     }
 
-    destroy(): void {
-    }
+    destroy(): void {}
 }

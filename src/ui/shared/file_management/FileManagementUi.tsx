@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef } from "react";
 
 interface FileManagementUiProps {
     name: string;
@@ -9,12 +9,12 @@ interface FileManagementUiProps {
 }
 
 export function FileManagementUi({
-                                     name,
-                                     validExtensions,
-                                     save,
-                                     onLoad,
-                                     onNameChange
-                                 }: FileManagementUiProps) {
+    name,
+    validExtensions,
+    save,
+    onLoad,
+    onNameChange,
+}: FileManagementUiProps) {
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleLoadClick = () => {
@@ -25,7 +25,7 @@ export function FileManagementUi({
         const file = e.target.files?.[0];
         if (!file) return;
 
-        const ext = file.name.slice(file.name.lastIndexOf('.'));
+        const ext = file.name.slice(file.name.lastIndexOf("."));
         if (!validExtensions.includes(ext)) {
             alert(`Invalid file type: ${ext}`);
             return;
@@ -38,7 +38,7 @@ export function FileManagementUi({
 
     const handleSaveClick = () => {
         if (!name.trim()) {
-            alert('Please enter a name.');
+            alert("Please enter a name.");
             return;
         }
         save(name.trim());
@@ -57,9 +57,9 @@ export function FileManagementUi({
                 <button onClick={handleLoadClick}>📂 Load</button>
                 <input
                     type="file"
-                    accept={validExtensions.join(',')}
+                    accept={validExtensions.join(",")}
                     ref={fileInputRef}
-                    style={{ display: 'none' }}
+                    style={{ display: "none" }}
                     onChange={handleFileChange}
                 />
             </div>

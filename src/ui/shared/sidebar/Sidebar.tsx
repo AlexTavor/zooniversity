@@ -1,5 +1,5 @@
-import React, { ReactNode } from 'react';
-import './Sidebar.css';
+import React, { ReactNode } from "react";
+import "./Sidebar.css";
 
 interface SidebarProps {
     title: string;
@@ -10,9 +10,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ title, children }) => {
     return (
         <aside className="sidebar">
             <h2 className="sidebar-title">{title}</h2>
-            <div className="sidebar-buttons">
-                {children}
-            </div>
+            <div className="sidebar-buttons">{children}</div>
         </aside>
     );
 };
