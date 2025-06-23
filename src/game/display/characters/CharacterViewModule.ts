@@ -20,8 +20,13 @@ import { ViewTracker } from "../setup/ViewTracker";
 import { GameDisplayContext } from "../GameDisplay";
 import { ActionIntentComponent } from "../../logic/intent/intent-to-action/ActionIntentComponent";
 import { CharacterAction } from "../../logic/intent/intent-to-action/actionIntentData";
+import { EffectType } from "../setup/ViewEffectController";
 
 export class CharacterViewModule extends ViewDisplayModule {
+    private actionRef: { action: CharacterAction } = {
+        action: CharacterAction.NONE,
+    };
+
     init(context: GameDisplayContext): void {
         registerViewDisplayModule(this, context, context.viewsByEntity);
     }
@@ -98,6 +103,8 @@ export class CharacterViewModule extends ViewDisplayModule {
 
         EventBus.emit(GameEvent.CharacterUpdate, updateData);
 
+        this.actionRef.action = action;
+
         return isChanged;
     }
 
@@ -114,7 +121,10 @@ export class CharacterViewModule extends ViewDisplayModule {
             this.context.layers.Surface,
             this.context.scene,
         );
-        // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
+        view.applyEffect(EffectType.ActionEffect, {
+            container: this.context.layers.Icons,
+            currentActionRef: this.actionRef,
+        });
         return view;
     }
 }

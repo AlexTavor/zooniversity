@@ -1,6 +1,6 @@
 // TimeTintPipeline.ts
 import Phaser from "phaser";
-import fragShader from "../../shaders/tint.frag?raw";
+import fragShader from "../shaders/tint.frag?raw";
 
 export class TimeTintPipeline extends Phaser.Renderer.WebGL.Pipelines
     .SinglePipeline {

@@ -12,6 +12,10 @@ import {
     SelectionOutlineEffect,
     SelectionOutlineEffectOptions,
 } from "../effects/SelectionOutlineEffect";
+import {
+    ActionEffect,
+    ActionEffectConfig,
+} from "../effects/actions/ActionEffect";
 
 export interface EffectInstance {
     start(): void;
@@ -28,6 +32,7 @@ export enum EffectType {
     Progress = "progress",
     Shudder = "shudder",
     FORAGABLE = "foragable",
+    ActionEffect = "ActionEffect",
 }
 
 // Ensure ProgressBarOptions matches if it was defined elsewhere, or use ProgressBarConfig directly
@@ -76,6 +81,9 @@ export class ViewEffectController {
                 instance = this.makeForagableDisplay(
                     opts as ForagableEffectConfig,
                 );
+                break;
+            case EffectType.ActionEffect:
+                instance = this.makeActionEffect(opts as ActionEffectConfig);
                 break;
         }
 
@@ -190,13 +198,13 @@ export class ViewEffectController {
 
     private makeForagableDisplay(
         config: ForagableEffectConfig,
-    ): EffectInstance {
-        const foragableEffect = new ForagableEffect(this.view, config);
-        return {
-            start: foragableEffect.start.bind(foragableEffect),
-            stop: foragableEffect.stop.bind(foragableEffect),
-            update: foragableEffect.update.bind(foragableEffect),
-            destroy: foragableEffect.destroy.bind(foragableEffect),
-        };
+    ): EffectInstance | undefined {
+        if (!this.view) return undefined;
+        return new ForagableEffect(this.view, config);
+    }
+
+    makeActionEffect(opts: ActionEffectConfig): EffectInstance | undefined {
+        if (!this.view) return undefined;
+        return new ActionEffect(this.view, opts);
     }
 }
