@@ -1,11 +1,9 @@
 TODO:
-    Char action
-        Each action generates particles
-        Each action has its own particles behavior - sleep floats away, wood chop arches away spinning like wood chips, etc
     Char icon
         In world, topmost layer
         Disappears if close enough and selected
     Wood Dojo panel
+    Schedule update
+        Click scheulde item to open vertical list
     Foraging
         Siwtch to foraging if wanna eat and have no food
-

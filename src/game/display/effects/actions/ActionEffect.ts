@@ -25,12 +25,12 @@ export class ActionEffect implements EffectInstance {
 
         const choppingConfig: ActionParticleEffectConfig = {
             container: config.container,
-            emitFreq: 250,
+            emitFreq: 600,
             emitQuantity: 2,
             config: {
                 frame: ["axe_icon"],
                 lifespan: 1600,
-                speed: { min: 300, max: 600 },
+                speed: { min: 200, max: 400 },
                 scale: { start: 3, end: 1 },
                 rotate: { start: 0, end: 720 },
                 angle: { min: -120, max: -60 },
@@ -57,14 +57,16 @@ export class ActionEffect implements EffectInstance {
 
         const foragingConfig: ActionParticleEffectConfig = {
             container: config.container,
-            emitFreq: 150,
-            emitQuantity: 1,
+            emitFreq: 350,
+            emitQuantity: 2,
             config: {
                 frame: ["forage_icon"],
                 lifespan: 1200,
                 speed: { min: 20, max: 50 },
-                scale: { start: 0.3, end: 0 },
-                rotate: { min: -90, max: 90 },
+                scale: { start: 3, end: 1 },
+                alpha: { start: 1, end: 0.1 },
+                x: { min: -100, max: 100 },
+                y: { min: -100, max: 100 },
                 gravityY: 80,
                 emitting: false,
             },
@@ -77,8 +79,8 @@ export class ActionEffect implements EffectInstance {
             config: {
                 frame: ["eat_icon"],
                 lifespan: 1200,
-                speedY: { min: -150, max: -220 },
-                speedX: { min: -300, max: 300 },
+                speedY: { min: -120, max: -60 },
+                speedX: { min: -200, max: 200 },
                 gravityY: 400,
                 scale: { start: 3, end: 2 },
                 alpha: { start: 1, end: 0.1 },
