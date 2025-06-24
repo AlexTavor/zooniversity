@@ -9,13 +9,7 @@
       "title": "Wood Dojo",
       "description": "Center of Wood Mastery",
       "imagePath": "assets/panels/wood_dojo_panel.png",
-      "panelType": "WOOD_DOJO",
-      "actions": [
-        {
-          "label": "Select Trees to Harvest",
-          "type": "TreeCutting"
-        }
-      ]
+      "panelType": "WOOD_DOJO"
     },
     "tree_generic": {
       "title": "Tree",

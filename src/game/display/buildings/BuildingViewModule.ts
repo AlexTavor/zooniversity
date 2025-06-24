@@ -16,6 +16,7 @@ import {
 import { createView } from "../setup/ViewStore";
 import { ToolType } from "../tools/GameTools";
 import { GameDisplayContext } from "../GameDisplay";
+import { PanelId, PanelRegistry } from "../data_panel/PanelRegistry";
 
 export class BuildingViewModule extends ViewDisplayModule {
     init(context: GameDisplayContext): void {
@@ -55,16 +56,8 @@ export class BuildingViewModule extends ViewDisplayModule {
     }
 
     private createPanelDefinition(): PanelDefinition {
-        const panel = new PanelDefinition();
-        panel.title = "Wood Dojo";
-        panel.description = "Center of Wood Mastery";
-        panel.imagePath = "assets/panels/wood_dojo_panel.png";
-        panel.actions = [
-            {
-                label: "Select Trees to Harvest",
-                type: ToolType.TreeCutting,
-            },
-        ];
+        const panel =
+            PanelRegistry[PanelId.BUILDING_WOOD_DOJO] || new PanelDefinition();
         return panel;
     }
 

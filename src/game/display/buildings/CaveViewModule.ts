@@ -66,7 +66,6 @@ export class CaveViewModule extends ViewDisplayModule {
             this.context.layers.Caves,
             this.context.scene,
         );
-        // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
         return view;
     }
 }
