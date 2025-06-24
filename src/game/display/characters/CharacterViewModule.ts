@@ -98,6 +98,7 @@ export class CharacterViewModule extends ViewDisplayModule {
                 type: CharacterType.PROFESSOR,
             },
             currentAction: action,
+            visible: !view.viewContainer.visible,
         };
 
         EventBus.emit(GameEvent.CharacterUpdate, updateData);
@@ -124,6 +125,11 @@ export class CharacterViewModule extends ViewDisplayModule {
             container: this.context.layers.Icons,
             currentActionRef: this.actionRef,
         });
+
+        view.applyEffect(EffectType.SelectionForeground, {
+            container: this.context.layers.Icons,
+        });
+
         return view;
     }
 }

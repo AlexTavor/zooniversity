@@ -16,6 +16,10 @@ import {
     ActionEffect,
     ActionEffectConfig,
 } from "../effects/actions/ActionEffect";
+import {
+    SelectionForegroundEffect,
+    SelectionForegroundEffectOptions,
+} from "../effects/SelectionForegroundEffect";
 
 export interface EffectInstance {
     start(): void;
@@ -26,13 +30,14 @@ export interface EffectInstance {
 
 export enum EffectType {
     Red = "red",
-    Highlight = "highlight", // Currently same as Red
+    Highlight = "highlight",
     Shader = "shader",
     Shake = "shake",
     Progress = "progress",
     Shudder = "shudder",
     FORAGABLE = "foragable",
     ActionEffect = "ActionEffect",
+    SelectionForeground = "SelectionForeground",
 }
 
 // Ensure ProgressBarOptions matches if it was defined elsewhere, or use ProgressBarConfig directly
@@ -85,12 +90,24 @@ export class ViewEffectController {
             case EffectType.ActionEffect:
                 instance = this.makeActionEffect(opts as ActionEffectConfig);
                 break;
+            case EffectType.SelectionForeground:
+                instance = this.makeSelectionForegroundEffect(
+                    opts as SelectionForegroundEffectOptions,
+                );
+                break;
         }
 
         if (instance) {
             this.active.set(type, instance);
             instance.start();
         }
+    }
+
+    makeSelectionForegroundEffect(
+        opts: SelectionForegroundEffectOptions,
+    ): EffectInstance | undefined {
+        if (!this.view) return undefined;
+        return new SelectionForegroundEffect(this.view, opts);
     }
 
     private makeHighlight(

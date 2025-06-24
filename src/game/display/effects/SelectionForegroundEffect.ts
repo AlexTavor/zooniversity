@@ -2,23 +2,17 @@ import { View } from "../setup/View";
 import { EffectInstance } from "../setup/ViewEffectController";
 import { duplicateSprite, syncDuplicateSprite } from "../utils/spriteUtils";
 
-export interface SelectionOutlineEffectOptions {
+export interface SelectionForegroundEffectOptions {
     container: Phaser.GameObjects.Container;
-    outlineConfig?: {
-        thickness?: number;
-        outlineColor?: number;
-        quality?: number;
-    };
 }
 
-export class SelectionOutlineEffect implements EffectInstance {
+export class SelectionForegroundEffect implements EffectInstance {
     private view: View;
     private duplicateSprite: Phaser.GameObjects.Sprite | undefined;
 
-    constructor(view: View, options: SelectionOutlineEffectOptions) {
+    constructor(view: View, options: SelectionForegroundEffectOptions) {
         this.view = view;
         this.duplicateSprite = duplicateSprite(view, options.container);
-        this.duplicateSprite.setPipeline("outlineOnly");
     }
 
     public start(): void {
@@ -37,12 +31,12 @@ export class SelectionOutlineEffect implements EffectInstance {
         if (!this.duplicateSprite) {
             return;
         }
-        syncDuplicateSprite(this.view, this.duplicateSprite!);
+        syncDuplicateSprite(this.view, this.duplicateSprite);
+        this.duplicateSprite.alpha = 0.3;
     }
 
     public destroy(): void {
         if (this.duplicateSprite) {
-            this.duplicateSprite.resetPipeline();
             this.duplicateSprite.destroy();
             this.duplicateSprite = undefined;
         }

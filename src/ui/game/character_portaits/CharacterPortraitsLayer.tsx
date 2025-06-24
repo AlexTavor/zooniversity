@@ -11,6 +11,7 @@ type CharacterUpdateData = {
         icon: string;
         type: string;
     };
+    visible: boolean;
 };
 
 export const CharacterPortraitsLayer: React.FC = () => {

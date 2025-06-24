@@ -11,12 +11,15 @@ type CharacterPortraitProps = {
             icon: string;
             type: string;
         };
+        visible: boolean;
     };
 };
 
 export const CharacterPortrait: React.FC<CharacterPortraitProps> = ({
     data,
 }) => {
+    if (!data.visible) return null;
+
     return (
         <div
             className="character-portrait"
