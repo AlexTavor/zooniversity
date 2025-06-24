@@ -1,45 +1,14 @@
-import {
-    DisplayTraitType,
-    PanelDefinition,
-    PanelType,
-    ViewDefinition,
-    ViewType,
-} from "./ViewDefinition.ts";
+import { ViewDefinition, ViewType } from "./ViewDefinition.ts";
 
 export type ViewMap = Record<number, ViewDefinition>;
 
 let nextId = 1;
 let viewMap: ViewMap = {};
-
-const panelDefinitions: Record<ViewType, PanelDefinition> = {
-    [ViewType.TREE]: {
-        title: "Tree",
-        description: "A lush forest tree. May sway in the wind.",
-        imagePath: "assets/panels/tree_panel.png",
-        traits: [
-            { type: DisplayTraitType.WOOD, value: 10 },
-            { type: DisplayTraitType.FOOD, value: 5 },
-        ],
-        panelType: PanelType.TREE,
-    },
-    [ViewType.CAVE]: {
-        title: "Cave",
-        description: "A dark cave entrance. Mysterious and unexplored.",
-        imagePath: "assets/panels/cave_panel.png",
-        panelType: PanelType.CAVE,
-    },
-    [ViewType.NONE]: {
-        title: "",
-        description: "",
-        imagePath: "",
-    },
-    [ViewType.CHARCTER]: {
-        title: "Character",
-        description: "Some character",
-        imagePath: "",
-        panelType: PanelType.CHARACTER,
-    },
-} as Record<ViewType, PanelDefinition>;
+const defaultPanel = {
+    title: "",
+    description: "",
+    imagePath: "",
+};
 
 export function createView(def: Partial<ViewDefinition>): ViewDefinition {
     const id = nextId++;
@@ -54,7 +23,7 @@ export function createView(def: Partial<ViewDefinition>): ViewDefinition {
         subViews: [],
         type,
         selectable: def.selectable !== false,
-        panelDefinition: def.panelDefinition ?? panelDefinitions[type],
+        panelDefinition: def.panelDefinition ?? defaultPanel,
         ...def,
     } as ViewDefinition;
 

@@ -5,7 +5,11 @@ import { Transform } from "../../components/Transform";
 import { Tree } from "../../logic/trees/Tree";
 import { HarvestableComponent } from "../../logic/trees/HarvestableComponent";
 import { View } from "../setup/View";
-import { ViewDefinition, ViewType } from "../setup/ViewDefinition";
+import {
+    PanelDefinition,
+    ViewDefinition,
+    ViewType,
+} from "../setup/ViewDefinition";
 import {
     ViewDisplayModule,
     registerViewDisplayModule,
@@ -20,6 +24,7 @@ import { getTime } from "../../logic/time/TimeComponent";
 import { InteractionSlots, SlotType } from "../../components/InteractionSlots";
 import { ForagableComponent } from "../../logic/foraging/ForagableComponent";
 import { generateUniqueApplePositions } from "./generateUniqueApplePositions";
+import { PanelId, PanelRegistry } from "../data_panel/PanelRegistry";
 
 const MAX_APPLE_SPRITES = 20;
 
@@ -84,7 +89,14 @@ export class TreeViewModule extends ViewDisplayModule {
             },
             frame: 0,
             type: ViewType.TREE,
+            panelDefinition: this.createPanelDefinition(),
         });
+    }
+
+    private createPanelDefinition(): PanelDefinition {
+        const panel =
+            PanelRegistry[PanelId.TREE_GENERIC] || new PanelDefinition();
+        return panel;
     }
 
     updateView(ecs: ECS, entity: Entity, view: View): boolean {

@@ -9,7 +9,6 @@ import {
     ViewDefinition,
     PanelDefinition,
     ViewType,
-    PanelType,
 } from "../setup/ViewDefinition";
 import {
     ViewDisplayModule,
@@ -21,6 +20,7 @@ import { GameDisplayContext } from "../GameDisplay";
 import { ActionIntentComponent } from "../../logic/intent/intent-to-action/ActionIntentComponent";
 import { CharacterAction } from "../../logic/intent/intent-to-action/actionIntentData";
 import { EffectType } from "../setup/ViewEffectController";
+import { PanelId, PanelRegistry } from "../data_panel/PanelRegistry";
 
 export class CharacterViewModule extends ViewDisplayModule {
     private actionRef: { action: CharacterAction } = {
@@ -50,13 +50,6 @@ export class CharacterViewModule extends ViewDisplayModule {
     createDefinition(ecs: ECS, entity: Entity): ViewDefinition {
         const transform = ecs.getComponent(entity, Transform);
 
-        const panelDefinition = new PanelDefinition();
-        panelDefinition.title = "Professor Booker";
-        panelDefinition.description =
-            "The kind, absent-minded founder of Zooniversity.";
-        panelDefinition.imagePath = "assets/characters/booker/booker_panel.png";
-        panelDefinition.panelType = PanelType.CHARACTER;
-
         return createView({
             spriteName: "booker_char",
             atlasName: "booker_char",
@@ -66,8 +59,14 @@ export class CharacterViewModule extends ViewDisplayModule {
             },
             frame: 0,
             type: ViewType.CHARCTER,
-            panelDefinition,
+            panelDefinition: this.createPanelDefinition(),
         });
+    }
+
+    private createPanelDefinition(): PanelDefinition {
+        const panel =
+            PanelRegistry[PanelId.CHAR_BOOKER] || new PanelDefinition();
+        return panel;
     }
 
     updateView(ecs: ECS, entity: Entity, view: View): boolean {

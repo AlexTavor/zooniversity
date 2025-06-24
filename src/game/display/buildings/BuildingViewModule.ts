@@ -14,7 +14,6 @@ import {
     registerViewDisplayModule,
 } from "../setup/ViewDisplayModule";
 import { createView } from "../setup/ViewStore";
-import { ToolType } from "../tools/GameTools";
 import { GameDisplayContext } from "../GameDisplay";
 import { PanelId, PanelRegistry } from "../data_panel/PanelRegistry";
 
@@ -81,8 +80,6 @@ export class BuildingViewModule extends ViewDisplayModule {
             this.context.layers.Surface,
             this.context.scene,
         );
-        // view.applyEffect(EffectType.Shader, { shader: "TimeTint" });
-
         return view;
     }
 }

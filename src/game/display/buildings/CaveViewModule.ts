@@ -4,12 +4,17 @@ import { Transform } from "../../components/Transform";
 import { GameDisplayContext } from "../GameDisplay";
 import { SpriteKey } from "../setup/SpriteLibrary";
 import { View } from "../setup/View";
-import { ViewDefinition, ViewType } from "../setup/ViewDefinition";
+import {
+    PanelDefinition,
+    ViewDefinition,
+    ViewType,
+} from "../setup/ViewDefinition";
 import {
     ViewDisplayModule,
     registerViewDisplayModule,
 } from "../setup/ViewDisplayModule";
 import { createView } from "../setup/ViewStore";
+import { PanelRegistry, PanelId } from "../data_panel/PanelRegistry";
 
 export class CaveViewModule extends ViewDisplayModule {
     init(context: GameDisplayContext): void {
@@ -43,7 +48,14 @@ export class CaveViewModule extends ViewDisplayModule {
             },
             frame: 0,
             type: ViewType.CAVE,
+            panelDefinition: this.createPanelDefinition(),
         });
+    }
+
+    private createPanelDefinition(): PanelDefinition {
+        const panel =
+            PanelRegistry[PanelId.CAVE_GENERIC] || new PanelDefinition();
+        return panel;
     }
 
     updateView(ecs: ECS, entity: Entity, view: View): boolean {
