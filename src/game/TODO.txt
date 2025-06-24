@@ -1,9 +1,9 @@
 TODO:
+    Schedule update
+        Click scheulde item to open schedule modal
+    Wood Dojo panel
     Char icon
         In world, topmost layer
         Disappears if close enough and selected
-    Wood Dojo panel
-    Schedule update
-        Click scheulde item to open vertical list
     Foraging
         Siwtch to foraging if wanna eat and have no food

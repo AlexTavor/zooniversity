@@ -45,14 +45,10 @@ export class ShudderEffect implements EffectInstance {
         }
     }
 
-    setSpeed(speed: number): void {
-        this.timeScale = speed;
-    }
-
     update(delta: number): void {
         if (!this.sprite) return;
 
-        this.timer += delta * this.timeScale;
+        this.timer += delta;
 
         if (!this.isShaking && this.timer >= this.interval) {
             this.isShaking = true;

@@ -4,6 +4,7 @@ import { Layers } from "./setup/Layers.ts";
 import { Config } from "../config/Config.ts";
 import { createView } from "./setup/ViewStore.ts";
 import { View } from "./setup/View.ts";
+import { getTime } from "../logic/time/TimeComponent.ts";
 
 export interface GameDisplayContext {
     scene: Phaser.Scene;
@@ -116,7 +117,8 @@ export class GameDisplay implements GameDisplayContext {
         this.layers.destroy();
     }
 
-    public update(delta: number) {
+    public update(_delta: number) {
+        const delta = _delta * getTime(this.ecs).speedFactor;
         this.modules.forEach((module) => module.update(delta));
         this.viewsByEntity.forEach((view) => view.update(delta));
         this.iconsByEntity.forEach((view) => view.update(delta));
