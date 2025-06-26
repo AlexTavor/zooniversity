@@ -97,6 +97,8 @@ export class SelectionApi extends DisplayModule<GameDisplayContext> {
                 worldPoint.x,
                 worldPoint.y,
             );
+            overlapping.push(entity);
+
             if (alpha > 0) {
                 overlapping.push(entity);
             }
@@ -113,6 +115,10 @@ export class SelectionApi extends DisplayModule<GameDisplayContext> {
         overlapping.sort((a, b) => {
             const va = this.context.viewsByEntity.get(a);
             const vb = this.context.viewsByEntity.get(b);
+            if (va?.getSprite()?.name.includes("character")) {
+                return 1;
+            }
+
             return (
                 (vb?.getSprite()?.depth ?? 0) - (va?.getSprite()?.depth ?? 0)
             );

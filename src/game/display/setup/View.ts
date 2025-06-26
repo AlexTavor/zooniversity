@@ -70,7 +70,7 @@ export class View {
         this.viewContainer.add(sprite);
 
         sprite.setOrigin(0.5, type === ViewType.TREE ? 1 : 0.5);
-        // sprite.setFrame(frame);
+
         sprite.setInteractive({ useHandCursor: false });
 
         const defaultSize = SpriteLibrary[spriteName as SpriteKey]

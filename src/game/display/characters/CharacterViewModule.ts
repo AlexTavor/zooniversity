@@ -123,6 +123,8 @@ export class CharacterViewModule extends ViewDisplayModule {
             this.context.scene,
         );
 
+        view.sprite.name = "character" + _entity;
+
         view.applyEffect(EffectType.ActionEffect, {
             container: this.context.layers.Icons,
             currentActionRef: this.actionRef,
@@ -135,3 +137,4 @@ export class CharacterViewModule extends ViewDisplayModule {
         return view;
     }
 }
+

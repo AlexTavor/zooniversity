@@ -103,18 +103,6 @@ export class Preloader extends Scene {
 
         this.load.spritesheet("night_sky", "night_sky.png", caveFrameConfig);
 
-        const charFrameConfig = {
-            frameWidth: Config.AnimImports.StaticHeight,
-            frameHeight: Config.AnimImports.StaticWidth,
-            endFrame: 0,
-        };
-
-        this.load.setPath("assets/characters/booker");
-        this.load.spritesheet(
-            "booker_char",
-            "booker_char.png",
-            charFrameConfig,
-        );
         this.load.spritesheet(
             "booker_icon",
             "booker_icon.png",

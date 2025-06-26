@@ -41,7 +41,7 @@ module.exports = {
               "ignoreRestSiblings": true 
             }
           ],
-        endOfLine: 0
+        endOfLine: "/r/n"
     }
 };
 

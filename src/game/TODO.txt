@@ -1,3 +1,13 @@
 TODO:
+    Fix click
+        Get sprites under pointer
+        Filter by alpha under pointer
+        Get entities from sprites
+        Cycle entities
+    Fix layout
+        Have a given size for canvas
+        Scale it to fit available space
+        Positions all UI accordingly
+    Finish migrating everything that should be API, to API
     Foraging
         Siwtch to foraging if wanna eat and have no food
