@@ -2,8 +2,6 @@ import { EventBus } from "../../EventBus.ts";
 import { GameEvent } from "../../consts/GameEvent.ts";
 import { GameDisplay } from "../../display/GameDisplay.ts";
 import { CameraModule } from "../../display/camera/CameraModule.ts";
-import { SelectionHighlightModule } from "../../display/tools/selection/SelectionHighlightModule.ts";
-import { DataPanelModule } from "../../display/data_panel/DataPanelModule.ts";
 import { CloudsModule } from "../../display/sky/CloudsModule.ts";
 import { SkyDisplayModule } from "../../display/sky/SkyDisplayModule.ts";
 import { StarfieldModule } from "../../display/sky/StarfieldModule.ts";
@@ -60,6 +58,7 @@ import { ForagingSystem } from "../foraging/ForagingSystem.ts";
 import { HarvestingComponentRemovalSystem } from "../trees/HarvestingComponentRemovalSystem.tsx";
 import { ForageRegenerationSystem } from "../foraging/ForageRegenerationSystem.ts";
 import { ForagerComponent } from "../foraging/ForagerComponent.ts";
+import { UIApiModule } from "../../display/api/UIApiModule.ts";
 
 export const init = (game: Game) => {
     initData(game);
@@ -155,9 +154,8 @@ export const initDisplay = (game: Game) => {
         new CloudsModule(),
         new TinterModule(),
         new TreeSwayModule(),
-        new SelectionHighlightModule(),
         new GameTools(),
-        new DataPanelModule(),
+        new UIApiModule(),
         new CaveViewModule(),
         new BuildingViewModule(),
         new TreeViewModule(),

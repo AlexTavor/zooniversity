@@ -1,9 +1,3 @@
 TODO:
-    Wood Dojo panel
-    Char icon
-        In world, topmost layer
-        Disappears if close enough and selected
-    Schedule update
-        Click scheulde item to open schedule modal
     Foraging
         Siwtch to foraging if wanna eat and have no food

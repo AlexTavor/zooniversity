@@ -8,12 +8,13 @@ import { NeedsDisplay } from "../../needs/NeedsDisplay";
 import {
     ScheduleUIData,
     ScheduleDisplay,
-} from "../../schedule/ScheduleDisplay";
+} from "../../../schedule/ScheduleDisplay";
 import { StatusEffectsDisplay } from "../../status/StatusEffectsDisplay";
 import { DisplayableBuffData } from "../../../../../game/display/data_panel/character/deriveBuffs";
 
 // Data structure expected for this component
 export interface CharacterInfoData {
+    entity: number; // Char's entity id
     schedule: ScheduleUIData;
     currentAction: { type: CharacterAction; description: string }; // Or CurrentActionUIData
     needs: NeedUIData[];
@@ -83,14 +84,18 @@ const ActionDescription = styled.span`
 export const CharacterInfoContent: React.FC<CharacterInfoContentProps> = ({
     data,
 }) => {
-    const { schedule, currentAction, needs, statusEffects } = data;
+    const { schedule, currentAction, needs, statusEffects, entity } = data;
 
     return (
         <InfoContentWrapper>
             <TopRow>
                 <TopRowSection>
                     <SectionHeader>Schedule</SectionHeader>
-                    <ScheduleDisplay scheduleData={schedule} iconSize="24px" />
+                    <ScheduleDisplay
+                        scheduleData={schedule}
+                        iconSize="24px"
+                        entity={entity}
+                    />
                 </TopRowSection>
                 <TopRowSection>
                     <SectionHeader>Current Action</SectionHeader>

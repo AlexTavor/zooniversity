@@ -1,9 +1,8 @@
-import { Entity, ECS } from "../../ECS";
 import { EventBus } from "../../EventBus";
 import { GameEvent } from "../../consts/GameEvent";
 import { UIEvent } from "../../consts/UIEvent";
 import { View } from "../setup/View";
-import { PanelDefinition, DisplayTrait } from "../setup/ViewDefinition";
+import { PanelDefinition } from "../setup/ViewDefinition";
 import { ToolType } from "../tools/GameTools";
 
 export type PanelActionImplementation = {
@@ -46,17 +45,3 @@ export function createPanelActions(
         icon: actionIcons[action.type] ?? undefined,
     }));
 }
-
-export interface SelectionPanelData {
-    traits?: DisplayTrait[];
-    extraLines?: string[];
-}
-
-export type SelectionPanelReducer = (
-    entity: Entity,
-    ecs: ECS,
-) => Partial<SelectionPanelData>;
-
-export const SelectionPanelReducers: Partial<
-    Record<number, SelectionPanelReducer>
-> = {}; // populated elsewhere if needed

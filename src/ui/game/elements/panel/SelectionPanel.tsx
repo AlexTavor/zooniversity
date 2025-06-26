@@ -1,44 +1,38 @@
+// src/ui/panel/SelectionPanel.tsx
 import React, { useState, useEffect, useCallback } from "react";
 import styled from "@emotion/styled";
-
-import { EventBus } from "../../../../game/EventBus";
 import { PanelType } from "../../../../game/display/setup/ViewDefinition";
-import { PinButton, PinIconType, ChevronDirection } from "../buttons/PinButton";
+import { usePanelData } from "../../hooks/usePanelData";
+import { useSelection } from "../../hooks/useSelection";
+import { ChevronDirection, PinButton, PinIconType } from "../buttons/PinButton";
 import { SelectionTabBar } from "./SelectionTabBar";
-import { TABS_CONFIG } from "./TabTypes"; // Ensure this path is correct
-import { GameUIEvent } from "../../../../game/consts/UIEvent"; // Using your GameUIEvent
-import { CharacterThoughtsContentCollapsed } from "./character/CharacterThoughtsContentCollapsed";
-import { CharacterThoughtsContent } from "./character/CharacterThoughtsContent";
+import { TABS_CONFIG } from "./TabTypes";
 import { CharacterInfoContent } from "./character/CharacterInfoContent";
+import { CharacterThoughtsContent } from "./character/CharacterThoughtsContent";
+import { CharacterThoughtsContentCollapsed } from "./character/CharacterThoughtsContentCollapsed";
 import { CharacterInfoContentCollapsed } from "./character/CharcterInfoContentCollapsed";
 import { TreePanelContent } from "./tree/TreePanelContent";
 import { TreePanelContentCollapsed } from "./tree/TreePanelContentCollapsed";
-
-export interface SelectedEntityPayload {
-    id: string | number;
-    title: string;
-    panelType: PanelType;
-    panelTypeData: any;
-    findAction?: () => void;
-}
 
 export interface EntityContentViewProps<TData = any> {
     data: TData;
     isContentAreaCollapsed: boolean;
 }
+
 export type EntityContentView<TData = any> = React.FC<
     EntityContentViewProps<TData>
 >;
 
 type ContentByTab = Partial<Record<string, EntityContentView>>;
-
 const charContentRegistry: ContentByTab = {
+    // eslint-disable-next-line react/prop-types
     ["thoughts"]: ({ data, isContentAreaCollapsed }) =>
         isContentAreaCollapsed ? (
             <CharacterThoughtsContentCollapsed data={data} />
         ) : (
             <CharacterThoughtsContent data={data} />
         ),
+    // eslint-disable-next-line react/prop-types
     ["info"]: ({ data, isContentAreaCollapsed }) =>
         isContentAreaCollapsed ? (
             <CharacterInfoContentCollapsed data={data} />
@@ -46,7 +40,6 @@ const charContentRegistry: ContentByTab = {
             <CharacterInfoContent data={data} />
         ),
 };
-
 const treeContentRegistry: ContentByTab = {
     info: ({ data, isContentAreaCollapsed }) => {
         return isContentAreaCollapsed ? (
@@ -73,7 +66,6 @@ const PanelOuterWrapper = styled.div`
     z-index: 800;
     background-color: transparent; /* Outer wrapper is transparent */
 `;
-
 const PlaceholderText = styled.div<{ height: string }>`
     display: flex;
     align-items: center;
@@ -82,22 +74,11 @@ const PlaceholderText = styled.div<{ height: string }>`
     font-size: 0.8rem;
     color: #777;
     font-style: italic;
-    background-color: rgba(
-        30,
-        32,
-        35,
-        0.98
-    ); /* Background for placeholder only */
+    background-color: rgba(30, 32, 35, 0.98);
     flex-shrink: 0;
 `;
-
 const MainContentWrapper = styled.div`
-    background-color: rgba(
-        30,
-        32,
-        35,
-        0.98
-    ); /* Main panel background, below tabs if tabs are styled separately */
+    background-color: rgba(30, 32, 35, 0.98);
     color: #dde;
     display: flex;
     flex-direction: column;
@@ -105,7 +86,6 @@ const MainContentWrapper = styled.div`
     min-height: 0; /* For flex children */
     padding-left: 8px;
 `;
-
 const ThinControlBar = styled.div`
     font-size: 0.8rem;
     display: flex;
@@ -113,9 +93,9 @@ const ThinControlBar = styled.div`
     align-items: center;
     height: 24px; /* Slightly smaller */
     flex-shrink: 0;
+    padding-right: 8px; /* Padding for buttons */
     border-bottom: 1px solid #2a2c2e;
 `;
-
 const TabContentArea = styled.div`
     background-color: transparent;
     flex-grow: 1;
@@ -138,38 +118,32 @@ const MINIMAL_PANEL_HEIGHT_NO_SELECTION = "36px";
 const TAB_BAR_HEIGHT = "30px";
 
 export const SelectionPanel: React.FC = () => {
-    const [currentEntity, setCurrentEntity] =
-        useState<SelectedEntityPayload | null>(null);
+    const selectedEntityId = useSelection();
+    const panelData = usePanelData(selectedEntityId);
+
     const [isContentAreaCollapsed, setIsContentAreaCollapsed] =
         useState<boolean>(true);
     const [activeTabId, setActiveTabId] = useState<string | null>(null);
 
+    // Effect to reset or define the active tab when the panel data changes
     useEffect(() => {
-        const handleSelectedEntityUpdate = (
-            data: SelectedEntityPayload | null,
-        ) => {
-            setCurrentEntity(data);
+        if (!panelData) {
+            setActiveTabId(null);
+            return;
+        }
 
-            const tabs = TABS_CONFIG[data?.panelType as PanelType];
-            if (!tabs) {
-                setActiveTabId(null);
-                return;
-            }
+        const tabs = TABS_CONFIG[panelData.panelType as PanelType];
+        if (!tabs || tabs.length === 0) {
+            setActiveTabId(null);
+            return;
+        }
 
-            const currentIndex = tabs.findIndex(
-                (value) => value.id == activeTabId,
-            );
-
-            currentIndex == -1 && setActiveTabId(tabs[0].id);
-        };
-        EventBus.on(GameUIEvent.ShowPanelCalled, handleSelectedEntityUpdate);
-        return () => {
-            EventBus.off(
-                GameUIEvent.ShowPanelCalled,
-                handleSelectedEntityUpdate,
-            );
-        };
-    }, [activeTabId]);
+        // If the current tab isn't valid for the new panel type, reset to the first tab
+        const currentTabIsValid = tabs.some((tab) => tab.id === activeTabId);
+        if (!currentTabIsValid) {
+            setActiveTabId(tabs[0].id);
+        }
+    }, [panelData, activeTabId]);
 
     const toggleContentCollapse = useCallback(() => {
         setIsContentAreaCollapsed((prev) => !prev);
@@ -179,17 +153,18 @@ export const SelectionPanel: React.FC = () => {
         setActiveTabId(tabId);
     }, []);
 
-    const currentPanelType = currentEntity?.panelType as PanelType | null;
+    const currentPanelType = panelData?.panelType as PanelType | null;
     const ContentComponentToRender = currentPanelType
         ? contentViewRegistry[currentPanelType]?.[activeTabId ?? ""]
         : null;
+
     const hasTabs = !!(
         currentPanelType &&
         TABS_CONFIG[currentPanelType] &&
         TABS_CONFIG[currentPanelType]!.length > 0
     );
 
-    if (!currentEntity) {
+    if (!panelData) {
         return (
             <PanelOuterWrapper>
                 <PlaceholderText height={MINIMAL_PANEL_HEIGHT_NO_SELECTION}>
@@ -215,13 +190,13 @@ export const SelectionPanel: React.FC = () => {
             )}
             <MainContentWrapper>
                 <ThinControlBar>
-                    {currentEntity.title}
+                    {panelData.title}
                     <div>
-                        {currentEntity?.findAction ? (
+                        {panelData?.findAction ? (
                             <PinButton
                                 iconType={PinIconType.LOOKING_GLASS}
                                 title="Inspect Selected"
-                                onClick={currentEntity.findAction}
+                                onClick={panelData.findAction}
                                 size="16px"
                             />
                         ) : null}
@@ -243,7 +218,7 @@ export const SelectionPanel: React.FC = () => {
                 {ContentComponentToRender && activeTabId && (
                     <TabContentArea>
                         <ContentComponentToRender
-                            data={currentEntity.panelTypeData}
+                            data={panelData.panelTypeData}
                             isContentAreaCollapsed={isContentAreaCollapsed}
                         />
                     </TabContentArea>

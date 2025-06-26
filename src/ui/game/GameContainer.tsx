@@ -9,6 +9,7 @@ import { TopCharacterBar } from "./elements/top-char-bar/TopCharactersBar.tsx";
 import { BottomBar } from "./elements/bottom-bar/BottomBar.tsx";
 import { CharacterPortraitsLayer } from "./character_portaits/CharacterPortraitsLayer.tsx";
 import { useToolCursor } from "./hooks/useToolCursor.tsx";
+import { ModalManager } from "./modals/ModalManager.tsx";
 
 export const GameContainer: React.FC = () => {
     const [gameLoaded, setGameLoaded] = useState(false);
@@ -33,6 +34,7 @@ export const GameContainer: React.FC = () => {
             <ResourceDisplay />
             <CharacterPortraitsLayer />
             <TopCharacterBar />
+            <ModalManager />
         </>
     );
 };

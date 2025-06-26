@@ -64,6 +64,7 @@ export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
         needs: needsData,
         statusEffects: deriveBuffs(ecs, entity, time.minutesElapsed),
         currentStatusText: deriveCurrentStatusText(ecs, entity, actionIntent),
+        entity,
     };
 }
 

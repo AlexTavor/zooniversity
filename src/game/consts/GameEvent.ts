@@ -17,4 +17,11 @@ export enum GameEvent {
     ViewSelected = "ViewSelected",
     TreeSelectedForCutting = "TreeSelectedForCutting",
     ToolSelected = "ToolSelected",
+    ScheduleFetchSucceeded = "ScheduleFetchSucceeded",
+    ScheduleFetchRequested = "ScheduleFetchRequested",
+    ScheduleUpdateRequest = "ScheduleUpdateRequest",
+    FetchPanelDataSucceeded = "FetchPanelDataSucceeded",
+    FetchPanelDataRequested = "FetchPanelDataRequested",
+    PanelDataUpdated = "PanelDataUpdated",
+    ShowScheduleEditor = "ShowScheduleEditor",
 }

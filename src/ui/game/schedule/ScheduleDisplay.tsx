@@ -1,13 +1,19 @@
 import React from "react";
 import styled from "@emotion/styled";
-import { ScheduleIcon, ScheduleActivityType } from "../icons/ScheduleIcon";
+import {
+    ScheduleIcon,
+    ScheduleActivityType,
+} from "../elements/icons/ScheduleIcon";
+import { EventBus } from "../../../game/EventBus";
+import { GameEvent } from "../../../game/consts/GameEvent";
 
 export interface ScheduleUIData {
     slots: ScheduleActivityType[]; // Array representing each hour/block of the day
-    currentSlotIndex?: number; // Optional: Index of the current time slot to highlight
+    currentSlotIndex: number; // Index of the current time slot to highlight
 }
 
 interface ScheduleDisplayProps {
+    entity: number; // The entity this schedule belongs to
     scheduleData: ScheduleUIData;
     className?: string;
     iconSize?: string; // Size for each ScheduleIcon
@@ -34,6 +40,7 @@ export const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({
     activeIconSize = "24px",
     activeBorderColor, // Uses ScheduleIcon's default if not provided
     inactiveOpacity, // Uses ScheduleIcon's default if not provided
+    entity,
 }) => {
     const { slots, currentSlotIndex } = scheduleData;
 
@@ -42,7 +49,14 @@ export const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({
     }
 
     return (
-        <ScheduleDisplayWrapper className={className}>
+        <ScheduleDisplayWrapper
+            className={className}
+            onClick={() => {
+                EventBus.emit(GameEvent.ShowScheduleEditor, {
+                    entityId: entity,
+                });
+            }}
+        >
             {slots.map((activityType, index) => (
                 <ScheduleIcon
                     key={index} // Using index as key is acceptable if schedule order is stable and has no unique IDs per slot

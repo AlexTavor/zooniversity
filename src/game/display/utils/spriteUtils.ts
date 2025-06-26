@@ -47,4 +47,6 @@ export function syncDuplicateSprite(
     duplicateSprite.scaleY = originalSprite.scaleY;
 
     duplicateSprite.alpha = originalSprite.alpha;
+
+    duplicateSprite.removeInteractive();
 }

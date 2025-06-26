@@ -3,7 +3,6 @@ import { GameEvent } from "../../consts/GameEvent";
 import { GameDisplayContext } from "../GameDisplay";
 import { DisplayModule } from "../setup/DisplayModule";
 import { RightClickHandler } from "../utils/RightClickHandler";
-import { SelectionTool } from "./selection/SelectionTool";
 import { TreeCutSelectionTool } from "./trees/TreeCutSelectionTool";
 
 export enum ToolType {
@@ -21,7 +20,7 @@ export interface ITool {
 export type Tool = ITool & DisplayModule<GameDisplayContext>;
 
 export class GameTools extends DisplayModule<GameDisplayContext> {
-    private modules: Tool[] = [new SelectionTool(), new TreeCutSelectionTool()];
+    private modules: Tool[] = [new TreeCutSelectionTool()];
     private activeTool: ToolType = ToolType.None;
     private awaitingReset: boolean = false;
     private rClickHandler!: RightClickHandler;

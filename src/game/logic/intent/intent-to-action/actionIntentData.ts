@@ -14,6 +14,13 @@ export enum CharacterIntent {
     FORAGE = "FORAGE",
 }
 
+export const SCHEDULE_INTENTS: CharacterIntent[] = [
+    CharacterIntent.HARVEST,
+    CharacterIntent.FORAGE,
+    CharacterIntent.REST,
+    CharacterIntent.SLEEP,
+];
+
 /** Defines the concrete, observable, low-level action a character is currently performing. */
 
 export enum CharacterAction {

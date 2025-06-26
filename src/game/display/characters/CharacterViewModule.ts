@@ -60,6 +60,7 @@ export class CharacterViewModule extends ViewDisplayModule {
             frame: 0,
             type: ViewType.CHARCTER,
             panelDefinition: this.createPanelDefinition(),
+            selectable: true,
         });
     }
 
@@ -121,6 +122,7 @@ export class CharacterViewModule extends ViewDisplayModule {
             this.context.layers.Surface,
             this.context.scene,
         );
+
         view.applyEffect(EffectType.ActionEffect, {
             container: this.context.layers.Icons,
             currentActionRef: this.actionRef,

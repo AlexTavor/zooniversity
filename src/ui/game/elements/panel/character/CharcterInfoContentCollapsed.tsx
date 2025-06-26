@@ -8,12 +8,13 @@ import { NeedsDisplay } from "../../needs/NeedsDisplay";
 import {
     ScheduleUIData,
     ScheduleDisplay,
-} from "../../schedule/ScheduleDisplay";
+} from "../../../schedule/ScheduleDisplay";
 import { StatusEffectsDisplay } from "../../status/StatusEffectsDisplay";
 import { UIStatusEffectData } from "../../status/StatusLine";
 
 // Data structure expected for this component (subset of CharacterInfoData)
 export interface CharacterInfoCollapsedData {
+    entity: number; // Char's entity id
     schedule: ScheduleUIData;
     currentAction: { type: CharacterAction; description: string }; // Description might be used for tooltip
     statusEffects: UIStatusEffectData[];
@@ -62,7 +63,7 @@ const NeedsStackCollapsed = styled.div`
 export const CharacterInfoContentCollapsed: React.FC<
     CharacterInfoContentCollapsedProps
 > = ({ data }) => {
-    const { schedule, currentAction, statusEffects, needs } = data;
+    const { schedule, currentAction, statusEffects, needs, entity } = data;
 
     return (
         <CollapsedContentWrapper title={currentAction.description}>
@@ -73,6 +74,7 @@ export const CharacterInfoContentCollapsed: React.FC<
                         currentSlotIndex: schedule.currentSlotIndex,
                     }}
                     iconSize="16px" // Smaller icons for collapsed view
+                    entity={entity}
                 />
             </CollapsedSection>
 
