@@ -99,7 +99,6 @@ export class SelectionApi extends DisplayModule<GameDisplayContext> {
                 worldPoint.x,
                 worldPoint.y,
             );
-            overlapping.push(entity);
 
             if (alpha > 0) {
                 overlapping.push(entity);

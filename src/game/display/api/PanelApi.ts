@@ -143,3 +143,4 @@ export class PanelApi extends DisplayModule<GameDisplayContext> {
         return fullDef;
     }
 }
+

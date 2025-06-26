@@ -6,6 +6,7 @@
       "panelType": "CHARACTER"
     },
     "building_wood_dojo": {
+      "displayName": "Wood Dojo",
       "title": "Wood Dojo",
       "description": "Center of Wood Mastery",
       "imagePath": "assets/panels/wood_dojo_panel.png",

@@ -25,25 +25,9 @@ export class Preloader extends Scene {
 
         this.load.atlas(
             "plants",
-            "assets/trees/plants.png",
-            "assets/trees/plants.json",
+            "assets/atlases/plants.png",
+            "assets/atlases/plants.json",
         );
-
-        this.load.setPath("assets/plants");
-
-        const animFrameConfig = {
-            frameWidth: Config.AnimImports.FrameWidth * 2,
-            frameHeight: Config.AnimImports.FrameHeight * 2,
-            endFrame: Config.AnimImports.NumberOfFrames - 1,
-        };
-
-        for (let i = 0; i < Config.AnimImports.NumberOfTrees; i++) {
-            this.load.spritesheet(`tree${i}`, `tree${i}.png`, animFrameConfig);
-        }
-
-        for (let i = 0; i < Config.AnimImports.NumberOfBushes; i++) {
-            this.load.spritesheet(`bush${i}`, `bush${i}.png`, animFrameConfig);
-        }
 
         this.load.setPath("assets/hill");
 
@@ -117,3 +101,4 @@ export class Preloader extends Scene {
         this.scene.start(Config.EntryScene);
     }
 }
+

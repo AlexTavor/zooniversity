@@ -4,6 +4,7 @@ import { Naming } from "../../consts/Naming";
 import { Config } from "../../config/Config";
 import { SpriteKey, SpriteLibrary } from "./SpriteLibrary";
 import { EffectType, ViewEffectController } from "./ViewEffectController";
+import { Pos } from "../../../utils/Math";
 
 export class View {
     public readonly id: number;
@@ -73,6 +74,20 @@ export class View {
 
         sprite.setInteractive({ useHandCursor: false });
 
+        if (atlasName) {
+            this.sizeByAtlas(sprite, spriteName as SpriteKey, size);
+        } else {
+            this.sizeBySprite(spriteName, sprite, size);
+        }
+
+        this.sprite = sprite;
+    }
+
+    private sizeBySprite(
+        spriteName: string,
+        sprite: Phaser.GameObjects.Sprite,
+        size: Pos,
+    ) {
         const defaultSize = SpriteLibrary[spriteName as SpriteKey]
             ?.defaultSize ?? { x: 1, y: 1 };
         const pxPerUnit = Config.Display.PixelsPerUnit;
@@ -80,8 +95,34 @@ export class View {
             defaultSize.x * pxPerUnit * size.x,
             defaultSize.y * pxPerUnit * size.y,
         );
+    }
 
-        this.sprite = sprite;
+    private sizeByAtlas(
+        sprite: Phaser.GameObjects.Sprite,
+        spriteKey: SpriteKey,
+        sizeMultiplier: Pos,
+    ) {
+        const frameData = sprite.frame as any;
+        const spriteDef = SpriteLibrary[spriteKey];
+
+        // Ensure Config is imported or accessible here.
+        const defaultWidthInPx =
+            (spriteDef?.defaultSize.x ?? 1) * Config.Display.PixelsPerUnit;
+
+        if (frameData.trimmed && frameData.sourceSize) {
+            const sourceWidth = frameData.sourceSize.w;
+            const baseScale = defaultWidthInPx / sourceWidth;
+            sprite.setScale(
+                baseScale * sizeMultiplier.x,
+                baseScale * sizeMultiplier.y,
+            ); // Apply both x and y multipliers
+        } else {
+            const baseScale = defaultWidthInPx / sprite.frame.width;
+            sprite.setScale(
+                baseScale * sizeMultiplier.x,
+                baseScale * sizeMultiplier.y,
+            ); // Apply both x and y multipliers
+        }
     }
 
     public getSprite(): Phaser.GameObjects.Sprite | undefined {
@@ -136,3 +177,4 @@ export class View {
         this.viewContainer.destroy();
     }
 }
+

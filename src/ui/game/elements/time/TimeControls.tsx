@@ -9,8 +9,8 @@ import { GameEvent } from "../../../../game/consts/GameEvent"; // Adjust path
 const SPEEDS_CONFIG: { label: string; value: TimeSpeed; title: string }[] = [
     { label: "⏸", value: "paused", title: "Pause" },
     { label: "1x", value: "normal", title: "Normal Speed" },
-    { label: "12x", value: "fast", title: "Fast Speed" },
-    { label: "60x", value: "veryfast", title: "Very Fast Speed" },
+    { label: "3x", value: "fast", title: "Fast Speed" },
+    { label: "12x", value: "veryfast", title: "Very Fast Speed" },
 ];
 
 const ControlsWrapper = styled.div`

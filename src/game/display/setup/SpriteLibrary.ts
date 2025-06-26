@@ -17,7 +17,11 @@ export const CaveSpriteKeys = ["cave", "wood_dojo"] as const;
 export type CaveSpriteKey = (typeof CaveSpriteKeys)[number];
 export const CharacterKeys = ["booker_char"] as const;
 export type CharacterKey = (typeof CharacterKeys)[number];
-export type SpriteKey = PlantSpriteKey | HillSpriteKey | CaveSpriteKey; // | CharacterKey;
+export type SpriteKey =
+    | PlantSpriteKey
+    | HillSpriteKey
+    | CaveSpriteKey
+    | CharacterKey;
 
 export const TreeAtlasKeys = [
     "fir0",
@@ -103,7 +107,8 @@ interface SpriteDefinition {
 
 const defaultTreeSize = { x: 2, y: 2 };
 const defaultBushSize = { x: 1, y: 1 };
-const defaultCaveSize = { x: 1, y: 1 };
+const defaultCaveSize = { x: 1.25, y: 1.25 };
+const defaultCharSize = { x: 0.5, y: 0.5 };
 const defaultHillSize = {
     x: 1 + Config.GameWidth / Config.Display.PixelsPerUnit,
     y: Config.GameHeight / Config.Display.PixelsPerUnit,
@@ -165,5 +170,8 @@ export const SpriteLibrary: Record<SpriteKey, SpriteDefinition> = {
         defaultSize: defaultCaveSize,
         path: "assets/hill/wood_dojo.png",
     },
-    // booker_char: {key: 'booker_char', defaultSize: {x: 0.5, y: 0.75}, path: 'assets/characters/booker_char.png'},
+    booker_char: {
+        key: "booker_char",
+        defaultSize: defaultCharSize,
+    },
 };

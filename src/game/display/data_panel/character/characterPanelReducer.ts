@@ -65,6 +65,7 @@ export function characterPanelReducer(entity: Entity, ecs: ECS): unknown {
         statusEffects: deriveBuffs(ecs, entity, time.minutesElapsed),
         currentStatusText: deriveCurrentStatusText(ecs, entity, actionIntent),
         entity,
+        displayName: "Professor Booker",
     };
 }
 
@@ -196,3 +197,4 @@ const actionToString: Record<CharacterAction, string> = {
     [CharacterAction.EATING]: "Eating",
     [CharacterAction.FORAGING]: "Foraging",
 };
+

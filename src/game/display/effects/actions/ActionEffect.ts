@@ -31,9 +31,9 @@ export class ActionEffect implements EffectInstance {
                 frame: ["axe_icon"],
                 lifespan: 1200,
                 speed: { min: 200, max: 400 },
-                scale: { start: 3, end: 1 },
+                scale: { start: 1.5, end: 0.5 },
                 rotate: { start: 0, end: 720 },
-                angle: { min: -120, max: -60 },
+                angle: { min: -60, max: -30 },
                 gravityY: 500,
                 emitting: false,
             },
@@ -63,10 +63,10 @@ export class ActionEffect implements EffectInstance {
                 frame: ["forage_icon"],
                 lifespan: 1200,
                 speed: { min: 20, max: 50 },
-                scale: { start: 3, end: 1 },
+                scale: { start: 1.5, end: 0.5 },
                 alpha: { start: 1, end: 0.1 },
-                x: { min: -100, max: 100 },
-                y: { min: -100, max: 100 },
+                x: { min: -50, max: 50 },
+                y: { min: -50, max: 50 },
                 gravityY: 80,
                 emitting: false,
             },
@@ -160,3 +160,4 @@ export class ActionEffect implements EffectInstance {
         this.emitters.clear();
     }
 }
+

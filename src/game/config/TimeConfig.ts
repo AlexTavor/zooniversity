@@ -9,7 +9,7 @@ export class TimeConfig {
     static SpeedMultipliers = {
         paused: 0,
         normal: 1,
-        fast: 12,
-        veryfast: 60,
+        fast: 3,
+        veryfast: 12,
     } as const;
 }

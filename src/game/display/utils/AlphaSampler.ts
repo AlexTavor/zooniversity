@@ -12,18 +12,34 @@ export class AlphaSampler {
     ): Promise<number> {
         if (!sprite.texture || !sprite.frame) return 0;
 
-        const originOffsetX = sprite.displayOriginX;
-        const originOffsetY = sprite.displayOriginY;
-
+        // Transform the world coordinate into the sprite's local space
         const local = sprite
             .getWorldTransformMatrix()
             .applyInverse(worldX, worldY);
-        const tx = Math.floor(local.x + originOffsetX);
-        const ty = Math.floor(local.y + originOffsetY);
 
-        if (tx < 0 || ty < 0 || tx >= sprite.width || ty >= sprite.height)
+        // local.x and local.y are now relative to the sprite's origin point.
+        // We need to convert this to a coordinate relative to the top-left of the TRIMMED frame.
+
+        // 1. Get the position of the origin within the trimmed frame (in pixels)
+        const originInFrameX = sprite.frame.width * sprite.originX;
+        const originInFrameY = sprite.frame.height * sprite.originY;
+
+        // 2. Add the local coordinate to the origin's position to get the final
+        //    coordinate within the trimmed frame.
+        const tx = Math.floor(local.x + originInFrameX);
+        const ty = Math.floor(local.y + originInFrameY);
+
+        // 3. Check if this coordinate is within the bounds of the trimmed frame
+        if (
+            tx < 0 ||
+            ty < 0 ||
+            tx >= sprite.frame.width ||
+            ty >= sprite.frame.height
+        ) {
             return 0;
+        }
 
+        // This part remains the same, it correctly draws the requested pixel for snapshotting
         this.rt.clear();
         this.rt.drawFrame(sprite.texture.key, sprite.frame.name, -tx, -ty);
 

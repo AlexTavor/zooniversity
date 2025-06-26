@@ -21,6 +21,7 @@ import { ActionIntentComponent } from "../../logic/intent/intent-to-action/Actio
 import { CharacterAction } from "../../logic/intent/intent-to-action/actionIntentData";
 import { EffectType } from "../setup/ViewEffectController";
 import { PanelId, PanelRegistry } from "../data_panel/PanelRegistry";
+import { CharacterKeys, SpriteLibrary } from "../setup/SpriteLibrary";
 
 export class CharacterViewModule extends ViewDisplayModule {
     // Changed to a Map to hold a separate action reference for each entity.
@@ -52,7 +53,6 @@ export class CharacterViewModule extends ViewDisplayModule {
         const transform = ecs.getComponent(entity, Transform);
 
         return createView({
-            spriteName: "booker_char",
             atlasName: "booker_char",
             position: {
                 x: Math.round(transform.x),
@@ -62,6 +62,7 @@ export class CharacterViewModule extends ViewDisplayModule {
             type: ViewType.CHARCTER,
             panelDefinition: this.createPanelDefinition(),
             selectable: true,
+            size: SpriteLibrary[CharacterKeys[0]].defaultSize,
         });
     }
 
@@ -82,8 +83,7 @@ export class CharacterViewModule extends ViewDisplayModule {
 
         view.viewContainer.x = rx;
         view.viewContainer.y = ry;
-        view.viewContainer.scaleX =
-            view.viewDefinition.size.x * transform.direction;
+        view.sprite.scaleX = view.viewDefinition.size.x * transform.direction;
 
         const action =
             ecs.getComponent(entity, ActionIntentComponent)
@@ -150,3 +150,4 @@ export class CharacterViewModule extends ViewDisplayModule {
         return view;
     }
 }
+

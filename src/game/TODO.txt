@@ -1,4 +1,5 @@
 TODO:
+    set correct size for Booker
     Fix layout
         Have a given size for canvas
         Scale it to fit available space
