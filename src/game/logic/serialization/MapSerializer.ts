@@ -148,5 +148,8 @@ export function loadNewGame(ecs: ECS, scene: Phaser.Scene): void {
     loadMapIntoECS(ecs, mapDefinition);
     initWorld(ecs);
     createProfessorBooker(ecs);
+    createProfessorBooker(ecs);
+    createProfessorBooker(ecs);
+    createProfessorBooker(ecs);
     EventBus.emit(GameEvent.GameLoaded);
 }

@@ -23,9 +23,8 @@ import { EffectType } from "../setup/ViewEffectController";
 import { PanelId, PanelRegistry } from "../data_panel/PanelRegistry";
 
 export class CharacterViewModule extends ViewDisplayModule {
-    private actionRef: { action: CharacterAction } = {
-        action: CharacterAction.NONE,
-    };
+    // Changed to a Map to hold a separate action reference for each entity.
+    private actionRefs = new Map<Entity, { action: CharacterAction }>();
 
     init(context: GameDisplayContext): void {
         registerViewDisplayModule(this, context, context.viewsByEntity);
@@ -37,6 +36,8 @@ export class CharacterViewModule extends ViewDisplayModule {
 
     destroy(): void {
         this.tracker?.destroy();
+        // Clear the map on destroy to prevent potential memory leaks.
+        this.actionRefs.clear();
     }
 
     getComponentClasses(): Function[] {
@@ -104,14 +105,21 @@ export class CharacterViewModule extends ViewDisplayModule {
 
         EventBus.emit(GameEvent.CharacterUpdate, updateData);
 
-        this.actionRef.action = action;
+        // Get or create the actionRef for this specific entity.
+        let actionRef = this.actionRefs.get(entity);
+        if (!actionRef) {
+            actionRef = { action: CharacterAction.NONE };
+            this.actionRefs.set(entity, actionRef);
+        }
+        // Update the action property of the reference object.
+        actionRef.action = action;
 
         return isChanged;
     }
 
     createView(
         _ecs: ECS,
-        _entity: number,
+        entity: number,
         views: { [key: number]: ViewDefinition },
         viewDefinition: ViewDefinition,
     ): View {
@@ -123,11 +131,16 @@ export class CharacterViewModule extends ViewDisplayModule {
             this.context.scene,
         );
 
-        view.sprite.name = "character" + _entity;
+        // Get or create the actionRef for this entity to pass to the effect.
+        let actionRef = this.actionRefs.get(entity);
+        if (!actionRef) {
+            actionRef = { action: CharacterAction.NONE };
+            this.actionRefs.set(entity, actionRef);
+        }
 
         view.applyEffect(EffectType.ActionEffect, {
             container: this.context.layers.Icons,
-            currentActionRef: this.actionRef,
+            currentActionRef: actionRef,
         });
 
         view.applyEffect(EffectType.SelectionForeground, {
@@ -137,4 +150,3 @@ export class CharacterViewModule extends ViewDisplayModule {
         return view;
     }
 }
-

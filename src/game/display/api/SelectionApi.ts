@@ -5,6 +5,7 @@ import { GameDisplayContext } from "../../display/GameDisplay";
 import { DisplayModule } from "../../display/setup/DisplayModule";
 import { AlphaSampler } from "../../display/utils/AlphaSampler";
 import { ClickThresholdHandler } from "../../display/utils/ClickThresholdHandler";
+import { Character } from "../../logic/characters/Character";
 
 // Helper function to compare if the selection candidates have changed.
 function arraysEqual(a: number[], b: number[]): boolean {
@@ -26,6 +27,7 @@ export class SelectionApi extends DisplayModule<GameDisplayContext> {
     // State for cycling through overlapping entities
     private cycleStack: number[] = [];
     private cycleIndex = 0;
+    private selected: number = -1;
 
     /**
      * Initializes the module and its utilities for handling clicks and alpha sampling.
@@ -111,14 +113,24 @@ export class SelectionApi extends DisplayModule<GameDisplayContext> {
             return;
         }
 
+        // If it's a character and not yet selected, select immediately
+        for (const entity of overlapping) {
+            if (
+                entity != this.selected &&
+                this.context.ecs.hasComponent(entity, Character)
+            ) {
+                this.cycleStack = [];
+                this.cycleIndex = 0;
+                this.selected = entity;
+                EventBus.emit(GameEvent.SelectionChanged, this.selected);
+                return;
+            }
+        }
+
         // Sort candidates by display depth to select the top-most one first
         overlapping.sort((a, b) => {
             const va = this.context.viewsByEntity.get(a);
             const vb = this.context.viewsByEntity.get(b);
-            if (va?.getSprite()?.name.includes("character")) {
-                return 1;
-            }
-
             return (
                 (vb?.getSprite()?.depth ?? 0) - (va?.getSprite()?.depth ?? 0)
             );
@@ -130,8 +142,9 @@ export class SelectionApi extends DisplayModule<GameDisplayContext> {
             this.cycleIndex = 0;
         }
 
-        const selected = this.cycleStack[this.cycleIndex];
-        EventBus.emit(GameEvent.SelectionChanged, selected);
+        this.selected = this.cycleStack[this.cycleIndex];
+        EventBus.emit(GameEvent.SelectionChanged, this.selected);
         this.cycleIndex = (this.cycleIndex + 1) % this.cycleStack.length;
     }
 }
+

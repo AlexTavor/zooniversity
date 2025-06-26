@@ -1,9 +1,4 @@
 TODO:
-    Fix click
-        Get sprites under pointer
-        Filter by alpha under pointer
-        Get entities from sprites
-        Cycle entities
     Fix layout
         Have a given size for canvas
         Scale it to fit available space

@@ -231,8 +231,8 @@ function addBooker(
         booker,
         new NeedsComponent(
             new Map<NeedType, NeedData>([
-                [NeedType.SLEEP, { current: 75, max: 100 }],
-                [NeedType.FOOD, { current: 50, max: 100 }],
+                [NeedType.SLEEP, { current: 100, max: 100 }],
+                [NeedType.FOOD, { current: 100, max: 100 }],
             ]),
         ),
     );
@@ -244,3 +244,4 @@ function addBooker(
 
     return booker;
 }
+
