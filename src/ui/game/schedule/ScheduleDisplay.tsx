@@ -6,6 +6,7 @@ import {
 } from "../elements/icons/ScheduleIcon";
 import { EventBus } from "../../../game/EventBus";
 import { GameEvent } from "../../../game/consts/GameEvent";
+import { ModalType } from "../modals/ModalManager";
 
 export interface ScheduleUIData {
     slots: ScheduleActivityType[]; // Array representing each hour/block of the day
@@ -52,8 +53,8 @@ export const ScheduleDisplay: React.FC<ScheduleDisplayProps> = ({
         <ScheduleDisplayWrapper
             className={className}
             onClick={() => {
-                EventBus.emit(GameEvent.ShowScheduleEditor, {
-                    entityId: entity,
+                EventBus.emit(GameEvent.ShowModal, {
+                    type:ModalType.ScheduleEditor, props:{entityId: entity},
                 });
             }}
         >

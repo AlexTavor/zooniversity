@@ -23,5 +23,6 @@ export enum GameEvent {
     FetchPanelDataSucceeded = "FetchPanelDataSucceeded",
     FetchPanelDataRequested = "FetchPanelDataRequested",
     PanelDataUpdated = "PanelDataUpdated",
-    ShowScheduleEditor = "ShowScheduleEditor",
+    ShowModal = "ShowModal",
 }
+

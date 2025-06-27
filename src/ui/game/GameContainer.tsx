@@ -25,7 +25,10 @@ export const GameContainer: React.FC = () => {
     useToolCursor();
 
     return !gameLoaded ? (
+        <>
         <MainMenu />
+        <ModalManager />
+        </>
     ) : (
         <>
             <TimeControls />
