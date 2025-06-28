@@ -9,22 +9,22 @@ interface MenuButtonProps {
 
 const StyledMenuButton = styled.button`
     font-family: 'Chewy', cursive;
-    font-size: 1.6rem;
-    padding: 24px 56px;
-    background-color: #fce8c6; /* soft parchment tone */
-    border: 3px solid #6b4c3b; /* rich brown */
-    border-radius: 12px;
-    color: #2f1f16; /* darker brown text */
+    font-size: clamp(1.2rem, 2.5vw, 2.2rem);
+    padding: 2vh 3.5vw;
+    background-color: #fce8c6;
+    border: 0.4vmin solid #6b4c3b;
+    border-radius: 2vmin;
+    color: #2f1f16;
     cursor: pointer;
     transition:
         transform 0.2s ease-out,
         box-shadow 0.2s ease-out,
         background-color 0.2s ease-in;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 0.5vmin 0.8vmin rgba(0, 0, 0, 0.1);
 
     &:hover:not(:disabled) {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-0.6vmin);
+        box-shadow: 0 0.8vmin 1.5vmin rgba(0, 0, 0, 0.15);
     }
 
     &:active:not(:disabled) {

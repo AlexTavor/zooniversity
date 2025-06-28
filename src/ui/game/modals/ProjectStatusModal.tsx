@@ -69,7 +69,7 @@ const FeatureList = styled.ul`
 export const ProjectStatusModal: React.FC<ProjectStatusModalProps> = ({ onClose }) => {
     return (
         <ModalBackdrop onClick={onClose}>
-            <ModalContent onClick={(e) => e.stopPropagation()}>
+            <ModalContent onClick={(e) => {e.stopPropagation(); onClose();}}>
                 <Title>Project Status</Title>
                 <Section>
                     <SectionTitle>Implemented Features</SectionTitle>

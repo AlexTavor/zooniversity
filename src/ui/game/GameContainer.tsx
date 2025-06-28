@@ -3,13 +3,14 @@ import { GameEvent } from "../../game/consts/GameEvent.ts";
 import { EventBus } from "../../game/EventBus.ts";
 import { MainMenu } from "./main_menu/MainMenu.tsx";
 import { TimeControls } from "./elements/time/TimeControls.tsx";
-import { WeatherPanel } from "./weather/WeatherPanel.tsx";
+// import { WeatherPanel } from "./weather/WeatherPanel.tsx";
 import { ResourceDisplay } from "./resources/ResourceDisplay.tsx";
 import { TopCharacterBar } from "./elements/top-char-bar/TopCharactersBar.tsx";
 import { BottomBar } from "./elements/bottom-bar/BottomBar.tsx";
 import { CharacterPortraitsLayer } from "./character_portaits/CharacterPortraitsLayer.tsx";
 import { useToolCursor } from "./hooks/useToolCursor.tsx";
 import { ModalManager } from "./modals/ModalManager.tsx";
+import { CanvasProvider } from "./providers/CanvasProvider.tsx";
 
 export const GameContainer: React.FC = () => {
     const [gameLoaded, setGameLoaded] = useState(false);
@@ -26,18 +27,18 @@ export const GameContainer: React.FC = () => {
 
     return !gameLoaded ? (
         <>
-        <MainMenu />
-        <ModalManager />
+            <MainMenu />
+            <ModalManager />
         </>
     ) : (
-        <>
+        <CanvasProvider>
             <TimeControls />
-            <WeatherPanel />
+            {/*<WeatherPanel />*/}
             <BottomBar />
             <ResourceDisplay />
             <CharacterPortraitsLayer />
             <TopCharacterBar />
             <ModalManager />
-        </>
+        </CanvasProvider>
     );
 };

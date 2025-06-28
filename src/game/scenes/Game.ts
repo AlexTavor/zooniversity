@@ -10,6 +10,7 @@ import { loadNewGame } from "../logic/serialization/MapSerializer.ts";
 import { TimeTintPipeline } from "../../render/pipelines/TimeTintPipeline.ts";
 import { init } from "../logic/serialization/init.ts";
 import { OutlineOnlyPipeline } from "../../render/pipelines/OutlinePipelineSingle.ts";
+import { GameUIEvent } from "../consts/UIEvent.ts";
 
 export class Game extends Scene {
     gameDisplay: GameDisplay;
@@ -46,6 +47,8 @@ export class Game extends Scene {
             init(this);
         });
 
+        this.destroyQueue.push(this.registerForResize());
+
         this.events.on("destroy", this.destroy);
     }
 
@@ -56,6 +59,37 @@ export class Game extends Scene {
 
         const outlinePipeline = new OutlineOnlyPipeline(this.game);
         renderer.pipelines.add("outlineOnly", outlinePipeline);
+    }
+
+    private registerForResize(): () => void {
+        /**
+         * Handles the resize event by emitting the canvas bounds.
+         */
+        const handleResize = () => {
+            const bounds = this.scale.canvasBounds;
+            if (bounds) {
+                // Emit a plain object to avoid potential issues with Phaser's Rectangle object
+                EventBus.emit(GameUIEvent.CANVAS_RESIZED_EVENT, {
+                    x: bounds.x,
+                    y: bounds.y,
+                    width: bounds.width,
+                    height: bounds.height,
+                });
+            }
+        };
+
+        // Subscribe to the scale manager's resize event
+        this.scale.on("resize", handleResize);
+
+        // Emit the initial bounds immediately in case the UI is ready before a resize occurs
+        handleResize();
+
+        // Return a cleanup function to be called when the scene is destroyed
+        const cleanup = () => {
+            this.scale.off("resize", handleResize);
+        };
+
+        return cleanup;
     }
 
     private destroy() {
