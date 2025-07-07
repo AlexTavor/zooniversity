@@ -1,4 +1,4 @@
-Cozy Story Driven Colony Sim
+Colony Sim Playworld
 
 This is a prototyping playground for some colony sim mechanisms
 
